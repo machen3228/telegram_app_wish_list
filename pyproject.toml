@@ -1,5 +1,5 @@
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.13"
 explicit_package_bases = true
 disallow_subclassing_any = false
 warn_unused_ignores = false
