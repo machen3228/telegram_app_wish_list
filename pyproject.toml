@@ -1,3 +1,16 @@
+[project]
+name = "telegram-app-wish-list"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13.7"
+dependencies = [
+    "flask>=3.1.2",
+    "mypy>=1.19.0",
+    "pre-commit>=4.5.0",
+    "ruff>=0.14.8",
+]
+
 [tool.mypy]
 python_version = "3.13"
 explicit_package_bases = true
