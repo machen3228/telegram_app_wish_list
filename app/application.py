@@ -6,16 +6,18 @@ from litestar.contrib.jinja import JinjaTemplateEngine
 from litestar.response import Template
 from litestar.template import TemplateConfig
 
+ROOT = Path(__file__).resolve().parent
+
 
 @get('/')
 async def index() -> Template:
-    return Template(template_name='index.html')
+    return Template(template_name=str(ROOT / 'templates'))
 
 
 app = Litestar(
     route_handlers=[UserController, ItemController, index],
     template_config=TemplateConfig(
-        directory=Path('templates'),
+        directory=[str(ROOT / 'static')],
         engine=JinjaTemplateEngine,
     ),
     debug=True,
