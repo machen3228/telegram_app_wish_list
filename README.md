@@ -34,6 +34,9 @@ curl -sSf https://atlasgo.sh | sh
 ```
 You can implement changes in database. First, you need to
 change database schema in `/database_schema/schema.pg.hcl`
+Advise you to install `Atlas` plugin in Pycharm to see
+syntaxis hints. Schema has extension `.pg.hcl`, so it will
+help you to minimize errors while working with postgres schema.
 
 To create migration file, fun:
 ```bash
