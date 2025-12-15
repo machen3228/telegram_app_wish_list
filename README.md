@@ -33,7 +33,7 @@ local machine. For instance, you can run:
 curl -sSf https://atlasgo.sh | sh
 ```
 You can implement changes in database. First, you need to
-change database schema in `app/database_schema/schema.pg.hcl`
+change database schema in `/database_schema/schema.pg.hcl`
 
 To create migration file, fun:
 ```bash
