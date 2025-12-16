@@ -18,3 +18,35 @@ To install dependencies run:
 ```bash
 uv sync
 ```
+
+# Start project
+To launch database, run:
+```bash
+docker compose up --build -d
+```
+
+# Work with migrations
+We work with **Atlas** to implement migrations.
+So, to work with in you need Atlas to be installed on your
+local machine. For instance, you can run:
+```bash
+curl -sSf https://atlasgo.sh | sh
+```
+You can implement changes in database. First, you need to
+change database schema in `/database_schema/schema.pg.hcl`
+Advise you to install `Atlas` plugin in Pycharm to see
+syntaxis hints. Schema has extension `.pg.hcl`, so it will
+help you to minimize errors while working with postgres schema.
+
+To create migration file, fun:
+```bash
+atlas migrate diff {migration_name} --env local
+```
+To apply migration run:
+```bash
+atlas migrate apply --env local
+```
+To check migrations status, run:
+```bash
+atlas migrate status --env local
+```
