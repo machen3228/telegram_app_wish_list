@@ -65,6 +65,14 @@ table "gifts" {
     null = true
     type = smallint
   }
+  column "price" {
+    null = true
+    type = numeric(10, 2)
+  }
+  column "note" {
+    null = true
+    type = text
+  }
   column "created_at" {
     null = false
     type = timestamp

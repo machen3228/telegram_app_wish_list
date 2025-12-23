@@ -50,3 +50,7 @@ To check migrations status, run:
 ```bash
 atlas migrate status --env local
 ```
+If you want to downgrade, run:
+```bash
+atlas migrate down --env local
+```
