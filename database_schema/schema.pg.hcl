@@ -26,12 +26,12 @@ table "users" {
   }
   column "created_at" {
     null = false
-    type = timestamp
+    type = timestamptz
     default = sql("now()")
   }
   column "updated_at" {
     null = false
-    type = timestamp
+    type = timestamptz
     default = sql("now()")
   }
   primary_key {
@@ -75,12 +75,12 @@ table "gifts" {
   }
   column "created_at" {
     null = false
-    type = timestamp
+    type = timestamptz
     default = sql("now()")
   }
   column "updated_at" {
     null = false
-    type = timestamp
+    type = timestamptz
     default = sql("now()")
   }
   primary_key {
@@ -110,7 +110,7 @@ table "friends" {
   }
   column "created_at" {
     null = false
-    type = timestamp
+    type = timestamptz
     default = sql("now()")
   }
   primary_key {
