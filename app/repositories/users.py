@@ -1,14 +1,11 @@
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.users import User
+from repositories.base import BaseRepository
 
 
-class UserRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
-
-    async def create_user(self, user: User) -> None:
+class UserRepository(BaseRepository[User]):
+    async def add(self, user: User) -> int:
         stmt = text("""
             INSERT INTO users (tg_id, tg_username, first_name, last_name, birthday, created_at, updated_at)
             VALUES (:tg_id, :tg_username, :first_name, :last_name, :birthday, :created_at, :updated_at)
@@ -23,3 +20,17 @@ class UserRepository:
             'updated_at': user.updated_at,
         }
         await self._session.execute(stmt, params)
+        return user.tg_id
+
+    async def get(self, tg_id: int) -> User:
+        query = text("""
+            SELECT tg_id, tg_username, first_name, last_name, birthday, created_at, updated_at
+            FROM users
+            WHERE tg_id = :tg_id
+        """)
+        params = {'tg_id': tg_id}
+        query_result = await self._session.execute(query, params)
+        row = query_result.mappings().one_or_none()
+        if row is None:
+            raise KeyError
+        return User(**row)
