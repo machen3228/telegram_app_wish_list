@@ -1,6 +1,6 @@
 import uvicorn
 
-from application import app
+import application  # noqa: F401
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=80)  # noqa: S104
+    uvicorn.run('application:app', host='0.0.0.0', port=80, reload=True)  # noqa: S104

@@ -62,6 +62,6 @@ export PYTHONPATH=$PYTHONPATH:$(pwd)/app
 ```
 To run application, run:
 ```bash
-python -m app.main
+python app/main.py
 ```
 To get Swagger, open in browser http://localhost/schema/swagger
