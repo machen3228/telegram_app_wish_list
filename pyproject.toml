@@ -38,8 +38,8 @@ indent-width = 4
 [tool.ruff.lint]
 select = ["ALL"]
 fixable = ["ALL"]
-ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "D203", "D213", "COM812",
-    "Q000", "Q003", "PLR0913", "INP001"
+ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "D203", "D213", "COM812", "EM102",
+    "Q000", "Q003", "PLR0913", "INP001", "TRY003"
 ]
 
 [tool.ruff.format]

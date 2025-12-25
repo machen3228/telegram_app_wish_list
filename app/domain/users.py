@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from typing import Self
 
@@ -16,26 +16,16 @@ class Gift:
     updated_at: datetime
 
 
+@dataclass
 class User:
-    def __init__(
-        self,
-        *,
-        tg_id: int,
-        tg_username: str,
-        first_name: str,
-        last_name: str | None,
-        birthday: date | None,
-        created_at: datetime,
-        updated_at: datetime,
-    ) -> None:
-        self.tg_id = tg_id
-        self.tg_username = tg_username
-        self.first_name = first_name
-        self.last_name = last_name
-        self.birthday = birthday
-        self.created_at = created_at
-        self.updated_at = updated_at
-        self._gifts: list[Gift] = []
+    tg_id: int
+    tg_username: str
+    first_name: str
+    last_name: str | None
+    birthday: date | None
+    created_at: datetime
+    updated_at: datetime
+    _gifts: list['Gift'] = field(default_factory=list, repr=False)
 
     def __repr__(self) -> str:
         return f'<User {self.tg_id}>'

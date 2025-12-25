@@ -32,5 +32,6 @@ class UserRepository(BaseRepository[User]):
         query_result = await self._session.execute(query, params)
         row = query_result.mappings().one_or_none()
         if row is None:
-            raise KeyError
-        return User(**row)
+            raise KeyError(f'User with tg_id={tg_id} not found')
+        user_data = dict(row)
+        return User(**user_data)

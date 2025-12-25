@@ -35,7 +35,6 @@ class UserService:
 
     async def get(self, tg_id: int) -> User:
         try:
-            result = await self._repository.get(tg_id)
-        except KeyError:
-            raise HTTPException(status_code=404, detail='User not found') from None
-        return result
+            return await self._repository.get(tg_id)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from None
