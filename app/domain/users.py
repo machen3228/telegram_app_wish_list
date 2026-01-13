@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from typing import Self
@@ -15,6 +16,14 @@ class Gift:
     created_at: datetime
     updated_at: datetime
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Gift):
+            return False
+        return self.id == other.id
+
+    def __hash__(self) -> int:
+        return hash(self.id)
+
 
 @dataclass
 class User:
@@ -25,11 +34,19 @@ class User:
     birthday: date | None
     created_at: datetime
     updated_at: datetime
-    _gifts: list['Gift'] = field(default_factory=list, repr=False)
-    _friends: list['User'] = field(default_factory=list, repr=False)
+    gifts: set['Gift'] = field(default_factory=set, repr=False)
+    friends_ids: set[int] = field(default_factory=set, repr=False)
 
     def __repr__(self) -> str:
         return f'<User {self.tg_id}>'
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, User):
+            return False
+        return self.tg_id == other.tg_id
+
+    def __hash__(self) -> int:
+        return hash(self.tg_id)
 
     @classmethod
     def create(
@@ -51,11 +68,14 @@ class User:
             updated_at=now,
         )
 
-    def add_gift(self, gift: Gift) -> None:
-        self._gifts.append(gift)
+    def add_gifts(self, gifts: Sequence['Gift']) -> None:
+        self.gifts.update(gift for gift in gifts)
 
-    def remove_gift(self, gift: Gift) -> None:
-        self._gifts.remove(gift)
+    def add_friends(self, friends: Sequence[int]) -> None:
+        self.friends_ids.update(friends)
 
     def can_add_friend(self, friend: 'User') -> bool:
-        return friend.tg_id not in self._friends
+        return friend.tg_id not in self.friends_ids
+
+    def can_delete_friend(self, friend: 'User') -> bool:
+        return friend.tg_id in self.friends_ids
