@@ -4,7 +4,7 @@ default_language_version:
   python: python3
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.0.1
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
         files: ^(app)/
@@ -16,14 +16,14 @@ repos:
         files: ^(app)/
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.26.0
+    rev: v3.21.2
     hooks:
       - id: pyupgrade
         files: ^(app)/
-        entry: pyupgrade --py39-plus --keep-percent-format
+        entry: pyupgrade --py313-plus --keep-percent-format
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.12
+    rev: v0.14.10
     hooks:
       - id: ruff
         files: ^(app)/
@@ -31,17 +31,12 @@ repos:
       - id: ruff-format
         files: ^(app)/
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+  - repo: https://github.com/JacobCoffee/ty-pre-commit
+    rev: v0.0.1
     hooks:
-      - id: mypy
-        files: ^(app)/
-        additional_dependencies:
-          - pydantic
-          - pydantic-settings
-          - fastapi
-          - starlette
-          - sqlalchemy
+      - id: ty
+        name: ty check
+        args: [ "--ignore", "unresolved-import" ]
 
   - repo: local
     hooks:

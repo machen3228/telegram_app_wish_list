@@ -26,6 +26,7 @@ class User:
     created_at: datetime
     updated_at: datetime
     _gifts: list['Gift'] = field(default_factory=list, repr=False)
+    _friends: list['User'] = field(default_factory=list, repr=False)
 
     def __repr__(self) -> str:
         return f'<User {self.tg_id}>'
@@ -55,3 +56,6 @@ class User:
 
     def remove_gift(self, gift: Gift) -> None:
         self._gifts.remove(gift)
+
+    def can_add_friend(self, friend: 'User') -> bool:
+        return friend.tg_id not in self._friends

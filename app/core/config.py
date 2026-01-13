@@ -18,4 +18,4 @@ class Settings(BaseSettings):
         return f'postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
 
 
-settings = Settings()
+settings = Settings()  # ty:ignore[missing-argument]
