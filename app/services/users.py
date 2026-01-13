@@ -43,10 +43,22 @@ class UserService:
         if tg_id == friend_id:
             raise HTTPException(status_code=401, detail='You can not add yourself to the friend list') from None
         try:
+            user = await self._repository.get(tg_id)
             friend = await self._repository.get(friend_id)
-            user = await self._repository.get_user_with_friends(tg_id)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from None
         if not user.can_add_friend(friend):
-            raise HTTPException(status_code=401, detail='User already in your friend list') from None
+            raise HTTPException(status_code=400, detail='User already in your friend list') from None
         await self._repository.add_friend(user, friend)
+
+    async def delete_friend(self, tg_id: int, friend_id: int) -> None:
+        if tg_id == friend_id:
+            raise HTTPException(status_code=401, detail='You can not delete yourself out of the friend list') from None
+        try:
+            user = await self._repository.get(tg_id)
+            friend = await self._repository.get(friend_id)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from None
+        if not user.can_delete_friend(friend):
+            raise HTTPException(status_code=400, detail='User is not in your friend list') from None
+        await self._repository.delete_friend(user, friend)

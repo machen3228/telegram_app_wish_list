@@ -30,6 +30,8 @@ class UserController(Controller):
             await service.add_friend(tg_id, friend_id)
             return {'message': 'Friend was added'}
 
-    @delete('/{friend_id:int}')
-    async def delete_friend(self, friend_id: int) -> None:
-        pass
+    @delete('/{tg_id:int}/{friend_id:int}', status_code=204)
+    async def delete_friend(self, tg_id: int, friend_id: int) -> None:
+        async with get_session() as session:
+            service = UserService(session)
+            await service.delete_friend(tg_id, friend_id)
