@@ -38,3 +38,15 @@ class UserService:
             return await self._repository.get(tg_id)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from None
+
+    async def add_friend(self, tg_id: int, friend_id: int) -> None:
+        if tg_id == friend_id:
+            raise HTTPException(status_code=401, detail='You can not add yourself to the friend list') from None
+        try:
+            friend = await self._repository.get(friend_id)
+            user = await self._repository.get_user_with_friends(tg_id)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from None
+        if not user.can_add_friend(friend):
+            raise HTTPException(status_code=401, detail='User already in your friend list') from None
+        await self._repository.add_friend(user, friend)

@@ -10,7 +10,7 @@ from services.users import UserService
 class UserController(Controller):
     path = '/users'
 
-    @post()
+    @post(status_code=201)
     async def add(self, data: UserCreateDTO) -> dict[str, int]:
         async with get_session() as session:
             service = UserService(session)
@@ -23,9 +23,12 @@ class UserController(Controller):
             service = UserService(session)
             return await service.get(tg_id)
 
-    @post('/{friend_id:int}')
-    async def add_friend(self, friend_id: int) -> None:
-        pass
+    @post('/{tg_id:int}/{friend_id:int}', status_code=201)
+    async def add_friend(self, tg_id: int, friend_id: int) -> dict[str, str]:
+        async with get_session() as session:
+            service = UserService(session)
+            await service.add_friend(tg_id, friend_id)
+            return {'message': 'Friend was added'}
 
     @delete('/{friend_id:int}')
     async def delete_friend(self, friend_id: int) -> None:
