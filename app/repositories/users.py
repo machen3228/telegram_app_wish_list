@@ -1,5 +1,3 @@
-import json
-
 from sqlalchemy import text
 
 from domain.users import Gift, User
@@ -86,7 +84,7 @@ class UserRepository(BaseRepository[User]):
         user_data = dict(row)
         friend_ids = user_data.pop('friends_ids') or []
         gifts_json = user_data.pop('gifts') or '[]'
-        gifts_list = [Gift(**g) for g in json.loads(gifts_json)]
+        gifts_list = [Gift(**g) for g in gifts_json]  # ty:ignore[invalid-argument-type]
         user = User(**user_data)
         user.add_gifts(gifts_list)
         user.add_friends(friend_ids)
