@@ -25,4 +25,21 @@ class GiftRepository(BaseRepository[Gift]):
         return result.scalar_one()
 
     async def get(self, obj_id: int) -> Gift:
-        pass
+        query = text("""
+            SELECT *
+            FROM gifts g
+            WHERE g.id = :gift_id
+         """)
+        params = {'gift_id': obj_id}
+        query_result = await self._session.execute(query, params)
+        result = query_result.mappings().one_or_none()
+        if result is None:
+            raise KeyError(f'Gift with id={obj_id} not found')
+        return Gift(**dict(result))
+
+    async def delete(self, obj_id: int) -> None:
+        stmt = text("""
+            DELETE FROM gifts WHERE id = :gift_id;
+        """)
+        params = {'gift_id': obj_id}
+        await self._session.execute(stmt, params)

@@ -1,3 +1,4 @@
+from litestar.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.users import Gift
@@ -26,3 +27,16 @@ class GiftService:
             note=note,
         )
         return await self._repository.add(gift)
+
+    async def get(self, gift_id: int) -> Gift:
+        try:
+            return await self._repository.get(gift_id)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+
+    async def delete(self, gift_id: int) -> None:
+        try:
+            await self._repository.get(gift_id)
+        except KeyError as e:
+            raise HTTPException(status_code=404, detail=str(e)) from e
+        return await self._repository.delete(gift_id)
