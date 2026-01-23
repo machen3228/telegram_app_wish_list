@@ -1,5 +1,6 @@
 from litestar import Controller, Request, delete, get, post
 from litestar.dto import DataclassDTO
+from litestar.exceptions import HTTPException
 
 from core.db import get_session
 from core.security import verify_telegram_auth
@@ -11,7 +12,7 @@ class UserController(Controller):
     path = '/users'
     tags = ('Users',)
 
-    @post('/auth', return_dto=DataclassDTO[User], status_code=201)
+    @post('/auth', return_dto=DataclassDTO[User], summary='Add new user or login')
     async def telegram_login(self, request: Request) -> User:
         data = await request.json()
         verified_data = verify_telegram_auth(data)
@@ -25,7 +26,7 @@ class UserController(Controller):
             service = UserService(session)
             try:
                 user = await service.get(tg_id)
-            except KeyError:
+            except HTTPException:
                 user = await service.add(
                     tg_id=tg_id,
                     tg_username=username,
