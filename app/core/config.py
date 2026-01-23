@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     db_name: str
     db_user: str
     db_password: str
+
     bot_token: str
 
     @property
