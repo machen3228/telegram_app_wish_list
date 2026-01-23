@@ -19,7 +19,7 @@ class UserService:
         first_name: str,
         last_name: str | None,
         birthday: date | None,
-    ) -> int:
+    ) -> User:
         user = User.create(
             tg_id=tg_id,
             tg_username=tg_username,
@@ -28,10 +28,10 @@ class UserService:
             birthday=birthday,
         )
         try:
-            result = await self._repository.add(user)
+            tg_id = await self._repository.add(user)
         except IntegrityError as e:
             raise HTTPException(status_code=400, detail='User already exists') from e
-        return result
+        return await self._repository.get(tg_id)
 
     async def get(self, tg_id: int) -> User:
         try:
