@@ -1,9 +1,9 @@
-from litestar import Controller, delete, get, post
+from litestar import Controller, Request, delete, get, post
 from litestar.dto import DataclassDTO
 
 from core.db import get_session
+from core.security import verify_telegram_auth
 from domain.users import User
-from dto.users import UserCreateDTO
 from services.users import UserService
 
 
@@ -11,12 +11,29 @@ class UserController(Controller):
     path = '/users'
     tags = ('Users',)
 
-    @post(status_code=201, summary='Add new user')
-    async def add(self, data: UserCreateDTO) -> dict[str, int]:
+    @post('/auth', return_dto=DataclassDTO[User], status_code=201)
+    async def telegram_login(self, request: Request) -> User:
+        data = await request.json()
+        verified_data = verify_telegram_auth(data)
+
+        tg_id = verified_data['id']
+        username = verified_data['username']
+        first_name = verified_data['first_name']
+        last_name = verified_data['last_name']
+
         async with get_session() as session:
             service = UserService(session)
-            tg_id = await service.add(**data.__dict__)
-            return {'tg_id': tg_id}
+            try:
+                user = await service.get(tg_id)
+            except KeyError:
+                user = await service.add(
+                    tg_id=tg_id,
+                    tg_username=username,
+                    first_name=first_name,
+                    last_name=last_name,
+                    birthday=None,
+                )
+        return user
 
     @get('/{tg_id:int}', return_dto=DataclassDTO[User], summary='Get user')
     async def get(self, tg_id: int) -> User:
