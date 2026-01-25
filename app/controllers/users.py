@@ -1,10 +1,13 @@
-from litestar import Controller, Request, delete, get, post
+import json
+
+from litestar import Controller, delete, get, post
 from litestar.dto import DataclassDTO
 from litestar.exceptions import HTTPException
 
+from core.auth import validate_telegram_init_data
 from core.db import get_session
-from core.security import verify_telegram_auth
 from domain.users import User
+from dto.users import TelegramAuthDTO
 from services.users import UserService
 
 
@@ -12,27 +15,29 @@ class UserController(Controller):
     path = '/users'
     tags = ('Users',)
 
-    @post('/auth', return_dto=DataclassDTO[User], summary='Add new user or login')
-    async def telegram_login(self, request: Request) -> User:
-        data = await request.json()
-        verified_data = verify_telegram_auth(data)
-
-        tg_id = verified_data['id']
-        username = verified_data['username']
-        first_name = verified_data['first_name']
-        last_name = verified_data['last_name']
-
+    @post('/auth/telegram', summary='Telegram Mini App auth')
+    async def telegram_login(self, data: TelegramAuthDTO) -> User:
+        if not data.init_data:
+            raise HTTPException(status_code=401, detail='Missing init_data')
+        try:
+            validated_data = validate_telegram_init_data(data.init_data)
+        except ValueError as e:
+            raise HTTPException(status_code=401, detail=f'Invalid init_data: {e!s}') from None
+        user_json = validated_data.get('user')
+        if not user_json:
+            raise HTTPException(status_code=401, detail='User data not found in init_data')
+        user_data = json.loads(user_json)
         async with get_session() as session:
             service = UserService(session)
             try:
-                user = await service.get(tg_id)
+                user = await service.get(user_data['id'])
             except HTTPException:
                 user = await service.add(
-                    tg_id=tg_id,
-                    tg_username=username,
-                    first_name=first_name,
-                    last_name=last_name,
-                    birthday=None,
+                    tg_id=user_data['id'],
+                    tg_username=user_data.get('username', ''),
+                    first_name=user_data.get('first_name', ''),
+                    last_name=user_data.get('last_name', ''),
+                    avatar_url=user_data.get('photo_url', ''),
                 )
         return user
 

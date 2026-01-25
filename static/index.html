@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Wishlist</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-hint-color: #999999;
+            --tg-theme-link-color: #0088cc;
+            --tg-theme-button-color: #0088cc;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f5f5f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--tg-theme-button-color);
+            flex-shrink: 0;
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--tg-theme-text-color);
+        }
+
+        .profile-username {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+            margin-bottom: 8px;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .profile-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .profile-stat-value {
+            font-weight: 600;
+            color: var(--tg-theme-button-color);
+        }
+
+        .section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+        }
+
+        .gifts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .gift-card {
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            padding: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .gift-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .gift-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .gift-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color);
+            flex: 1;
+        }
+
+        .gift-wish-rate {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .gift-url {
+            display: inline-block;
+            color: var(--tg-theme-link-color);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .gift-url:hover {
+            text-decoration: underline;
+        }
+
+        .gift-details {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .gift-price {
+            color: var(--tg-theme-button-color);
+            font-weight: 600;
+        }
+
+        .gift-note {
+            margin-top: 8px;
+            padding: 8px;
+            background: var(--tg-theme-bg-color);
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+            font-style: italic;
+        }
+
+        .gift-date {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            margin-top: 8px;
+        }
+
+        .friends-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .friend-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            transition: transform 0.2s;
+        }
+
+        .friend-card:hover {
+            transform: translateX(4px);
+        }
+
+        .friend-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .friend-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .friend-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--tg-theme-text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .friend-id {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        details {
+            margin-top: 30px;
+        }
+
+        summary {
+            cursor: pointer;
+            padding: 10px;
+            background: var(--tg-theme-secondary-bg-color);
+            border-radius: 8px;
+            font-size: 14px;
+            user-select: none;
+        }
+
+        summary:hover {
+            opacity: 0.8;
+        }
+
+        pre {
+            background: var(--tg-theme-secondary-bg-color);
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px;
+            }
+
+            .profile-avatar {
+                width: 100px;
+                height: 100px;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+
+            .gifts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .friends-list {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .profile-name {
+                font-size: 20px;
+            }
+
+            .gift-details {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="status" class="status loading">
+            Authenticating...
+        </div>
+
+        <div id="profile" style="display: none;">
+            <!-- Профиль пользователя -->
+            <div class="profile-header">
+                <img id="profile-avatar" class="profile-avatar" src="" alt="Avatar">
+                <div class="profile-info">
+                    <div id="profile-name" class="profile-name"></div>
+                    <div id="profile-username" class="profile-username"></div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <span>🎁</span>
+                            <span id="gifts-count" class="profile-stat-value">0</span>
+                            <span>подарков</span>
+                        </div>
+                        <div class="profile-stat">
+                            <span>👥</span>
+                            <span id="friends-count" class="profile-stat-value">0</span>
+                            <span>друзей</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Список подарков -->
+            <div class="section">
+                <h2 class="section-title">🎁 Мои подарки</h2>
+                <div id="gifts-container"></div>
+            </div>
+
+            <!-- Список друзей -->
+            <div class="section">
+                <h2 class="section-title">👥 Друзья</h2>
+                <div id="friends-container"></div>
+            </div>
+        </div>
+
+        <details>
+            <summary>🐛 Debug Info</summary>
+            <pre id="debug-data"></pre>
+        </details>
+    </div>
+
+    <script>
+        console.log('Script started!');
+        console.log('Telegram WebApp available:', typeof window.Telegram !== 'undefined');
+
+        if (typeof window.Telegram === 'undefined') {
+            document.getElementById('status').className = 'status error';
+            document.getElementById('status').textContent = '❌ Error: Telegram WebApp SDK not loaded';
+            throw new Error('Telegram WebApp SDK not loaded');
+        }
+
+        const tg = window.Telegram.WebApp;
+        console.log('Telegram WebApp:', tg);
+
+        tg.ready();
+        tg.expand();
+
+        // Применяем тему Telegram
+        if (tg.themeParams) {
+            const root = document.documentElement;
+            Object.entries(tg.themeParams).forEach(([key, value]) => {
+                root.style.setProperty(`--tg-theme-${key.replace(/_/g, '-')}`, value);
+            });
+        }
+
+        const statusEl = document.getElementById('status');
+        const profileEl = document.getElementById('profile');
+        const debugEl = document.getElementById('debug-data');
+
+        // Функция для отображения подарков
+        function renderGifts(gifts) {
+            const container = document.getElementById('gifts-container');
+
+            if (!gifts || gifts.length === 0) {
+                container.innerHTML = '<div class="section-empty">Пока нет подарков в списке желаний</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="gifts-grid">
+                    ${gifts.map(gift => `
+                        <div class="gift-card">
+                            <div class="gift-header">
+                                <div class="gift-name">${escapeHtml(gift.name)}</div>
+                                ${gift.wish_rate ? `<div class="gift-wish-rate">⭐ ${gift.wish_rate}/10</div>` : ''}
+                            </div>
+                            ${gift.url ? `<a href="${escapeHtml(gift.url)}" class="gift-url" target="_blank">🔗 Ссылка</a>` : ''}
+                            <div class="gift-details">
+                                ${gift.price ? `<div class="gift-price">💰 ${gift.price} ₽</div>` : ''}
+                            </div>
+                            ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
+                            <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Функция для отображения друзей
+        function renderFriends(friendIds) {
+            const container = document.getElementById('friends-container');
+
+            if (!friendIds || friendIds.length === 0) {
+                container.innerHTML = '<div class="section-empty">Пока нет друзей</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="friends-list">
+                    ${friendIds.map(friendId => {
+                        const initials = `${friendId}`.substring(0, 2);
+                        return `
+                            <div class="friend-card">
+                                <div class="friend-avatar">${initials}</div>
+                                <div class="friend-info">
+                                    <div class="friend-name">Friend ${friendId}</div>
+                                    <div class="friend-id">ID: ${friendId}</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Защита от XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        async function authenticate() {
+            try {
+                console.log('Starting authentication...');
+                const initData = tg.initData;
+
+                console.log('initData:', initData);
+                console.log('initDataUnsafe:', tg.initDataUnsafe);
+
+                if (!initData) {
+                    throw new Error('No init data available. Please open this app from Telegram.');
+                }
+
+                // Показываем debug информацию
+                debugEl.textContent = JSON.stringify({
+                    initData: initData,
+                    initDataUnsafe: tg.initDataUnsafe,
+                    platform: tg.platform,
+                    version: tg.version
+                }, null, 2);
+
+                console.log('Sending request to /users/auth/telegram...');
+
+                // Отправляем на бэкенд
+                const response = await fetch('/users/auth/telegram', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        init_data: initData
+                    })
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    let errorDetail;
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorDetail = errorJson.detail || errorJson.message || 'Authentication failed';
+                    } catch {
+                        errorDetail = errorText || 'Authentication failed';
+                    }
+                    throw new Error(errorDetail);
+                }
+
+                const userData = await response.json();
+                console.log('User data received:', userData);
+
+                // Скрываем статус
+                statusEl.style.display = 'none';
+
+                // Показываем профиль
+                profileEl.style.display = 'block';
+
+                // Заполняем данные профиля
+                const avatarEl = document.getElementById('profile-avatar');
+                if (userData.avatar_url) {
+                    avatarEl.src = userData.avatar_url;
+                } else {
+                    // Fallback аватар
+                    avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.first_name)}&size=200&background=0088cc&color=fff`;
+                }
+
+                document.getElementById('profile-name').textContent =
+                    `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
+
+                document.getElementById('profile-username').textContent =
+                    userData.tg_username ? `@${userData.tg_username}` : `ID: ${userData.tg_id}`;
+
+                document.getElementById('gifts-count').textContent = userData.gifts?.length || 0;
+                document.getElementById('friends-count').textContent = userData.friends_ids?.length || 0;
+
+                // Отображаем подарки и друзей
+                renderGifts(userData.gifts);
+                renderFriends(userData.friends_ids);
+
+            } catch (error) {
+                console.error('Authentication error:', error);
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Запускаем аутентификацию при загрузке
+        console.log('Calling authenticate()...');
+        authenticate();
+    </script>
+</body>
+</html>

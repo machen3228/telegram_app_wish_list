@@ -1,4 +1,5 @@
-h1:T1mTTWaSf6Vp1xVDr9XfPq/55v1DzIlQumUatyEvXt8=
+h1:CJ43cKVSPo18jTLU+qDFnw3tMU17N4CtPazAdZ8O7s8=
 20251215205013_initial.sql h1:RNPJPXdrCTy75rnxrCMpYJelB2GMoOeLl1HLGKR+6dw=
 20251223192138_gifts_add_price_note_columns.sql h1:EhC0uM4SUFfEHk2FCHG1/JyHM0wTz77JU9XUsbkrATI=
 20251223214759_update_timestamt_types.sql h1:0opewA7oJ/fTjWvjfN6sLosG86AEMhMUAc8MbzgfVLM=
+20260124120247_create_avatar_url_instead_of_birthday.sql h1:VcKul/dk227pEsxR3pSjZUf8v/0tizB9iRGRKbPXgRg=
