@@ -20,9 +20,9 @@ table "users" {
     null = true
     type = varchar(30)
   }
-  column "birthday" {
+  column "avatar_url" {
     null = true
-    type = date
+    type = varchar(100)
   }
   column "created_at" {
     null = false

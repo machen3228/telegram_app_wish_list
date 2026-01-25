@@ -1,5 +1,3 @@
-from datetime import date
-
 from litestar.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,14 +16,14 @@ class UserService:
         tg_username: str,
         first_name: str,
         last_name: str | None,
-        birthday: date | None,
+        avatar_url: str | None,
     ) -> User:
         user = User.create(
             tg_id=tg_id,
             tg_username=tg_username,
             first_name=first_name,
             last_name=last_name,
-            birthday=birthday,
+            avatar_url=avatar_url,
         )
         try:
             tg_id = await self._repository.add(user)

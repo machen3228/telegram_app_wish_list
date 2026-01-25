@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from typing import Self
 
 
@@ -54,7 +54,7 @@ class User:
     tg_username: str
     first_name: str
     last_name: str | None
-    birthday: date | None
+    avatar_url: str | None
     created_at: datetime
     updated_at: datetime
     gifts: set['Gift'] = field(default_factory=set, repr=False)
@@ -78,7 +78,7 @@ class User:
         tg_username: str,
         first_name: str,
         last_name: str | None,
-        birthday: date | None,
+        avatar_url: str | None,
     ) -> Self:
         now = datetime.now(UTC)
         return cls(
@@ -86,7 +86,7 @@ class User:
             tg_username=tg_username,
             first_name=first_name,
             last_name=last_name,
-            birthday=birthday,
+            avatar_url=avatar_url,
             created_at=now,
             updated_at=now,
         )
