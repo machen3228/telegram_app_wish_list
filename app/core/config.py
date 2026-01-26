@@ -1,23 +1,62 @@
-from dotenv import load_dotenv
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from logging import getLevelNamesMapping
+from pathlib import Path
+from typing import Literal
 
-load_dotenv(verbose=True)
+from pydantic import BaseModel, SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import URL
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
+class LoggerConfig(BaseModel):
+    format: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
+
+    @property
+    def log_level(self) -> int:
+        return getLevelNamesMapping()[self.level]
+
+
+class BotConfig(BaseModel):
+    token: SecretStr
+
+
+class DatabaseConfig(BaseModel):
+    host: str
+    port: int
+    name: str
+    user: str
+    password: SecretStr
+
+    echo: bool = True
+
+    @property
+    def async_url(self) -> URL:
+        return URL.create(
+            drivername='postgresql+asyncpg',
+            database=self.name,
+            host=self.host,
+            port=self.port,
+            username=self.user,
+            password=self.password.get_secret_value(),
+        )
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file='../../.env', env_file_encoding='utf-8')
+    model_config = SettingsConfigDict(
+        case_sensitive=False,
+        env_prefix='APP__',
+        env_nested_delimiter='__',
+        env_file='.env',
+        env_file_encoding='utf-8',
+        env_ignore_empty=True,
+        extra='ignore',
+    )
 
-    db_host: str
-    db_port: int
-    db_name: str
-    db_user: str
-    db_password: str
-
-    bot_token: str
-
-    @property
-    def db_url(self) -> str:
-        return f'postgresql+asyncpg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}'
+    logger: LoggerConfig = LoggerConfig()
+    bot: BotConfig
+    db: DatabaseConfig
 
 
-settings = Settings()  # ty:ignore[missing-argument]
+settings = Settings.model_validate({})
