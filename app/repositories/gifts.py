@@ -37,6 +37,17 @@ class GiftRepository(BaseRepository[Gift]):
             raise KeyError(f'Gift with id={obj_id} not found')
         return Gift(**dict(result))
 
+    async def get_gifts_by_user_id(self, tg_id: int) -> list[Gift]:
+        query = text("""
+          SELECT *
+          FROM gifts g
+          WHERE g.user_id = :user_id
+        """)
+        params = {'user_id': tg_id}
+        query_result = await self._session.execute(query, params)
+        rows = query_result.mappings().all()
+        return [Gift(**row) for row in rows]
+
     async def delete(self, obj_id: int) -> None:
         stmt = text("""
             DELETE FROM gifts WHERE id = :gift_id;

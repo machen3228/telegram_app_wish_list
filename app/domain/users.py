@@ -58,7 +58,7 @@ class User:
     created_at: datetime
     updated_at: datetime
     gifts: set['Gift'] = field(default_factory=set, repr=False)
-    friends_ids: set[int] = field(default_factory=set, repr=False)
+    _friends_ids: set[int] = field(default_factory=set, repr=False)
 
     def __repr__(self) -> str:
         return f'<User {self.tg_id}>'
@@ -95,10 +95,10 @@ class User:
         self.gifts.update(gift for gift in gifts)
 
     def add_friends(self, friends: Sequence[int]) -> None:
-        self.friends_ids.update(friends)
+        self._friends_ids.update(friends)
 
     def can_add_friend(self, friend: 'User') -> bool:
-        return friend.tg_id not in self.friends_ids
+        return friend.tg_id not in self._friends_ids
 
     def can_delete_friend(self, friend: 'User') -> bool:
-        return friend.tg_id in self.friends_ids
+        return friend.tg_id in self._friends_ids
