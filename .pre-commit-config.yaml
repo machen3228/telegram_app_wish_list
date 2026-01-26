@@ -9,7 +9,6 @@ repos:
       - id: check-added-large-files
         files: ^(app)/
       - id: check-yaml
-        files: ^(app)/
       - id: end-of-file-fixer
         files: ^(app)/
       - id: trailing-whitespace
