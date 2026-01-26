@@ -32,9 +32,57 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 20px;
+            padding-bottom: 80px;
         }
 
+        /* Табы навигации */
+        .tabs {
+            display: flex;
+            background: var(--tg-theme-secondary-bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid var(--tg-theme-hint-color);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+            border: none;
+            background: transparent;
+            color: var(--tg-theme-text-color);
+        }
+
+        .tab:hover {
+            background: rgba(0, 136, 204, 0.1);
+        }
+
+        .tab.active {
+            color: var(--tg-theme-button-color);
+            border-bottom: 3px solid var(--tg-theme-button-color);
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Статусы загрузки */
         .status {
             padding: 15px;
             border-radius: 12px;
@@ -48,16 +96,12 @@
             color: #1976d2;
         }
 
-        .status.success {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
         .status.error {
             background: #ffebee;
             color: #c62828;
         }
 
+        /* Профиль пользователя */
         .profile-header {
             display: flex;
             align-items: center;
@@ -86,7 +130,6 @@
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 4px;
-            color: var(--tg-theme-text-color);
         }
 
         .profile-username {
@@ -95,31 +138,27 @@
             margin-bottom: 8px;
         }
 
-        .profile-stats {
-            display: flex;
-            gap: 16px;
-            font-size: 14px;
+        .profile-id {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            font-family: monospace;
         }
 
-        .profile-stat {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .profile-stat-value {
-            font-weight: 600;
-            color: var(--tg-theme-button-color);
-        }
-
+        /* Секции */
         .section {
             margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
         .section-title {
             font-size: 20px;
             font-weight: 600;
-            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -132,6 +171,41 @@
             font-size: 14px;
         }
 
+        /* Кнопки */
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+        }
+
+        .btn-danger {
+            background: #ef5350;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Карточки подарков */
         .gifts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -142,6 +216,7 @@
             background: var(--tg-theme-secondary-bg-color);
             border-radius: 12px;
             padding: 16px;
+            position: relative;
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
@@ -150,17 +225,41 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
+        .gift-card.own .gift-delete-btn {
+            display: block;
+        }
+
+        .gift-delete-btn {
+            display: none;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: #ef5350;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .gift-delete-btn:hover {
+            background: #e53935;
+        }
+
         .gift-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
             margin-bottom: 12px;
+            padding-right: 40px;
         }
 
         .gift-name {
             font-size: 18px;
             font-weight: 600;
-            color: var(--tg-theme-text-color);
             flex: 1;
         }
 
@@ -187,16 +286,11 @@
             text-decoration: underline;
         }
 
-        .gift-details {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
         .gift-price {
             color: var(--tg-theme-button-color);
             font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 8px;
         }
 
         .gift-note {
@@ -215,9 +309,10 @@
             margin-top: 8px;
         }
 
-        .friends-list {
+        /* Список друзей */
+        .friends-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 12px;
         }
 
@@ -228,24 +323,47 @@
             padding: 12px;
             background: var(--tg-theme-secondary-bg-color);
             border-radius: 12px;
-            transition: transform 0.2s;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            position: relative;
         }
 
         .friend-card:hover {
             transform: translateX(4px);
+            background: rgba(0, 136, 204, 0.1);
+        }
+
+        .friend-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            border: none;
+            border-radius: 50%;
+            background: #ef5350;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .friend-card:hover .friend-delete-btn {
+            opacity: 1;
+        }
+
+        .friend-delete-btn:hover {
+            background: #e53935;
         }
 
         .friend-avatar {
             width: 48px;
             height: 48px;
             border-radius: 50%;
-            background: var(--tg-theme-button-color);
-            color: var(--tg-theme-button-text-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 18px;
+            object-fit: cover;
+            border: 2px solid var(--tg-theme-button-color);
             flex-shrink: 0;
         }
 
@@ -257,47 +375,96 @@
         .friend-name {
             font-weight: 500;
             font-size: 14px;
-            color: var(--tg-theme-text-color);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        .friend-id {
+        .friend-username {
             font-size: 12px;
             color: var(--tg-theme-hint-color);
         }
 
-        details {
-            margin-top: 30px;
+        /* Модальные окна */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
 
-        summary {
-            cursor: pointer;
-            padding: 10px;
-            background: var(--tg-theme-secondary-bg-color);
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--tg-theme-bg-color);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons .btn {
+            flex: 1;
+        }
+
+        /* Формы */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--tg-theme-hint-color);
             border-radius: 8px;
             font-size: 14px;
-            user-select: none;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
         }
 
-        summary:hover {
-            opacity: 0.8;
+        .form-input:focus {
+            outline: none;
+            border-color: var(--tg-theme-button-color);
         }
 
-        pre {
-            background: var(--tg-theme-secondary-bg-color);
-            padding: 10px;
-            border-radius: 8px;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            font-size: 12px;
-            margin-top: 10px;
+        textarea.form-input {
+            min-height: 80px;
+            resize: vertical;
         }
 
+        /* Адаптивность */
         @media (max-width: 768px) {
             .container {
-                padding: 12px;
+                padding-bottom: 60px;
             }
 
             .profile-header {
@@ -311,15 +478,11 @@
                 height: 100px;
             }
 
-            .profile-stats {
-                justify-content: center;
-            }
-
             .gifts-grid {
                 grid-template-columns: 1fr;
             }
 
-            .friends-list {
+            .friends-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -327,79 +490,158 @@
                 font-size: 18px;
             }
         }
-
-        @media (max-width: 480px) {
-            .profile-name {
-                font-size: 20px;
-            }
-
-            .gift-details {
-                flex-direction: column;
-                gap: 4px;
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="status" class="status loading">
-            Authenticating...
+    <div id="app">
+        <!-- Загрузка -->
+        <div id="loading" class="container">
+            <div class="status loading">
+                Загрузка...
+            </div>
         </div>
 
-        <div id="profile" style="display: none;">
-            <!-- Профиль пользователя -->
-            <div class="profile-header">
-                <img id="profile-avatar" class="profile-avatar" src="" alt="Avatar">
-                <div class="profile-info">
-                    <div id="profile-name" class="profile-name"></div>
-                    <div id="profile-username" class="profile-username"></div>
-                    <div class="profile-stats">
-                        <div class="profile-stat">
-                            <span>🎁</span>
-                            <span id="gifts-count" class="profile-stat-value">0</span>
-                            <span>подарков</span>
+        <!-- Основное приложение -->
+        <div id="main-app" style="display: none;">
+            <!-- Табы навигации -->
+            <div class="tabs">
+                <button class="tab active" data-tab="profile">👤 Профиль</button>
+                <button class="tab" data-tab="friends">👥 Друзья</button>
+            </div>
+
+            <!-- Контент вкладок -->
+            <div class="container">
+                <!-- Вкладка: Мой профиль -->
+                <div id="tab-profile" class="tab-content active">
+                    <div class="profile-header">
+                        <img id="my-avatar" class="profile-avatar" src="" alt="Avatar">
+                        <div class="profile-info">
+                            <div id="my-name" class="profile-name"></div>
+                            <div id="my-username" class="profile-username"></div>
+                            <div id="my-id" class="profile-id"></div>
                         </div>
-                        <div class="profile-stat">
-                            <span>👥</span>
-                            <span id="friends-count" class="profile-stat-value">0</span>
-                            <span>друзей</span>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">🎁 Мои подарки</h2>
+                            <button class="btn btn-primary btn-small" onclick="openAddGiftModal()">
+                                + Добавить
+                            </button>
                         </div>
+                        <div id="my-gifts-container"></div>
+                    </div>
+                </div>
+
+                <!-- Вкладка: Друзья -->
+                <div id="tab-friends" class="tab-content">
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">👥 Мои друзья</h2>
+                            <button class="btn btn-primary btn-small" onclick="openAddFriendModal()">
+                                + Добавить
+                            </button>
+                        </div>
+                        <div id="friends-container"></div>
+                    </div>
+                </div>
+
+                <!-- Вкладка: Профиль друга (динамическая) -->
+                <div id="tab-friend-profile" class="tab-content">
+                    <button class="btn btn-small" onclick="showTab('friends')" style="margin-bottom: 16px;">
+                        ← Назад к друзьям
+                    </button>
+
+                    <div class="profile-header">
+                        <img id="friend-avatar" class="profile-avatar" src="" alt="Avatar">
+                        <div class="profile-info">
+                            <div id="friend-name" class="profile-name"></div>
+                            <div id="friend-username" class="profile-username"></div>
+                            <div id="friend-id" class="profile-id"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">🎁 Вишлист</h2>
+                        <div id="friend-gifts-container"></div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Список подарков -->
-            <div class="section">
-                <h2 class="section-title">🎁 Мои подарки</h2>
-                <div id="gifts-container"></div>
-            </div>
-
-            <!-- Список друзей -->
-            <div class="section">
-                <h2 class="section-title">👥 Друзья</h2>
-                <div id="friends-container"></div>
+        <!-- Модальное окно: Добавить подарок -->
+        <div id="modal-add-gift" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">Добавить подарок</div>
+                <form id="form-add-gift" onsubmit="handleAddGift(event)">
+                    <div class="form-group">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ссылка</label>
+                        <input type="url" name="url" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Желаемость (1-10)</label>
+                        <input type="number" name="wish_rate" class="form-input" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Цена (₽)</label>
+                        <input type="number" name="price" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Заметка</label>
+                        <textarea name="note" class="form-input"></textarea>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn" onclick="closeModal('modal-add-gift')">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Добавить
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
-        <details>
-            <summary>🐛 Debug Info</summary>
-            <pre id="debug-data"></pre>
-        </details>
+        <!-- Модальное окно: Добавить друга -->
+        <div id="modal-add-friend" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">Добавить друга</div>
+                <form id="form-add-friend" onsubmit="handleAddFriend(event)">
+                    <div class="form-group">
+                        <label class="form-label">Telegram ID друга *</label>
+                        <input type="number" name="friend_id" class="form-input" required
+                               placeholder="Например: 123456789">
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn" onclick="closeModal('modal-add-friend')">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Добавить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
-        console.log('Script started!');
-        console.log('Telegram WebApp available:', typeof window.Telegram !== 'undefined');
+        // ============= Глобальное состояние =============
+        const state = {
+            initData: null,
+            currentUser: null,
+            myGifts: [],
+            myFriends: [],
+            selectedFriend: null,
+            selectedFriendGifts: []
+        };
 
-        if (typeof window.Telegram === 'undefined') {
-            document.getElementById('status').className = 'status error';
-            document.getElementById('status').textContent = '❌ Error: Telegram WebApp SDK not loaded';
-            throw new Error('Telegram WebApp SDK not loaded');
-        }
-
+        // ============= Инициализация Telegram WebApp =============
         const tg = window.Telegram.WebApp;
-        console.log('Telegram WebApp:', tg);
-
         tg.ready();
         tg.expand();
 
@@ -411,16 +653,219 @@
             });
         }
 
-        const statusEl = document.getElementById('status');
-        const profileEl = document.getElementById('profile');
-        const debugEl = document.getElementById('debug-data');
+        state.initData = tg.initData;
 
-        // Функция для отображения подарков
-        function renderGifts(gifts) {
-            const container = document.getElementById('gifts-container');
+        // ============= API запросы =============
+        async function apiRequest(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Telegram-Init-Data': state.initData,
+                    ...options.headers
+                },
+                ...options
+            };
 
-            if (!gifts || gifts.length === 0) {
+            try {
+                const response = await fetch(url, defaultOptions);
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.detail || `HTTP ${response.status}`);
+                }
+
+                // Для DELETE запросов может не быть тела ответа
+                if (response.status === 204) {
+                    return null;
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                throw error;
+            }
+        }
+
+        // ============= API методы =============
+        async function getCurrentUser() {
+            return await apiRequest('/users/me');
+        }
+
+        async function getMyFriends() {
+            return await apiRequest('/users/me/friends');
+        }
+
+        async function addFriend(friendId) {
+            return await apiRequest(`/users/me/friends/${friendId}`, {
+                method: 'POST'
+            });
+        }
+
+        async function deleteFriend(friendId) {
+            return await apiRequest(`/users/me/friends/${friendId}`, {
+                method: 'DELETE'
+            });
+        }
+
+        async function getUserById(userId) {
+            return await apiRequest(`/users/${userId}`);
+        }
+
+        async function getUserGifts(userId) {
+            return await apiRequest(`/users/${userId}/gifts`);
+        }
+
+        async function addGift(giftData) {
+            return await apiRequest('/gifts', {
+                method: 'POST',
+                body: JSON.stringify(giftData)
+            });
+        }
+
+        async function deleteGift(giftId) {
+            return await apiRequest(`/gifts/${giftId}`, {
+                method: 'DELETE'
+            });
+        }
+
+        // ============= Утилиты =============
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('ru-RU').format(price);
+        }
+
+        function getAvatarUrl(user) {
+            if (user.avatar_url) {
+                return user.avatar_url;
+            }
+            return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.first_name)}&size=200&background=0088cc&color=fff`;
+        }
+
+        // ============= Навигация по табам =============
+        function showTab(tabName) {
+            // Убираем активный класс со всех табов и контента
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Активируем нужный таб
+            const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+
+            const tabContent = document.getElementById(`tab-${tabName}`);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+        }
+
+        // Обработчики кликов по табам
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabName = tab.dataset.tab;
+                showTab(tabName);
+            });
+        });
+
+        // ============= Рендеринг =============
+        function renderMyProfile() {
+            const user = state.currentUser;
+
+            document.getElementById('my-avatar').src = getAvatarUrl(user);
+            document.getElementById('my-name').textContent =
+                `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
+            document.getElementById('my-username').textContent =
+                user.tg_username ? `@${user.tg_username}` : '';
+            document.getElementById('my-id').textContent = `ID: ${user.tg_id}`;
+
+            renderMyGifts();
+        }
+
+        function renderMyGifts() {
+            const container = document.getElementById('my-gifts-container');
+            const gifts = state.currentUser.gifts || [];
+
+            if (gifts.length === 0) {
                 container.innerHTML = '<div class="section-empty">Пока нет подарков в списке желаний</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="gifts-grid">
+                    ${gifts.map(gift => `
+                        <div class="gift-card own">
+                            <button class="gift-delete-btn" onclick="confirmDeleteGift(${gift.id})" title="Удалить">
+                                ×
+                            </button>
+                            <div class="gift-header">
+                                <div class="gift-name">${escapeHtml(gift.name)}</div>
+                                ${gift.wish_rate ? `<div class="gift-wish-rate">⭐ ${gift.wish_rate}/10</div>` : ''}
+                            </div>
+                            ${gift.url ? `<a href="${escapeHtml(gift.url)}" class="gift-url" target="_blank">🔗 Ссылка</a>` : ''}
+                            ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
+                            ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
+                            <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderFriends() {
+            const container = document.getElementById('friends-container');
+            const friends = state.myFriends;
+
+            if (friends.length === 0) {
+                container.innerHTML = '<div class="section-empty">Пока нет друзей</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="friends-grid">
+                    ${friends.map(friend => `
+                        <div class="friend-card" onclick="showFriendProfile(${friend.tg_id})">
+                            <button class="friend-delete-btn" onclick="event.stopPropagation(); confirmDeleteFriend(${friend.tg_id})" title="Удалить">
+                                ×
+                            </button>
+                            <img class="friend-avatar" src="${getAvatarUrl(friend)}" alt="Avatar">
+                            <div class="friend-info">
+                                <div class="friend-name">${escapeHtml(friend.first_name)}${friend.last_name ? ' ' + escapeHtml(friend.last_name) : ''}</div>
+                                <div class="friend-username">${friend.tg_username ? '@' + escapeHtml(friend.tg_username) : 'ID: ' + friend.tg_id}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderFriendProfile() {
+            const friend = state.selectedFriend;
+
+            document.getElementById('friend-avatar').src = getAvatarUrl(friend);
+            document.getElementById('friend-name').textContent =
+                `${friend.first_name}${friend.last_name ? ' ' + friend.last_name : ''}`;
+            document.getElementById('friend-username').textContent =
+                friend.tg_username ? `@${friend.tg_username}` : '';
+            document.getElementById('friend-id').textContent = `ID: ${friend.tg_id}`;
+
+            renderFriendGifts();
+        }
+
+        function renderFriendGifts() {
+            const container = document.getElementById('friend-gifts-container');
+            const gifts = state.selectedFriendGifts;
+
+            if (gifts.length === 0) {
+                container.innerHTML = '<div class="section-empty">У друга пока нет подарков в вишлисте</div>';
                 return;
             }
 
@@ -433,9 +878,7 @@
                                 ${gift.wish_rate ? `<div class="gift-wish-rate">⭐ ${gift.wish_rate}/10</div>` : ''}
                             </div>
                             ${gift.url ? `<a href="${escapeHtml(gift.url)}" class="gift-url" target="_blank">🔗 Ссылка</a>` : ''}
-                            <div class="gift-details">
-                                ${gift.price ? `<div class="gift-price">💰 ${gift.price} ₽</div>` : ''}
-                            </div>
+                            ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
                             ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
                             <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
                         </div>
@@ -444,129 +887,220 @@
             `;
         }
 
-        // Функция для отображения друзей
-        function renderFriends(friendIds) {
-            const container = document.getElementById('friends-container');
+        // ============= Действия с подарками =============
+        function openAddGiftModal() {
+            document.getElementById('modal-add-gift').classList.add('active');
+        }
 
-            if (!friendIds || friendIds.length === 0) {
-                container.innerHTML = '<div class="section-empty">Пока нет друзей</div>';
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            // Очищаем форму
+            const form = document.querySelector(`#${modalId} form`);
+            if (form) form.reset();
+        }
+
+        async function handleAddGift(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const giftData = {
+                user_id: state.currentUser.tg_id,
+                name: formData.get('name'),
+                url: formData.get('url') || null,
+                wish_rate: formData.get('wish_rate') ? parseInt(formData.get('wish_rate')) : null,
+                price: formData.get('price') ? parseInt(formData.get('price')) : null,
+                note: formData.get('note') || null
+            };
+
+            try {
+                await addGift(giftData);
+                closeModal('modal-add-gift');
+
+                // Обновляем данные
+                state.currentUser = await getCurrentUser();
+                renderMyGifts();
+
+                tg.showPopup({
+                    title: 'Успех',
+                    message: 'Подарок добавлен в вишлист!',
+                    buttons: [{type: 'ok'}]
+                });
+            } catch (error) {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: error.message,
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        }
+
+        function confirmDeleteGift(giftId) {
+            tg.showPopup({
+                title: 'Удалить подарок?',
+                message: 'Вы уверены, что хотите удалить этот подарок из вишлиста?',
+                buttons: [
+                    {id: 'cancel', type: 'cancel'},
+                    {id: 'delete', type: 'destructive', text: 'Удалить'}
+                ]
+            }, async (buttonId) => {
+                if (buttonId === 'delete') {
+                    try {
+                        await deleteGift(giftId);
+
+                        // Обновляем данные
+                        state.currentUser = await getCurrentUser();
+                        renderMyGifts();
+
+                        tg.showPopup({
+                            title: 'Успех',
+                            message: 'Подарок удалён',
+                            buttons: [{type: 'ok'}]
+                        });
+                    } catch (error) {
+                        tg.showPopup({
+                            title: 'Ошибка',
+                            message: error.message,
+                            buttons: [{type: 'ok'}]
+                        });
+                    }
+                }
+            });
+        }
+
+        // ============= Действия с друзьями =============
+        function openAddFriendModal() {
+            document.getElementById('modal-add-friend').classList.add('active');
+        }
+
+        async function handleAddFriend(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const friendId = parseInt(formData.get('friend_id'));
+
+            if (friendId === state.currentUser.tg_id) {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: 'Нельзя добавить самого себя в друзья',
+                    buttons: [{type: 'ok'}]
+                });
                 return;
             }
 
-            container.innerHTML = `
-                <div class="friends-list">
-                    ${friendIds.map(friendId => {
-                        const initials = `${friendId}`.substring(0, 2);
-                        return `
-                            <div class="friend-card">
-                                <div class="friend-avatar">${initials}</div>
-                                <div class="friend-info">
-                                    <div class="friend-name">Friend ${friendId}</div>
-                                    <div class="friend-id">ID: ${friendId}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        // Защита от XSS
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        async function authenticate() {
             try {
-                console.log('Starting authentication...');
-                const initData = tg.initData;
+                await addFriend(friendId);
+                closeModal('modal-add-friend');
 
-                console.log('initData:', initData);
-                console.log('initDataUnsafe:', tg.initDataUnsafe);
+                // Обновляем список друзей
+                state.myFriends = await getMyFriends();
+                renderFriends();
 
-                if (!initData) {
-                    throw new Error('No init data available. Please open this app from Telegram.');
-                }
-
-                // Показываем debug информацию
-                debugEl.textContent = JSON.stringify({
-                    initData: initData,
-                    initDataUnsafe: tg.initDataUnsafe,
-                    platform: tg.platform,
-                    version: tg.version
-                }, null, 2);
-
-                console.log('Sending request to /users/auth/telegram...');
-
-                // Отправляем на бэкенд
-                const response = await fetch('/users/auth/telegram', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        init_data: initData
-                    })
+                tg.showPopup({
+                    title: 'Успех',
+                    message: 'Друг добавлен!',
+                    buttons: [{type: 'ok'}]
                 });
-
-                console.log('Response status:', response.status);
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Error response:', errorText);
-                    let errorDetail;
-                    try {
-                        const errorJson = JSON.parse(errorText);
-                        errorDetail = errorJson.detail || errorJson.message || 'Authentication failed';
-                    } catch {
-                        errorDetail = errorText || 'Authentication failed';
-                    }
-                    throw new Error(errorDetail);
-                }
-
-                const userData = await response.json();
-                console.log('User data received:', userData);
-
-                // Скрываем статус
-                statusEl.style.display = 'none';
-
-                // Показываем профиль
-                profileEl.style.display = 'block';
-
-                // Заполняем данные профиля
-                const avatarEl = document.getElementById('profile-avatar');
-                if (userData.avatar_url) {
-                    avatarEl.src = userData.avatar_url;
-                } else {
-                    // Fallback аватар
-                    avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.first_name)}&size=200&background=0088cc&color=fff`;
-                }
-
-                document.getElementById('profile-name').textContent =
-                    `${userData.first_name}${userData.last_name ? ' ' + userData.last_name : ''}`;
-
-                document.getElementById('profile-username').textContent =
-                    userData.tg_username ? `@${userData.tg_username}` : `ID: ${userData.tg_id}`;
-
-                document.getElementById('gifts-count').textContent = userData.gifts?.length || 0;
-                document.getElementById('friends-count').textContent = userData.friends_ids?.length || 0;
-
-                // Отображаем подарки и друзей
-                renderGifts(userData.gifts);
-                renderFriends(userData.friends_ids);
-
             } catch (error) {
-                console.error('Authentication error:', error);
-                statusEl.className = 'status error';
-                statusEl.textContent = `❌ Error: ${error.message}`;
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: error.message,
+                    buttons: [{type: 'ok'}]
+                });
             }
         }
 
-        // Запускаем аутентификацию при загрузке
-        console.log('Calling authenticate()...');
-        authenticate();
+        function confirmDeleteFriend(friendId) {
+            tg.showPopup({
+                title: 'Удалить из друзей?',
+                message: 'Вы уверены, что хотите удалить этого пользователя из друзей?',
+                buttons: [
+                    {id: 'cancel', type: 'cancel'},
+                    {id: 'delete', type: 'destructive', text: 'Удалить'}
+                ]
+            }, async (buttonId) => {
+                if (buttonId === 'delete') {
+                    try {
+                        await deleteFriend(friendId);
+
+                        // Обновляем список друзей
+                        state.myFriends = await getMyFriends();
+                        renderFriends();
+
+                        tg.showPopup({
+                            title: 'Успех',
+                            message: 'Друг удалён',
+                            buttons: [{type: 'ok'}]
+                        });
+                    } catch (error) {
+                        tg.showPopup({
+                            title: 'Ошибка',
+                            message: error.message,
+                            buttons: [{type: 'ok'}]
+                        });
+                    }
+                }
+            });
+        }
+
+        async function showFriendProfile(friendId) {
+            try {
+                // Загружаем данные друга и его подарки
+                state.selectedFriend = await getUserById(friendId);
+                state.selectedFriendGifts = await getUserGifts(friendId);
+
+                // Отображаем профиль друга
+                renderFriendProfile();
+                showTab('friend-profile');
+            } catch (error) {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: 'Не удалось загрузить профиль друга',
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        }
+
+        // ============= Инициализация приложения =============
+        async function initApp() {
+            try {
+                if (!state.initData) {
+                    throw new Error('Откройте приложение из Telegram');
+                }
+
+                // Сначала делаем авторизацию через /users/auth/telegram
+                // Этот эндпоинт создаст пользователя если его нет
+                state.currentUser = await apiRequest('/users/auth/telegram', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        init_data: state.initData
+                    })
+                });
+
+                console.log('User authenticated:', state.currentUser);
+
+                // Загружаем друзей
+                state.myFriends = await getMyFriends();
+
+                // Отображаем интерфейс
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+
+                // Рендерим профиль и друзей
+                renderMyProfile();
+                renderFriends();
+
+                } catch (error) {
+                    console.error('Init error:', error);
+                    document.getElementById('loading').innerHTML = `
+                        <div class="status error">
+                            ❌ Ошибка: ${error.message}
+                        </div>
+                    `;
+                }
+            }
+
+        // Запускаем приложение
+        initApp();
     </script>
 </body>
 </html>

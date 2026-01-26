@@ -35,6 +35,19 @@ class UserRepository(BaseRepository[User]):
         }
         await self._session.execute(stmt, params)
 
+    async def get_friends(self, user_id: int) -> list[User]:
+        query = text("""
+          SELECT u.*
+          FROM users u
+          JOIN friends f ON f.friend_tg_id = u.tg_id
+          WHERE f.user_tg_id = :tg_id
+        """)
+        params = {'tg_id': user_id}
+        query_result = await self._session.execute(query, params)
+        rows = query_result.mappings().all()
+
+        return [User(**row) for row in rows]
+
     async def get(self, obj_id: int) -> User:
         query = text("""
           WITH friends_cte AS (

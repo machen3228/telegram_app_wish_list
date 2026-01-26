@@ -34,6 +34,9 @@ class GiftService:
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
 
+    async def get_gifts_by_user_id(self, tg_id: int) -> list[Gift]:
+        return await self._repository.get_gifts_by_user_id(tg_id)
+
     async def delete(self, gift_id: int) -> None:
         try:
             await self._repository.get(gift_id)
