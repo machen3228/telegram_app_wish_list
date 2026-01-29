@@ -50,6 +50,15 @@
 
                 <!-- Вкладка: Друзья -->
                 <div id="tab-friends" class="tab-content">
+                    <!-- НОВАЯ СЕКЦИЯ: Заявки в друзья -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">📬 Заявки в друзья</h2>
+                        </div>
+                        <div id="friend-requests-container"></div>
+                    </div>
+
+                    <!-- Секция: Мои друзья -->
                     <div class="section">
                         <div class="section-header">
                             <h2 class="section-title">👥 Мои друзья</h2>
@@ -124,25 +133,30 @@
         <!-- Модальное окно: Добавить друга -->
         <div id="modal-add-friend" class="modal">
             <div class="modal-content">
-                <div class="modal-header">Добавить друга</div>
+                <div class="modal-header">Отправить заявку в друзья</div>
                 <form id="form-add-friend" onsubmit="handleAddFriend(event)">
                     <div class="form-group">
                         <label class="form-label">Telegram ID друга *</label>
                         <input type="number" name="friend_id" class="form-input" required
                                placeholder="Например: 123456789">
+                        <small style="color: var(--tg-theme-hint-color); font-size: 12px; display: block; margin-top: 4px;">
+                            Пользователь получит заявку и сможет принять или отклонить её
+                        </small>
                     </div>
                     <div class="modal-buttons">
                         <button type="button" class="btn" onclick="closeModal('modal-add-friend')">
                             Отмена
                         </button>
                         <button type="submit" class="btn btn-primary">
-                            Добавить
+                            Отправить заявку
                         </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Подключаем JavaScript -->
     <script src="/app.js"></script>
 </body>
 </html>

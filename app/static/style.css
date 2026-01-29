@@ -482,3 +482,55 @@ textarea.form-input {
         font-size: 18px;
     }
 }
+
+/* Добавьте эти стили в конец вашего style.css файла */
+
+/* Карточки заявок в друзья */
+.friend-requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.friend-request-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 12px;
+    border: 2px solid var(--tg-theme-button-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.friend-request-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.2);
+}
+
+.request-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.request-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .friend-request-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .request-actions {
+        width: 100%;
+    }
+
+    .request-actions .btn {
+        flex: 1;
+    }
+}

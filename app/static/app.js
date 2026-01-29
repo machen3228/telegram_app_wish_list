@@ -1,9 +1,10 @@
- // ============= Глобальное состояние =============
+// ============= Глобальное состояние =============
 const state = {
     initData: null,
     currentUser: null,
     myGifts: [],
     myFriends: [],
+    friendRequests: [], // НОВОЕ: входящие заявки в друзья
     selectedFriend: null,
     selectedFriendGifts: []
 };
@@ -63,8 +64,28 @@ async function getMyFriends() {
     return await apiRequest('/users/me/friends');
 }
 
-async function addFriend(friendId) {
-    return await apiRequest(`/users/me/friends/${friendId}`, {
+// ИЗМЕНЕНО: теперь это отправка заявки, а не мгновенное добавление
+async function sendFriendRequest(receiverId) {
+    return await apiRequest(`/users/me/friend-requests/${receiverId}`, {
+        method: 'POST'
+    });
+}
+
+// НОВОЕ: получить входящие заявки в друзья
+async function getPendingRequests() {
+    return await apiRequest('/users/me/friend-requests');
+}
+
+// НОВОЕ: принять заявку в друзья
+async function acceptFriendRequest(senderId) {
+    return await apiRequest(`/users/me/friend-requests/${senderId}/accept`, {
+        method: 'POST'
+    });
+}
+
+// НОВОЕ: отклонить заявку в друзья
+async function rejectFriendRequest(senderId) {
+    return await apiRequest(`/users/me/friend-requests/${senderId}/reject`, {
         method: 'POST'
     });
 }
@@ -182,6 +203,41 @@ function renderMyGifts() {
                     ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
                     ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
                     <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// НОВОЕ: рендер заявок в друзья
+function renderFriendRequests() {
+    const container = document.getElementById('friend-requests-container');
+
+    if (!state.friendRequests || state.friendRequests.length === 0) {
+        container.innerHTML = '<div class="section-empty">Нет входящих заявок</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="friend-requests-list">
+            ${state.friendRequests.map(request => `
+                <div class="friend-request-card">
+                    <div class="request-user-info">
+                        <div class="friend-name">${escapeHtml(request.sender_name || 'Пользователь')}</div>
+                        <div class="friend-username">
+                            ${request.sender_username ? '@' + escapeHtml(request.sender_username) : 'ID: ' + request.sender_tg_id}
+                        </div>
+                    </div>
+                    <div class="request-actions">
+                        <button class="btn btn-primary btn-small"
+                                onclick="handleAcceptRequest(${request.sender_tg_id})">
+                            ✓ Принять
+                        </button>
+                        <button class="btn btn-small"
+                                onclick="handleRejectRequest(${request.sender_tg_id})">
+                            ✗ Отклонить
+                        </button>
+                    </div>
                 </div>
             `).join('')}
         </div>
@@ -340,6 +396,7 @@ function openAddFriendModal() {
     document.getElementById('modal-add-friend').classList.add('active');
 }
 
+// ИЗМЕНЕНО: теперь отправляем заявку, а не добавляем сразу
 async function handleAddFriend(event) {
     event.preventDefault();
 
@@ -356,16 +413,60 @@ async function handleAddFriend(event) {
     }
 
     try {
-        await addFriend(friendId);
+        await sendFriendRequest(friendId); // ИЗМЕНЕНО
         closeModal('modal-add-friend');
 
-        // Обновляем список друзей
+        tg.showPopup({
+            title: 'Успех',
+            message: 'Заявка в друзья отправлена!',
+            buttons: [{type: 'ok'}]
+        });
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
+// НОВОЕ: обработчик принятия заявки
+async function handleAcceptRequest(senderId) {
+    try {
+        await acceptFriendRequest(senderId);
+
+        // Обновляем данные
+        state.friendRequests = await getPendingRequests();
         state.myFriends = await getMyFriends();
+
+        renderFriendRequests();
         renderFriends();
 
         tg.showPopup({
             title: 'Успех',
-            message: 'Друг добавлен!',
+            message: 'Заявка принята! Пользователь добавлен в друзья',
+            buttons: [{type: 'ok'}]
+        });
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
+// НОВОЕ: обработчик отклонения заявки
+async function handleRejectRequest(senderId) {
+    try {
+        await rejectFriendRequest(senderId);
+
+        state.friendRequests = await getPendingRequests();
+        renderFriendRequests();
+
+        tg.showPopup({
+            title: 'Успех',
+            message: 'Заявка отклонена',
             buttons: [{type: 'ok'}]
         });
     } catch (error) {
@@ -396,7 +497,7 @@ function confirmDeleteFriend(friendId) {
 
                 tg.showPopup({
                     title: 'Успех',
-                    message: 'Друг удалён',
+                    message: 'Пользователь удален из друзей',
                     buttons: [{type: 'ok'}]
                 });
             } catch (error) {
@@ -446,26 +547,28 @@ async function initApp() {
 
         console.log('User authenticated:', state.currentUser);
 
-        // Загружаем друзей
+        // Загружаем друзей и заявки
         state.myFriends = await getMyFriends();
+        state.friendRequests = await getPendingRequests(); // НОВОЕ
 
         // Отображаем интерфейс
         document.getElementById('loading').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
 
-        // Рендерим профиль и друзей
+        // Рендерим профиль, друзей и заявки
         renderMyProfile();
         renderFriends();
+        renderFriendRequests(); // НОВОЕ
 
-        } catch (error) {
-            console.error('Init error:', error);
-            document.getElementById('loading').innerHTML = `
-                <div class="status error">
-                    ❌ Ошибка: ${error.message}
-                </div>
-            `;
-        }
+    } catch (error) {
+        console.error('Init error:', error);
+        document.getElementById('loading').innerHTML = `
+            <div class="status error">
+                ❌ Ошибка: ${error.message}
+            </div>
+        `;
     }
+}
 
 // Запускаем приложение
 initApp();
