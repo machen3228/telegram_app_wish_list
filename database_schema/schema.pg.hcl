@@ -135,3 +135,56 @@ table "friends" {
     expr = "user_tg_id != friend_tg_id"
   }
 }
+
+table "friend_requests" {
+  schema = schema.public
+
+  column "sender_tg_id" {
+    null = false
+    type = bigint
+  }
+  column "receiver_tg_id" {
+    null = false
+    type = bigint
+  }
+  column "status" {
+    null    = false
+    type    = varchar(20)
+    default = "pending"
+  }
+  column "created_at" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  column "updated_at" {
+    type    = timestamptz
+    null    = false
+    default = sql("now()")
+  }
+  primary_key {
+    columns = [
+      column.sender_tg_id,
+      column.receiver_tg_id,
+    ]
+  }
+  foreign_key "fk_friend_requests_sender" {
+    columns     = [column.sender_tg_id]
+    ref_columns = [table.users.column.tg_id]
+    on_delete   = CASCADE
+  }
+  foreign_key "fk_friend_requests_receiver" {
+    columns     = [column.receiver_tg_id]
+    ref_columns = [table.users.column.tg_id]
+    on_delete   = CASCADE
+  }
+  check "chk_no_self_request" {
+    expr = "sender_tg_id != receiver_tg_id"
+  }
+  index "idx_friend_requests_receiver" {
+    columns = [column.receiver_tg_id]
+  }
+  index "idx_friend_requests_status" {
+    columns = [column.status]
+  }
+}
