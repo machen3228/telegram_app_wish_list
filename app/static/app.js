@@ -4,9 +4,11 @@ const state = {
     currentUser: null,
     myGifts: [],
     myFriends: [],
-    friendRequests: [], // НОВОЕ: входящие заявки в друзья
+    friendRequests: [],
     selectedFriend: null,
-    selectedFriendGifts: []
+    selectedFriendGifts: [],
+    myGiftsSortBy: 'date', // date, price, wish_rate
+    friendGiftsSortBy: 'date'
 };
 
 // ============= Инициализация Telegram WebApp =============
@@ -64,26 +66,22 @@ async function getMyFriends() {
     return await apiRequest('/users/me/friends');
 }
 
-// ИЗМЕНЕНО: теперь это отправка заявки, а не мгновенное добавление
 async function sendFriendRequest(receiverId) {
     return await apiRequest(`/users/me/friend-requests/${receiverId}`, {
         method: 'POST'
     });
 }
 
-// НОВОЕ: получить входящие заявки в друзья
 async function getPendingRequests() {
     return await apiRequest('/users/me/friend-requests');
 }
 
-// НОВОЕ: принять заявку в друзья
 async function acceptFriendRequest(senderId) {
     return await apiRequest(`/users/me/friend-requests/${senderId}/accept`, {
         method: 'POST'
     });
 }
 
-// НОВОЕ: отклонить заявку в друзья
 async function rejectFriendRequest(senderId) {
     return await apiRequest(`/users/me/friend-requests/${senderId}/reject`, {
         method: 'POST'
@@ -135,6 +133,47 @@ function getAvatarUrl(user) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.first_name)}&size=200&background=0088cc&color=fff`;
 }
 
+// функция сортировки подарков
+function sortGifts(gifts, sortBy) {
+    const sorted = [...gifts]; // копируем массив
+
+    switch(sortBy) {
+        case 'date':
+            // Сортировка по дате (новые первыми)
+            sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            break;
+        case 'price':
+            // Сортировка по цене (дорогие первыми, null в конце)
+            sorted.sort((a, b) => {
+                if (a.price === null) return 1;
+                if (b.price === null) return -1;
+                return b.price - a.price;
+            });
+            break;
+        case 'wish_rate':
+            // Сортировка по рейтингу (высокие первыми, null в конце)
+            sorted.sort((a, b) => {
+                if (a.wish_rate === null) return 1;
+                if (b.wish_rate === null) return -1;
+                return b.wish_rate - a.wish_rate;
+            });
+            break;
+    }
+
+    return sorted;
+}
+
+// обработчики изменения сортировки
+function changeMyGiftsSort(sortBy) {
+    state.myGiftsSortBy = sortBy;
+    renderMyGifts();
+}
+
+function changeFriendGiftsSort(sortBy) {
+    state.friendGiftsSortBy = sortBy;
+    renderFriendGifts();
+}
+
 // ============= Навигация по табам =============
 function showTab(tabName) {
     // Убираем активный класс со всех табов и контента
@@ -184,13 +223,34 @@ function renderMyGifts() {
     const gifts = state.currentUser.gifts || [];
 
     if (gifts.length === 0) {
-        container.innerHTML = '<div class="section-empty">Пока нет подарков в списке желаний</div>';
+        container.innerHTML = `
+            <div class="sort-controls">
+                <label class="sort-label">Сортировать:</label>
+                <select class="sort-select" onchange="changeMyGiftsSort(this.value)">
+                    <option value="date" ${state.myGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
+                    <option value="price" ${state.myGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
+                    <option value="wish_rate" ${state.myGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+                </select>
+            </div>
+            <div class="section-empty">Пока нет подарков в списке желаний</div>
+        `;
         return;
     }
 
+    // сортируем подарки
+    const sortedGifts = sortGifts(gifts, state.myGiftsSortBy);
+
     container.innerHTML = `
+        <div class="sort-controls">
+            <label class="sort-label">Сортировать:</label>
+            <select class="sort-select" onchange="changeMyGiftsSort(this.value)">
+                <option value="date" ${state.myGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
+                <option value="price" ${state.myGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
+                <option value="wish_rate" ${state.myGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+            </select>
+        </div>
         <div class="gifts-grid">
-            ${gifts.map(gift => `
+            ${sortedGifts.map(gift => `
                 <div class="gift-card own">
                     <button class="gift-delete-btn" onclick="confirmDeleteGift(${gift.id})" title="Удалить">
                         ×
@@ -209,7 +269,6 @@ function renderMyGifts() {
     `;
 }
 
-// НОВОЕ: рендер заявок в друзья
 function renderFriendRequests() {
     const container = document.getElementById('friend-requests-container');
 
@@ -289,13 +348,34 @@ function renderFriendGifts() {
     const gifts = state.selectedFriendGifts;
 
     if (gifts.length === 0) {
-        container.innerHTML = '<div class="section-empty">У друга пока нет подарков в вишлисте</div>';
+        container.innerHTML = `
+            <div class="sort-controls">
+                <label class="sort-label">Сортировать:</label>
+                <select class="sort-select" onchange="changeFriendGiftsSort(this.value)">
+                    <option value="date" ${state.friendGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
+                    <option value="price" ${state.friendGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
+                    <option value="wish_rate" ${state.friendGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+                </select>
+            </div>
+            <div class="section-empty">У друга пока нет подарков в вишлисте</div>
+        `;
         return;
     }
 
+    // сортируем подарки
+    const sortedGifts = sortGifts(gifts, state.friendGiftsSortBy);
+
     container.innerHTML = `
+        <div class="sort-controls">
+            <label class="sort-label">Сортировать:</label>
+            <select class="sort-select" onchange="changeFriendGiftsSort(this.value)">
+                <option value="date" ${state.friendGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
+                <option value="price" ${state.friendGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
+                <option value="wish_rate" ${state.friendGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+            </select>
+        </div>
         <div class="gifts-grid">
-            ${gifts.map(gift => `
+            ${sortedGifts.map(gift => `
                 <div class="gift-card">
                     <div class="gift-header">
                         <div class="gift-name">${escapeHtml(gift.name)}</div>
@@ -396,7 +476,6 @@ function openAddFriendModal() {
     document.getElementById('modal-add-friend').classList.add('active');
 }
 
-// ИЗМЕНЕНО: теперь отправляем заявку, а не добавляем сразу
 async function handleAddFriend(event) {
     event.preventDefault();
 
@@ -413,7 +492,7 @@ async function handleAddFriend(event) {
     }
 
     try {
-        await sendFriendRequest(friendId); // ИЗМЕНЕНО
+        await sendFriendRequest(friendId);
         closeModal('modal-add-friend');
 
         tg.showPopup({
@@ -430,7 +509,6 @@ async function handleAddFriend(event) {
     }
 }
 
-// НОВОЕ: обработчик принятия заявки
 async function handleAcceptRequest(senderId) {
     try {
         await acceptFriendRequest(senderId);
@@ -456,7 +534,6 @@ async function handleAcceptRequest(senderId) {
     }
 }
 
-// НОВОЕ: обработчик отклонения заявки
 async function handleRejectRequest(senderId) {
     try {
         await rejectFriendRequest(senderId);
@@ -549,7 +626,7 @@ async function initApp() {
 
         // Загружаем друзей и заявки
         state.myFriends = await getMyFriends();
-        state.friendRequests = await getPendingRequests(); // НОВОЕ
+        state.friendRequests = await getPendingRequests();
 
         // Отображаем интерфейс
         document.getElementById('loading').style.display = 'none';
@@ -558,7 +635,7 @@ async function initApp() {
         // Рендерим профиль, друзей и заявки
         renderMyProfile();
         renderFriends();
-        renderFriendRequests(); // НОВОЕ
+        renderFriendRequests();
 
     } catch (error) {
         console.error('Init error:', error);
