@@ -1,0 +1,471 @@
+ // ============= Глобальное состояние =============
+const state = {
+    initData: null,
+    currentUser: null,
+    myGifts: [],
+    myFriends: [],
+    selectedFriend: null,
+    selectedFriendGifts: []
+};
+
+// ============= Инициализация Telegram WebApp =============
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+
+// Применяем тему Telegram
+if (tg.themeParams) {
+    const root = document.documentElement;
+    Object.entries(tg.themeParams).forEach(([key, value]) => {
+        root.style.setProperty(`--tg-theme-${key.replace(/_/g, '-')}`, value);
+    });
+}
+
+state.initData = tg.initData;
+
+// ============= API запросы =============
+async function apiRequest(url, options = {}) {
+    const defaultOptions = {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Telegram-Init-Data': state.initData,
+            ...options.headers
+        },
+        ...options
+    };
+
+    try {
+        const response = await fetch(url, defaultOptions);
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.detail || `HTTP ${response.status}`);
+        }
+
+        // Для DELETE запросов может не быть тела ответа
+        if (response.status === 204) {
+            return null;
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+    }
+}
+
+// ============= API методы =============
+async function getCurrentUser() {
+    return await apiRequest('/users/me');
+}
+
+async function getMyFriends() {
+    return await apiRequest('/users/me/friends');
+}
+
+async function addFriend(friendId) {
+    return await apiRequest(`/users/me/friends/${friendId}`, {
+        method: 'POST'
+    });
+}
+
+async function deleteFriend(friendId) {
+    return await apiRequest(`/users/me/friends/${friendId}`, {
+        method: 'DELETE'
+    });
+}
+
+async function getUserById(userId) {
+    return await apiRequest(`/users/${userId}`);
+}
+
+async function getUserGifts(userId) {
+    return await apiRequest(`/users/${userId}/gifts`);
+}
+
+async function addGift(giftData) {
+    return await apiRequest('/gifts', {
+        method: 'POST',
+        body: JSON.stringify(giftData)
+    });
+}
+
+async function deleteGift(giftId) {
+    return await apiRequest(`/gifts/${giftId}`, {
+        method: 'DELETE'
+    });
+}
+
+// ============= Утилиты =============
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatPrice(price) {
+    return new Intl.NumberFormat('ru-RU').format(price);
+}
+
+function getAvatarUrl(user) {
+    if (user.avatar_url) {
+        return user.avatar_url;
+    }
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.first_name)}&size=200&background=0088cc&color=fff`;
+}
+
+// ============= Навигация по табам =============
+function showTab(tabName) {
+    // Убираем активный класс со всех табов и контента
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+
+    // Активируем нужный таб
+    const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tabButton) {
+        tabButton.classList.add('active');
+    }
+
+    const tabContent = document.getElementById(`tab-${tabName}`);
+    if (tabContent) {
+        tabContent.classList.add('active');
+    }
+}
+
+// Обработчики кликов по табам
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        const tabName = tab.dataset.tab;
+        showTab(tabName);
+    });
+});
+
+// ============= Рендеринг =============
+function renderMyProfile() {
+    const user = state.currentUser;
+
+    document.getElementById('my-avatar').src = getAvatarUrl(user);
+    document.getElementById('my-name').textContent =
+        `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
+    document.getElementById('my-username').textContent =
+        user.tg_username ? `@${user.tg_username}` : '';
+    document.getElementById('my-id').textContent = `ID: ${user.tg_id}`;
+
+    renderMyGifts();
+}
+
+function renderMyGifts() {
+    const container = document.getElementById('my-gifts-container');
+    const gifts = state.currentUser.gifts || [];
+
+    if (gifts.length === 0) {
+        container.innerHTML = '<div class="section-empty">Пока нет подарков в списке желаний</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="gifts-grid">
+            ${gifts.map(gift => `
+                <div class="gift-card own">
+                    <button class="gift-delete-btn" onclick="confirmDeleteGift(${gift.id})" title="Удалить">
+                        ×
+                    </button>
+                    <div class="gift-header">
+                        <div class="gift-name">${escapeHtml(gift.name)}</div>
+                        ${gift.wish_rate ? `<div class="gift-wish-rate">⭐ ${gift.wish_rate}/10</div>` : ''}
+                    </div>
+                    ${gift.url ? `<a href="${escapeHtml(gift.url)}" class="gift-url" target="_blank">🔗 Ссылка</a>` : ''}
+                    ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
+                    ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
+                    <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderFriends() {
+    const container = document.getElementById('friends-container');
+    const friends = state.myFriends;
+
+    if (friends.length === 0) {
+        container.innerHTML = '<div class="section-empty">Пока нет друзей</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="friends-grid">
+            ${friends.map(friend => `
+                <div class="friend-card" onclick="showFriendProfile(${friend.tg_id})">
+                    <button class="friend-delete-btn" onclick="event.stopPropagation(); confirmDeleteFriend(${friend.tg_id})" title="Удалить">
+                        ×
+                    </button>
+                    <img class="friend-avatar" src="${getAvatarUrl(friend)}" alt="Avatar">
+                    <div class="friend-info">
+                        <div class="friend-name">${escapeHtml(friend.first_name)}${friend.last_name ? ' ' + escapeHtml(friend.last_name) : ''}</div>
+                        <div class="friend-username">${friend.tg_username ? '@' + escapeHtml(friend.tg_username) : 'ID: ' + friend.tg_id}</div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderFriendProfile() {
+    const friend = state.selectedFriend;
+
+    document.getElementById('friend-avatar').src = getAvatarUrl(friend);
+    document.getElementById('friend-name').textContent =
+        `${friend.first_name}${friend.last_name ? ' ' + friend.last_name : ''}`;
+    document.getElementById('friend-username').textContent =
+        friend.tg_username ? `@${friend.tg_username}` : '';
+    document.getElementById('friend-id').textContent = `ID: ${friend.tg_id}`;
+
+    renderFriendGifts();
+}
+
+function renderFriendGifts() {
+    const container = document.getElementById('friend-gifts-container');
+    const gifts = state.selectedFriendGifts;
+
+    if (gifts.length === 0) {
+        container.innerHTML = '<div class="section-empty">У друга пока нет подарков в вишлисте</div>';
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="gifts-grid">
+            ${gifts.map(gift => `
+                <div class="gift-card">
+                    <div class="gift-header">
+                        <div class="gift-name">${escapeHtml(gift.name)}</div>
+                        ${gift.wish_rate ? `<div class="gift-wish-rate">⭐ ${gift.wish_rate}/10</div>` : ''}
+                    </div>
+                    ${gift.url ? `<a href="${escapeHtml(gift.url)}" class="gift-url" target="_blank">🔗 Ссылка</a>` : ''}
+                    ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
+                    ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
+                    <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// ============= Действия с подарками =============
+function openAddGiftModal() {
+    document.getElementById('modal-add-gift').classList.add('active');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+    // Очищаем форму
+    const form = document.querySelector(`#${modalId} form`);
+    if (form) form.reset();
+}
+
+async function handleAddGift(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const giftData = {
+        user_id: state.currentUser.tg_id,
+        name: formData.get('name'),
+        url: formData.get('url') || null,
+        wish_rate: formData.get('wish_rate') ? parseInt(formData.get('wish_rate')) : null,
+        price: formData.get('price') ? parseInt(formData.get('price')) : null,
+        note: formData.get('note') || null
+    };
+
+    try {
+        await addGift(giftData);
+        closeModal('modal-add-gift');
+
+        // Обновляем данные
+        state.currentUser = await getCurrentUser();
+        renderMyGifts();
+
+        tg.showPopup({
+            title: 'Успех',
+            message: 'Подарок добавлен в вишлист!',
+            buttons: [{type: 'ok'}]
+        });
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
+function confirmDeleteGift(giftId) {
+    tg.showPopup({
+        title: 'Удалить подарок?',
+        message: 'Вы уверены, что хотите удалить этот подарок из вишлиста?',
+        buttons: [
+            {id: 'cancel', type: 'cancel'},
+            {id: 'delete', type: 'destructive', text: 'Удалить'}
+        ]
+    }, async (buttonId) => {
+        if (buttonId === 'delete') {
+            try {
+                await deleteGift(giftId);
+
+                // Обновляем данные
+                state.currentUser = await getCurrentUser();
+                renderMyGifts();
+
+                tg.showPopup({
+                    title: 'Успех',
+                    message: 'Подарок удалён',
+                    buttons: [{type: 'ok'}]
+                });
+            } catch (error) {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: error.message,
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        }
+    });
+}
+
+// ============= Действия с друзьями =============
+function openAddFriendModal() {
+    document.getElementById('modal-add-friend').classList.add('active');
+}
+
+async function handleAddFriend(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const friendId = parseInt(formData.get('friend_id'));
+
+    if (friendId === state.currentUser.tg_id) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: 'Нельзя добавить самого себя в друзья',
+            buttons: [{type: 'ok'}]
+        });
+        return;
+    }
+
+    try {
+        await addFriend(friendId);
+        closeModal('modal-add-friend');
+
+        // Обновляем список друзей
+        state.myFriends = await getMyFriends();
+        renderFriends();
+
+        tg.showPopup({
+            title: 'Успех',
+            message: 'Друг добавлен!',
+            buttons: [{type: 'ok'}]
+        });
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
+function confirmDeleteFriend(friendId) {
+    tg.showPopup({
+        title: 'Удалить из друзей?',
+        message: 'Вы уверены, что хотите удалить этого пользователя из друзей?',
+        buttons: [
+            {id: 'cancel', type: 'cancel'},
+            {id: 'delete', type: 'destructive', text: 'Удалить'}
+        ]
+    }, async (buttonId) => {
+        if (buttonId === 'delete') {
+            try {
+                await deleteFriend(friendId);
+
+                // Обновляем список друзей
+                state.myFriends = await getMyFriends();
+                renderFriends();
+
+                tg.showPopup({
+                    title: 'Успех',
+                    message: 'Друг удалён',
+                    buttons: [{type: 'ok'}]
+                });
+            } catch (error) {
+                tg.showPopup({
+                    title: 'Ошибка',
+                    message: error.message,
+                    buttons: [{type: 'ok'}]
+                });
+            }
+        }
+    });
+}
+
+async function showFriendProfile(friendId) {
+    try {
+        // Загружаем данные друга и его подарки
+        state.selectedFriend = await getUserById(friendId);
+        state.selectedFriendGifts = await getUserGifts(friendId);
+
+        // Отображаем профиль друга
+        renderFriendProfile();
+        showTab('friend-profile');
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: 'Не удалось загрузить профиль друга',
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
+// ============= Инициализация приложения =============
+async function initApp() {
+    try {
+        if (!state.initData) {
+            throw new Error('Откройте приложение из Telegram');
+        }
+
+        // Сначала делаем авторизацию через /users/auth/telegram
+        // Этот эндпоинт создаст пользователя если его нет
+        state.currentUser = await apiRequest('/users/auth/telegram', {
+            method: 'POST',
+            body: JSON.stringify({
+                init_data: state.initData
+            })
+        });
+
+        console.log('User authenticated:', state.currentUser);
+
+        // Загружаем друзей
+        state.myFriends = await getMyFriends();
+
+        // Отображаем интерфейс
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('main-app').style.display = 'block';
+
+        // Рендерим профиль и друзей
+        renderMyProfile();
+        renderFriends();
+
+        } catch (error) {
+            console.error('Init error:', error);
+            document.getElementById('loading').innerHTML = `
+                <div class="status error">
+                    ❌ Ошибка: ${error.message}
+                </div>
+            `;
+        }
+    }
+
+// Запускаем приложение
+initApp();

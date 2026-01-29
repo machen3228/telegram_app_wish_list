@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Wishlist</title>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- Загрузка -->
+        <div id="loading" class="container">
+            <div class="status loading">
+                Загрузка...
+            </div>
+        </div>
+
+        <!-- Основное приложение -->
+        <div id="main-app" style="display: none;">
+            <!-- Табы навигации -->
+            <div class="tabs">
+                <button class="tab active" data-tab="profile">👤 Профиль</button>
+                <button class="tab" data-tab="friends">👥 Друзья</button>
+            </div>
+
+            <!-- Контент вкладок -->
+            <div class="container">
+                <!-- Вкладка: Мой профиль -->
+                <div id="tab-profile" class="tab-content active">
+                    <div class="profile-header">
+                        <img id="my-avatar" class="profile-avatar" src="" alt="Avatar">
+                        <div class="profile-info">
+                            <div id="my-name" class="profile-name"></div>
+                            <div id="my-username" class="profile-username"></div>
+                            <div id="my-id" class="profile-id"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">🎁 Мои подарки</h2>
+                            <button class="btn btn-primary btn-small" onclick="openAddGiftModal()">
+                                + Добавить
+                            </button>
+                        </div>
+                        <div id="my-gifts-container"></div>
+                    </div>
+                </div>
+
+                <!-- Вкладка: Друзья -->
+                <div id="tab-friends" class="tab-content">
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">👥 Мои друзья</h2>
+                            <button class="btn btn-primary btn-small" onclick="openAddFriendModal()">
+                                + Добавить
+                            </button>
+                        </div>
+                        <div id="friends-container"></div>
+                    </div>
+                </div>
+
+                <!-- Вкладка: Профиль друга (динамическая) -->
+                <div id="tab-friend-profile" class="tab-content">
+                    <button class="btn btn-small" onclick="showTab('friends')" style="margin-bottom: 16px;">
+                        ← Назад к друзьям
+                    </button>
+
+                    <div class="profile-header">
+                        <img id="friend-avatar" class="profile-avatar" src="" alt="Avatar">
+                        <div class="profile-info">
+                            <div id="friend-name" class="profile-name"></div>
+                            <div id="friend-username" class="profile-username"></div>
+                            <div id="friend-id" class="profile-id"></div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2 class="section-title">🎁 Вишлист</h2>
+                        <div id="friend-gifts-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Модальное окно: Добавить подарок -->
+        <div id="modal-add-gift" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">Добавить подарок</div>
+                <form id="form-add-gift" onsubmit="handleAddGift(event)">
+                    <div class="form-group">
+                        <label class="form-label">Название *</label>
+                        <input type="text" name="name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ссылка</label>
+                        <input type="url" name="url" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Желаемость (1-10)</label>
+                        <input type="number" name="wish_rate" class="form-input" min="1" max="10">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Цена (₽)</label>
+                        <input type="number" name="price" class="form-input" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Заметка</label>
+                        <textarea name="note" class="form-input"></textarea>
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn" onclick="closeModal('modal-add-gift')">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Добавить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Модальное окно: Добавить друга -->
+        <div id="modal-add-friend" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">Добавить друга</div>
+                <form id="form-add-friend" onsubmit="handleAddFriend(event)">
+                    <div class="form-group">
+                        <label class="form-label">Telegram ID друга *</label>
+                        <input type="number" name="friend_id" class="form-input" required
+                               placeholder="Например: 123456789">
+                    </div>
+                    <div class="modal-buttons">
+                        <button type="button" class="btn" onclick="closeModal('modal-add-friend')">
+                            Отмена
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            Добавить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="/app.js"></script>
+</body>
+</html>
