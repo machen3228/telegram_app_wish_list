@@ -133,6 +133,43 @@ function getAvatarUrl(user) {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(user.first_name)}&size=200&background=0088cc&color=fff`;
 }
 
+// копирование ID в буфер обмена
+async function copyIdToClipboard() {
+    const userId = state.currentUser.tg_id;
+
+    try {
+        // Попытка использовать современный API
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(userId.toString());
+        } else {
+            // Fallback для старых браузеров или Telegram WebApp
+            const textArea = document.createElement('textarea');
+            textArea.value = userId.toString();
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            textArea.remove();
+        }
+
+        tg.showPopup({
+            title: 'Скопировано!',
+            message: `Ваш ID ${userId} скопирован в буфер обмена`,
+            buttons: [{type: 'ok'}]
+        });
+    } catch (error) {
+        console.error('Copy error:', error);
+        tg.showPopup({
+            title: 'ID',
+            message: `Ваш ID: ${userId}`,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
 // функция сортировки подарков
 function sortGifts(gifts, sortBy) {
     const sorted = [...gifts]; // копируем массив
@@ -213,7 +250,15 @@ function renderMyProfile() {
         `${user.first_name}${user.last_name ? ' ' + user.last_name : ''}`;
     document.getElementById('my-username').textContent =
         user.tg_username ? `@${user.tg_username}` : '';
-    document.getElementById('my-id').textContent = `ID: ${user.tg_id}`;
+
+    // кнопка слева, ID по центру
+    const idElement = document.getElementById('my-id');
+    idElement.innerHTML = `
+        <button class="copy-id-btn" onclick="copyIdToClipboard()" title="Скопировать ID">
+            📋
+        </button>
+        <span class="id-text">ID: ${user.tg_id}</span>
+    `;
 
     renderMyGifts();
 }

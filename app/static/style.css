@@ -574,6 +574,41 @@ textarea.form-input {
     border-color: var(--tg-theme-button-color);
 }
 
+/* Кнопка копирования ID */
+.profile-id {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+}
+
+.id-text {
+    text-align: center;
+}
+
+.copy-id-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 0.2s, transform 0.1s;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.copy-id-btn:hover {
+    opacity: 0.9;
+}
+
+.copy-id-btn:active {
+    transform: scale(0.95);
+}
+
+/* Адаптивность для мобильных */
 @media (max-width: 480px) {
     .sort-controls {
         flex-direction: column;
