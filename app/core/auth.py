@@ -17,4 +17,4 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> dict:
         parsed_data.pop('signature', None)
         return parsed_data  # noqa: TRY300
     except Exception as e:
-        raise ValueError(f'Init data validation failed: {e}') from e
+        raise ValueError(f'Init_data validation failed: {e}') from e

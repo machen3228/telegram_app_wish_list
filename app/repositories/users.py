@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from domain.users import Gift, User
+from domain.users import User
 from dto.users import FriendRequestDTO
 from repositories.base import BaseRepository
 
@@ -44,23 +44,6 @@ class UserRepository(BaseRepository[User]):
               array_agg(friend_tg_id) AS friends_ids
             FROM friends
             GROUP BY user_tg_id
-          ),
-          gifts_cte AS (
-            SELECT
-              user_id,
-              json_agg(json_build_object(
-                'id', id,
-                'user_id', user_id,
-                'name', name,
-                'url', url,
-                'wish_rate', wish_rate,
-                'price', price,
-                'note', note,
-                'created_at', created_at,
-                'updated_at', updated_at
-              )) AS gifts
-            FROM gifts
-            GROUP BY user_id
           )
           SELECT
             u.tg_id,
@@ -70,11 +53,9 @@ class UserRepository(BaseRepository[User]):
             u.avatar_url,
             u.created_at,
             u.updated_at,
-            COALESCE(f.friends_ids, '{}') AS friends_ids,
-            COALESCE(g.gifts, '[]') AS gifts
+            COALESCE(f.friends_ids, '{}') AS friends_ids
           FROM users u
           LEFT JOIN friends_cte f ON u.tg_id = f.user_tg_id
-          LEFT JOIN gifts_cte g ON u.tg_id = g.user_id
           WHERE u.tg_id = :tg_id;
         """)
         params = {'tg_id': obj_id}
@@ -84,10 +65,7 @@ class UserRepository(BaseRepository[User]):
             raise KeyError(f'User with tg_id={obj_id} not found')
         user_data = dict(row)
         friend_ids = user_data.pop('friends_ids') or []
-        gifts_json = user_data.pop('gifts') or []
-        gifts_list = [Gift(**g) for g in gifts_json if isinstance(g, dict)]
         user = User(**user_data)
-        user.add_gifts(gifts_list)
         user.add_friends(friend_ids)
 
         return user

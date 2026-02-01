@@ -67,7 +67,7 @@ async function getMyFriends() {
 }
 
 async function sendFriendRequest(receiverId) {
-    return await apiRequest(`/users/me/friend-requests/${receiverId}`, {
+    return await apiRequest(`/users/me/friends/${receiverId}/request`, {
         method: 'POST'
     });
 }
@@ -77,19 +77,19 @@ async function getPendingRequests() {
 }
 
 async function acceptFriendRequest(senderId) {
-    return await apiRequest(`/users/me/friend-requests/${senderId}/accept`, {
+    return await apiRequest(`/users/me/friends/${senderId}/accept`, {
         method: 'POST'
     });
 }
 
 async function rejectFriendRequest(senderId) {
-    return await apiRequest(`/users/me/friend-requests/${senderId}/reject`, {
+    return await apiRequest(`/users/me/friends/${senderId}/reject`, {
         method: 'POST'
     });
 }
 
 async function deleteFriend(friendId) {
-    return await apiRequest(`/users/me/friends/${friendId}`, {
+    return await apiRequest(`/users/me/friends/${friendId}/delete`, {
         method: 'DELETE'
     });
 }
@@ -99,7 +99,8 @@ async function getUserById(userId) {
 }
 
 async function getUserGifts(userId) {
-    return await apiRequest(`/users/${userId}/gifts`);
+    const result = await apiRequest(`/users/${userId}/gifts`);
+    return result;
 }
 
 async function addGift(giftData) {
@@ -111,6 +112,24 @@ async function addGift(giftData) {
 
 async function deleteGift(giftId) {
     return await apiRequest(`/gifts/${giftId}`, {
+        method: 'DELETE'
+    });
+}
+
+async function addReservation(giftId) {
+    return await apiRequest(`/gifts/${giftId}/reserve`, {
+        method: 'POST'
+    });
+}
+
+async function deleteReservationByFriend(giftId) {
+    return await apiRequest(`/gifts/${giftId}/reserve/friend`, {
+        method: 'DELETE'
+    });
+}
+
+async function deleteReservationByOwner(giftId) {
+    return await apiRequest(`/gifts/${giftId}/reserve/owner`, {
         method: 'DELETE'
     });
 }
@@ -265,7 +284,7 @@ function renderMyProfile() {
 
 function renderMyGifts() {
     const container = document.getElementById('my-gifts-container');
-    const gifts = state.currentUser.gifts || [];
+    const gifts = state.myGifts || [];
 
     if (gifts.length === 0) {
         container.innerHTML = `
@@ -296,7 +315,7 @@ function renderMyGifts() {
         </div>
         <div class="gifts-grid">
             ${sortedGifts.map(gift => `
-                <div class="gift-card own">
+                <div class="gift-card own ${gift.is_reserved ? 'reserved' : ''}">
                     <button class="gift-delete-btn" onclick="confirmDeleteGift(${gift.id})" title="Удалить">
                         ×
                     </button>
@@ -308,6 +327,14 @@ function renderMyGifts() {
                     ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
                     ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
                     <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
+                    ${gift.is_reserved && gift.reserved_by === state.currentUser.tg_id
+                        ? `<div class="gift-reservation-badge">🔒 Забронировано тобой</div>
+                           <button class="gift-reserve-btn unreserve" onclick="handleUnreserveOwn(${gift.id})">Снять бронь</button>`
+                        : gift.is_reserved
+                            ? `<div class="gift-reservation-badge">🔒 Забронировано</div>
+                               <button class="gift-reserve-btn unreserve" onclick="handleUnreserveByOwner(${gift.id})">Снять бронь</button>`
+                            : ''
+                    }
                 </div>
             `).join('')}
         </div>
@@ -421,7 +448,7 @@ function renderFriendGifts() {
         </div>
         <div class="gifts-grid">
             ${sortedGifts.map(gift => `
-                <div class="gift-card">
+                <div class="gift-card ${gift.is_reserved ? 'reserved' : ''}">
                     <div class="gift-header">
                         <div class="gift-name">${escapeHtml(gift.name)}</div>
                         ${gift.wish_rate ? `<div class="gift-wish-rate">⭐ ${gift.wish_rate}/10</div>` : ''}
@@ -430,6 +457,13 @@ function renderFriendGifts() {
                     ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
                     ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
                     <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
+                    ${gift.is_reserved && gift.reserved_by === state.currentUser.tg_id
+                        ? `<div class="gift-reservation-badge">🔒 Забронировано тобой</div>
+                           <button class="gift-reserve-btn unreserve" onclick="handleUnreserveOwn(${gift.id})">Снять бронь</button>`
+                        : gift.is_reserved
+                            ? `<div class="gift-reservation-badge">🔒 Забронировано</div>`
+                            : `<button class="gift-reserve-btn reserve" onclick="handleReserve(${gift.id})">🎁 Буду дарить</button>`
+                    }
                 </div>
             `).join('')}
         </div>
@@ -453,7 +487,6 @@ async function handleAddGift(event) {
 
     const formData = new FormData(event.target);
     const giftData = {
-        user_id: state.currentUser.tg_id,
         name: formData.get('name'),
         url: formData.get('url') || null,
         wish_rate: formData.get('wish_rate') ? parseInt(formData.get('wish_rate')) : null,
@@ -466,7 +499,7 @@ async function handleAddGift(event) {
         closeModal('modal-add-gift');
 
         // Обновляем данные
-        state.currentUser = await getCurrentUser();
+        state.myGifts = await getUserGifts(state.currentUser.tg_id);
         renderMyGifts();
 
         tg.showPopup({
@@ -497,7 +530,7 @@ function confirmDeleteGift(giftId) {
                 await deleteGift(giftId);
 
                 // Обновляем данные
-                state.currentUser = await getCurrentUser();
+                state.myGifts = await getUserGifts(state.currentUser.tg_id);
                 renderMyGifts();
 
                 tg.showPopup({
@@ -651,6 +684,57 @@ async function showFriendProfile(friendId) {
     }
 }
 
+// ============= Действия с бронью =============
+async function handleReserve(giftId) {
+    try {
+        await addReservation(giftId);
+        state.selectedFriendGifts = await getUserGifts(state.selectedFriend.tg_id);
+        renderFriendGifts();
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
+// Снять свою бронь (текущий пользователь сам бронировал)
+async function handleUnreserveOwn(giftId) {
+    try {
+        await deleteReservationByFriend(giftId);
+        // Обновляем тот список, где мы сейчас находимся
+        if (state.selectedFriend) {
+            state.selectedFriendGifts = await getUserGifts(state.selectedFriend.tg_id);
+            renderFriendGifts();
+        } else {
+            state.myGifts = await getUserGifts(state.currentUser.tg_id);
+            renderMyGifts();
+        }
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
+// Снять бронь с своего подарка (текущий пользователь — хозяин подарка)
+async function handleUnreserveByOwner(giftId) {
+    try {
+        await deleteReservationByOwner(giftId);
+        state.myGifts = await getUserGifts(state.currentUser.tg_id);
+        renderMyGifts();
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
 // ============= Инициализация приложения =============
 async function initApp() {
     try {
@@ -667,11 +751,10 @@ async function initApp() {
             })
         });
 
-        console.log('User authenticated:', state.currentUser);
-
-        // Загружаем друзей и заявки
+        // Загружаем друзей, заявки и подарки
         state.myFriends = await getMyFriends();
         state.friendRequests = await getPendingRequests();
+        state.myGifts = await getUserGifts(state.currentUser.tg_id);
 
         // Отображаем интерфейс
         document.getElementById('loading').style.display = 'none';

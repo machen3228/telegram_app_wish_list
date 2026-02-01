@@ -9,7 +9,8 @@ from core.auth import validate_telegram_init_data
 from core.config import settings
 from core.db import get_session
 from core.dependencies import get_current_user_id
-from domain.users import Gift, User
+from domain.gifts import Gift
+from domain.users import User
 from dto.users import FriendRequestDTO, TelegramAuthDTO
 from services.gifts import GiftService
 from services.users import UserService
@@ -62,14 +63,18 @@ class UserController(Controller):
             service = UserService(session)
             return await service.get(tg_id)
 
-    @get('/{tg_id:int}/gifts', summary='Get user wishlist')
-    async def get_user_gifts(self, tg_id: int) -> list[Gift]:
+    @get(
+        '/{tg_id:int}/gifts',
+        summary='Get user wishlist',
+        dependencies={'current_user_id': Provide(get_current_user_id)},
+    )
+    async def get_user_gifts(self, tg_id: int, current_user_id: int) -> list[Gift]:
         async with get_session() as session:
             service = GiftService(session)
-            return await service.get_gifts_by_user_id(tg_id)
+            return await service.get_gifts_by_user_id(tg_id, current_user_id)
 
     @post(
-        '/me/friend-requests/{receiver_id:int}',
+        '/me/friends/{receiver_id:int}/request',
         status_code=201,
         summary='Send friend request',
         dependencies={'current_user_id': Provide(get_current_user_id)},
@@ -92,7 +97,7 @@ class UserController(Controller):
             return await service.get_pending_requests(current_user_id)
 
     @post(
-        '/me/friend-requests/{sender_id:int}/accept',
+        '/me/friends/{sender_id:int}/accept',
         status_code=200,
         summary='Accept friend request',
         dependencies={'current_user_id': Provide(get_current_user_id)},
@@ -104,7 +109,7 @@ class UserController(Controller):
             return {'message': 'Friend request accepted'}
 
     @post(
-        '/me/friend-requests/{sender_id:int}/reject',
+        '/me/friends/{sender_id:int}/reject',
         status_code=200,
         summary='Reject friend request',
         dependencies={'current_user_id': Provide(get_current_user_id)},
@@ -116,7 +121,7 @@ class UserController(Controller):
             return {'message': 'Friend request rejected'}
 
     @delete(
-        '/me/friends/{friend_id:int}',
+        '/me/friends/{friend_id:int}/delete',
         status_code=204,
         summary='Delete friend (mutual)',
         dependencies={'current_user_id': Provide(get_current_user_id)},

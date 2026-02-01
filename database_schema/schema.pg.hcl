@@ -188,3 +188,34 @@ table "friend_requests" {
     columns = [column.status]
   }
 }
+
+table "gift_reservations" {
+  schema = schema.public
+
+  column "gift_id" {
+    null = false
+    type = bigint
+  }
+  column "reserved_by_tg_id" {
+    null = false
+    type = bigint
+  }
+  column "created_at" {
+    null = false
+    type = timestamptz
+    default = sql("now()")
+  }
+  primary_key {
+    columns = [column.gift_id]
+  }
+  foreign_key "fk_gift_reservations_gift" {
+    columns     = [column.gift_id]
+    ref_columns = [table.gifts.column.id]
+    on_delete   = CASCADE
+  }
+  foreign_key "fk_gift_reservations_reserved_by" {
+    columns     = [column.reserved_by_tg_id]
+    ref_columns = [table.users.column.tg_id]
+    on_delete   = CASCADE
+  }
+}
