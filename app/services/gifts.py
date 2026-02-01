@@ -65,6 +65,6 @@ class GiftService:
             gift = await self._repository.get(gift_id, current_user_id)
         except KeyError as e:
             raise HTTPException(status_code=404, detail=str(e)) from e
-        if not current_user_id != gift.user_id:
+        if current_user_id != gift.user_id:
             raise HTTPException(status_code=403, detail='Not the gift owner')
         return await self._repository.delete_reservation_by_owner(gift_id)
