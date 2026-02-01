@@ -69,7 +69,7 @@ class UserController(Controller):
             return await service.get_gifts_by_user_id(tg_id)
 
     @post(
-        '/me/friend-requests/{receiver_id:int}',
+        '/me/friends/{receiver_id:int}/request',
         status_code=201,
         summary='Send friend request',
         dependencies={'current_user_id': Provide(get_current_user_id)},
@@ -92,7 +92,7 @@ class UserController(Controller):
             return await service.get_pending_requests(current_user_id)
 
     @post(
-        '/me/friend-requests/{sender_id:int}/accept',
+        '/me/friends/{sender_id:int}/accept',
         status_code=200,
         summary='Accept friend request',
         dependencies={'current_user_id': Provide(get_current_user_id)},
@@ -104,7 +104,7 @@ class UserController(Controller):
             return {'message': 'Friend request accepted'}
 
     @post(
-        '/me/friend-requests/{sender_id:int}/reject',
+        '/me/friends/{sender_id:int}/reject',
         status_code=200,
         summary='Reject friend request',
         dependencies={'current_user_id': Provide(get_current_user_id)},
@@ -116,7 +116,7 @@ class UserController(Controller):
             return {'message': 'Friend request rejected'}
 
     @delete(
-        '/me/friends/{friend_id:int}',
+        '/me/friends/{friend_id:int}/delete',
         status_code=204,
         summary='Delete friend (mutual)',
         dependencies={'current_user_id': Provide(get_current_user_id)},

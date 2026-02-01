@@ -67,7 +67,7 @@ async function getMyFriends() {
 }
 
 async function sendFriendRequest(receiverId) {
-    return await apiRequest(`/users/me/friend-requests/${receiverId}`, {
+    return await apiRequest(`/users/me/friends/${receiverId}/request`, {
         method: 'POST'
     });
 }
@@ -77,19 +77,19 @@ async function getPendingRequests() {
 }
 
 async function acceptFriendRequest(senderId) {
-    return await apiRequest(`/users/me/friend-requests/${senderId}/accept`, {
+    return await apiRequest(`/users/me/friends/${senderId}/accept`, {
         method: 'POST'
     });
 }
 
 async function rejectFriendRequest(senderId) {
-    return await apiRequest(`/users/me/friend-requests/${senderId}/reject`, {
+    return await apiRequest(`/users/me/friends/${senderId}/reject`, {
         method: 'POST'
     });
 }
 
 async function deleteFriend(friendId) {
-    return await apiRequest(`/users/me/friends/${friendId}`, {
+    return await apiRequest(`/users/me/friends/${friendId}/delete`, {
         method: 'DELETE'
     });
 }
