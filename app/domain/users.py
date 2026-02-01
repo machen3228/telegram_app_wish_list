@@ -51,6 +51,3 @@ class User:
 
     def can_add_friend(self, friend: 'User') -> bool:
         return friend.tg_id not in self._friends_ids
-
-    def can_delete_friend(self, friend: 'User') -> bool:
-        return friend.tg_id in self._friends_ids
