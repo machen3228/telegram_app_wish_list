@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 from sqlalchemy import text
 
-from domain.users import Gift
+from domain.gifts import Gift
 from repositories.base import BaseRepository
 
 

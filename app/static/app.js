@@ -115,6 +115,24 @@ async function deleteGift(giftId) {
     });
 }
 
+async function addReservation(giftId) {
+    return await apiRequest(`/gifts/${giftId}/reserve`, {
+        method: 'POST'
+    });
+}
+
+async function deleteReservationByFriend(giftId) {
+    return await apiRequest(`/gifts/${giftId}/reserve/friend`, {
+        method: 'DELETE'
+    });
+}
+
+async function deleteReservationByOwner(giftId) {
+    return await apiRequest(`/gifts/${giftId}/reserve/owner`, {
+        method: 'DELETE'
+    });
+}
+
 // ============= Утилиты =============
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -453,7 +471,6 @@ async function handleAddGift(event) {
 
     const formData = new FormData(event.target);
     const giftData = {
-        user_id: state.currentUser.tg_id,
         name: formData.get('name'),
         url: formData.get('url') || null,
         wish_rate: formData.get('wish_rate') ? parseInt(formData.get('wish_rate')) : null,

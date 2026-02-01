@@ -9,7 +9,8 @@ from core.auth import validate_telegram_init_data
 from core.config import settings
 from core.db import get_session
 from core.dependencies import get_current_user_id
-from domain.users import Gift, User
+from domain.gifts import Gift
+from domain.users import User
 from dto.users import FriendRequestDTO, TelegramAuthDTO
 from services.gifts import GiftService
 from services.users import UserService

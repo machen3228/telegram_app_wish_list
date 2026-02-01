@@ -619,3 +619,51 @@ textarea.form-input {
         text-align: center;
     }
 }
+
+/* Бронирование подарков */
+.gift-card.reserved {
+    opacity: 0.6;
+    filter: brightness(0.85);
+}
+
+.gift-reservation-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    background: #ef5350;
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gift-reserve-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.gift-reserve-btn:hover {
+    opacity: 0.85;
+}
+
+.gift-reserve-btn:active {
+    transform: scale(0.98);
+}
+
+.gift-reserve-btn.reserve {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.gift-reserve-btn.unreserve {
+    background: #ef5350;
+    color: white;
+}
