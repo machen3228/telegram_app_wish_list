@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_USER: ${APP__DB__USER}
       POSTGRES_PASSWORD: ${APP__DB__PASSWORD}
-      POSTGRES_DB: ${APP__DB_NAME}
+      POSTGRES_DB: ${APP__DB__NAME}
     ports:
       - ${APP__DB__PORT}:5432
     volumes:
