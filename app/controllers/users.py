@@ -62,11 +62,15 @@ class UserController(Controller):
             service = UserService(session)
             return await service.get(tg_id)
 
-    @get('/{tg_id:int}/gifts', summary='Get user wishlist')
-    async def get_user_gifts(self, tg_id: int) -> list[Gift]:
+    @get(
+        '/{tg_id:int}/gifts',
+        summary='Get user wishlist',
+        dependencies={'current_user_id': Provide(get_current_user_id)},
+    )
+    async def get_user_gifts(self, tg_id: int, current_user_id: int) -> list[Gift]:
         async with get_session() as session:
             service = GiftService(session)
-            return await service.get_gifts_by_user_id(tg_id)
+            return await service.get_gifts_by_user_id(tg_id, current_user_id)
 
     @post(
         '/me/friends/{receiver_id:int}/request',

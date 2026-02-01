@@ -15,6 +15,8 @@ class Gift:
     note: str | None
     created_at: datetime
     updated_at: datetime
+    is_reserved: bool
+    reserved_by: int | None
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Gift):
@@ -45,6 +47,8 @@ class Gift:
             note=note,
             created_at=now,
             updated_at=now,
+            is_reserved=False,
+            reserved_by=None,
         )
 
 
