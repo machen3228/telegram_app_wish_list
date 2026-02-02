@@ -22,7 +22,7 @@ table "users" {
   }
   column "avatar_url" {
     null = true
-    type = varchar(100)
+    type = varchar(200)
   }
   column "created_at" {
     null = false
