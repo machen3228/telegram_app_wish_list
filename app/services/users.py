@@ -1,15 +1,49 @@
+import json
+
 from litestar.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.auth import validate_telegram_init_data
+from core.config import settings
 from domain.users import User
-from dto.users import FriendRequestDTO
+from dto.users import FriendRequestDTO, TelegramAuthDTO
 from repositories.users import UserRepository
 
 
 class UserService:
     def __init__(self, session: AsyncSession) -> None:
         self._repository = UserRepository(session)
+
+    async def telegram_login(self, data: TelegramAuthDTO) -> User:
+        if not data.init_data:
+            raise HTTPException(status_code=401, detail='Missing init_data')
+        try:
+            validated_data = validate_telegram_init_data(data.init_data, settings.bot.token.get_secret_value())
+        except ValueError as e:
+            raise HTTPException(status_code=401, detail=f'Invalid init_data: {e!s}') from None
+
+        user_json = validated_data.get('user')
+        if not user_json:
+            raise HTTPException(status_code=401, detail='User data not found in init_data')
+
+        user_data = json.loads(user_json)
+
+        try:
+            user = await self._repository.get(user_data['id'])
+            is_need_update, fields_to_update = user.is_need_update_and_get_fields(user_data)
+            if is_need_update:
+                await self._repository.update(user_data['id'], **fields_to_update)
+                user = await self._repository.get(user_data['id'])
+        except KeyError:
+            user = await self.add(
+                tg_id=user_data['id'],
+                tg_username=user_data.get('username', ''),
+                first_name=user_data.get('first_name', ''),
+                last_name=user_data.get('last_name', ''),
+                avatar_url=user_data.get('photo_url', ''),
+            )
+        return user
 
     async def add(
         self,

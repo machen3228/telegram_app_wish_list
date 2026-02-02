@@ -1,12 +1,7 @@
-import json
-
 from litestar import Controller, delete, get, post
 from litestar.di import Provide
 from litestar.dto import DataclassDTO
-from litestar.exceptions import HTTPException
 
-from core.auth import validate_telegram_init_data
-from core.config import settings
 from core.db import get_session
 from core.dependencies import get_current_user_id
 from domain.gifts import Gift
@@ -22,29 +17,9 @@ class UserController(Controller):
 
     @post('/auth/telegram', summary='Telegram Mini App auth')
     async def telegram_login(self, data: TelegramAuthDTO) -> User:
-        if not data.init_data:
-            raise HTTPException(status_code=401, detail='Missing init_data')
-        try:
-            validated_data = validate_telegram_init_data(data.init_data, settings.bot.token.get_secret_value())
-        except ValueError as e:
-            raise HTTPException(status_code=401, detail=f'Invalid init_data: {e!s}') from None
-        user_json = validated_data.get('user')
-        if not user_json:
-            raise HTTPException(status_code=401, detail='User data not found in init_data')
-        user_data = json.loads(user_json)
         async with get_session() as session:
             service = UserService(session)
-            try:
-                user = await service.get(user_data['id'])
-            except HTTPException:
-                user = await service.add(
-                    tg_id=user_data['id'],
-                    tg_username=user_data.get('username', ''),
-                    first_name=user_data.get('first_name', ''),
-                    last_name=user_data.get('last_name', ''),
-                    avatar_url=user_data.get('photo_url', ''),
-                )
-        return user
+            return await service.telegram_login(data)
 
     @get(
         '/me',

@@ -1,3 +1,5 @@
+from datetime import UTC, datetime
+
 from sqlalchemy import text
 
 from domain.users import User
@@ -22,6 +24,17 @@ class UserRepository(BaseRepository[User]):
         }
         await self._session.execute(stmt, params)
         return obj.tg_id
+
+    async def update(self, tg_id: int, **fields: str | int | datetime) -> None:
+        if not fields:
+            return
+        fields['updated_at'] = datetime.now(UTC)
+        set_parts = [f'{key} = :{key}' for key in fields]
+        set_clause = ', '.join(set_parts)
+        query = f'UPDATE users SET {set_clause} WHERE tg_id = :tg_id'
+        stmt = text(query)
+        params = {'tg_id': tg_id, **fields}
+        await self._session.execute(stmt, params)
 
     async def get_friends(self, user_id: int) -> list[User]:
         query = text("""
