@@ -1,3 +1,4 @@
+from datetime import timedelta
 from logging import getLevelNamesMapping
 from pathlib import Path
 from typing import Literal
@@ -43,6 +44,12 @@ class DatabaseConfig(BaseModel):
         )
 
 
+class JWTConfig(BaseModel):
+    secret_key: SecretStr
+    algorithm: str = 'HS256'
+    access_token_expires: timedelta = timedelta(hours=1)
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         case_sensitive=False,
@@ -57,6 +64,7 @@ class Settings(BaseSettings):
     logger: LoggerConfig = LoggerConfig()
     bot: BotConfig
     db: DatabaseConfig
+    jwt: JWTConfig
 
 
 settings = Settings.model_validate({})

@@ -2,6 +2,8 @@ from litestar.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from core.security.jwt_auth import BaseJWTAuth, TokenOut
+from core.security.telegram_auth import TelegramInitData
 from domain.users import User
 from dto.users import FriendRequestDTO
 from repositories.users import UserRepository
@@ -10,6 +12,22 @@ from repositories.users import UserRepository
 class UserService:
     def __init__(self, session: AsyncSession) -> None:
         self._repository = UserRepository(session)
+
+    async def telegram_login(self, init_data: TelegramInitData) -> TokenOut:
+        try:
+            user = await self._repository.get(init_data['id'])
+            fields_to_update = user.get_changed_fields(init_data)
+            if fields_to_update:
+                await self._repository.update(init_data['id'], **fields_to_update)
+        except KeyError:
+            await self.add(
+                tg_id=init_data['id'],
+                tg_username=init_data.get('username', ''),
+                first_name=init_data.get('first_name', ''),
+                last_name=init_data.get('last_name', ''),
+                avatar_url=init_data.get('photo_url', ''),
+            )
+        return BaseJWTAuth.create_token(init_data['id'])
 
     async def add(
         self,
