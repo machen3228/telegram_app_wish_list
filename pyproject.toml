@@ -21,7 +21,7 @@ dependencies = [
 dev = [
     "pre-commit>=4.5.1",
     "ruff>=0.15.0",
-    "ty>=0.0.14",
+    "ty>=0.0.15",
 ]
 test = [
     "pytest>=8.4.2",
@@ -41,7 +41,7 @@ indent-width = 4
 select = ["ALL"]
 fixable = ["ALL"]
 ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "D203", "D213", "COM812","EM101", "EM102",
-    "Q000", "Q003", "PLR0913", "INP001", "TRY003", "TD002", "TD003", "FIX002", "S608",
+    "Q000", "Q003", "PLR0913", "INP001", "TRY003", "TD002", "TD003", "FIX002", "S608", "S101",
 ]
 
 [tool.ruff.format]
@@ -52,7 +52,10 @@ line-ending = "auto"
 docstring-code-format = false
 
 [tool.ty.environment]
-root = ["./app"]
+extra-paths = ["app", "tests"]
+
+[tool.ty.rules]
+possibly-missing-attribute = 'ignore'
 
 [tool.pytest.ini_options]
 pythonpath = ["app"]

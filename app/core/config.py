@@ -48,7 +48,7 @@ class DatabaseConfig(BaseModel):
         return URL.create(
             drivername='postgresql+asyncpg',
             database=f'{self.name}_test',
-            host=self.host,
+            host='localhost',
             port=self.port,
             username=self.user,
             password=self.password.get_secret_value(),
