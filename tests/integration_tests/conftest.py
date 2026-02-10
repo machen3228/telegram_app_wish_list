@@ -51,7 +51,7 @@ class UserDict(TypedDict):
 @pytest_asyncio.fixture
 async def test_user(db_session: AsyncSession) -> UserDict:
     user_data = UserDict(
-        tg_id=23456,
+        tg_id=123456,
         tg_username='tg_username',
         first_name='first_name',
         last_name='last_name',
