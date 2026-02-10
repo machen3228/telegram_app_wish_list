@@ -16,12 +16,20 @@ dependencies = [
     "sqlalchemy>=2.0.45",
 ]
 
+
 [dependency-groups]
 dev = [
     "pre-commit>=4.5.1",
     "ruff>=0.15.0",
     "ty>=0.0.14",
 ]
+test = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=0.23.8",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.15.1",
+]
+
 
 [tool.ruff]
 src = ["app"]
@@ -45,3 +53,11 @@ docstring-code-format = false
 
 [tool.ty.environment]
 root = ["./app"]
+
+[tool.pytest.ini_options]
+pythonpath = ["app"]
+asyncio_mode = "auto"
+markers = [
+    "unit: Unit tests (fast, no database)",
+    "integration: Integration tests (slower, use database)"
+]
