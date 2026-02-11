@@ -6,6 +6,8 @@ from core.security.jwt_auth import BaseJWTAuth, TokenOut
 from core.security.telegram_auth import TelegramInitData
 from domain.users import User
 from dto.users import FriendRequestDTO
+from exceptions.database import NotFoundInDbError
+from exceptions.http import NotFoundError
 from repositories.users import UserRepository
 
 
@@ -53,8 +55,8 @@ class UserService:
     async def get(self, tg_id: int) -> User:
         try:
             return await self._repository.get(tg_id)
-        except KeyError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
 
     async def get_friends(self, user_id: int) -> list[User]:
         return await self._repository.get_friends(user_id)

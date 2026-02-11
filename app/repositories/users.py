@@ -4,6 +4,7 @@ from sqlalchemy import text
 
 from domain.users import User
 from dto.users import FriendRequestDTO
+from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
 
 
@@ -51,13 +52,6 @@ class UserRepository(BaseRepository[User]):
 
     async def get(self, obj_id: int) -> User:
         query = text("""
-          WITH friends_cte AS (
-            SELECT
-              user_tg_id,
-              array_agg(friend_tg_id) AS friends_ids
-            FROM friends
-            GROUP BY user_tg_id
-          )
           SELECT
             u.tg_id,
             u.tg_username,
@@ -65,23 +59,17 @@ class UserRepository(BaseRepository[User]):
             u.last_name,
             u.avatar_url,
             u.created_at,
-            u.updated_at,
-            COALESCE(f.friends_ids, '{}') AS friends_ids
+            u.updated_at
           FROM users u
-          LEFT JOIN friends_cte f ON u.tg_id = f.user_tg_id
           WHERE u.tg_id = :tg_id;
         """)
-        params = {'tg_id': obj_id}
-        query_result = await self._session.execute(query, params)
-        row = query_result.mappings().one_or_none()
-        if row is None:
-            raise KeyError(f'User with tg_id={obj_id} not found')
-        user_data = dict(row)
-        friend_ids = user_data.pop('friends_ids') or []
-        user = User(**user_data)
-        user.add_friends(friend_ids)
+        result = await self._session.execute(query, {'tg_id': obj_id})
+        row = result.mappings().one_or_none()
 
-        return user
+        if row is None:
+            raise NotFoundInDbError('User', obj_id)
+
+        return User(**row)
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         stmt = text("""

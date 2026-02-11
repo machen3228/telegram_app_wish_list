@@ -52,13 +52,17 @@ class BaseJWTAuth:
 
 class AccessJWTAuth(BaseJWTAuth):
     async def __call__(self, request: Request) -> int:
-        if not request.headers.get('Authorization'):
+        authorization = request.headers.get('Authorization')
+
+        if authorization is None:
             raise UnauthorizedError(detail='Unauthorized')
 
-        authorization = request.headers.get('Authorization')
+        if not authorization.strip():
+            raise UnauthorizedError(detail='Invalid authorization scheme')
+
         scheme, _, token = authorization.partition(' ')
 
-        if scheme.lower() != 'bearer':
+        if scheme.lower() != 'bearer' or not token:
             raise UnauthorizedError(detail='Invalid authorization scheme')
 
         payload = self.verify_token(token)

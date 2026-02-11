@@ -63,5 +63,6 @@ pythonpath = ["app"]
 asyncio_mode = "auto"
 markers = [
     "unit: Unit tests (fast, no database)",
-    "integration: Integration tests (slower, use database)"
+    "integration: Integration tests (slower, use database)",
+    "asyncio: mark test as async"
 ]
