@@ -17,7 +17,7 @@ class UserController(Controller):
     tags = ('Users',)
 
     @post(
-        '/auth/telegram',
+        '/auth',
         summary='Telegram Mini App auth',
         dependencies={'init_data': Provide(get_telegram_init_data)},
     )
