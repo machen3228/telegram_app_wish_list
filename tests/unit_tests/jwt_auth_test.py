@@ -28,11 +28,8 @@ from exceptions.http import UnauthorizedError
 @pytest.mark.unit
 class TestBaseJWTAuth:
     def test_auth_jwt_create_token(self) -> None:
-        subject = 123456
-        token_out = BaseJWTAuth.create_token(subject)
-
         assert_that(
-            token_out,
+            BaseJWTAuth.create_token(123456),
             all_of(
                 instance_of(TokenOut),
                 has_properties(
@@ -47,16 +44,12 @@ class TestBaseJWTAuth:
 
     def test_auth_jwt_create_token_payload_contains_correct_data(self) -> None:
         subject = 123456
-        token_out = BaseJWTAuth.create_token(subject)
-
-        payload = jwt.decode(
-            token_out.access_token,
-            settings.jwt.secret_key.get_secret_value(),
-            settings.jwt.algorithm,
-        )
-
         assert_that(
-            payload,
+            jwt.decode(
+                BaseJWTAuth.create_token(subject).access_token,
+                settings.jwt.secret_key.get_secret_value(),
+                settings.jwt.algorithm,
+            ),
             all_of(
                 has_entries({
                     "sub": str(subject),
@@ -94,10 +87,8 @@ class TestBaseJWTAuth:
         subject = 123456
         token_out = BaseJWTAuth.create_token(subject)
 
-        payload = BaseJWTAuth.verify_token(token_out.access_token)
-
         assert_that(
-            payload,
+            BaseJWTAuth.verify_token(token_out.access_token),
             all_of(
                 instance_of(dict),
                 has_entries({
@@ -196,10 +187,9 @@ class TestAccessJWTAuth:
         valid_token: str,
     ) -> None:
         mock_request.headers = {'Authorization': f'Bearer {valid_token}'}
-        user_id = await auth(mock_request)
 
         assert_that(
-            user_id,
+            await auth(mock_request),
             all_of(
                 instance_of(int),
                 equal_to(123456),
@@ -284,10 +274,8 @@ class TestAccessJWTAuth:
             mock_request.headers = {'Authorization': f'Bearer {valid_token}'}
             return await auth(mock_request)
 
-        results = await asyncio.gather(*[authenticate() for _ in range(10)])
-
         assert_that(
-            results,
+            await asyncio.gather(*[authenticate() for _ in range(10)]),
             all_of(
                 has_length(10),
                 only_contains(123456),

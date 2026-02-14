@@ -2,7 +2,6 @@ from datetime import datetime
 
 import pytest
 from hamcrest import all_of, assert_that, equal_to, has_properties, instance_of
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from exceptions.database import NotFoundInDbError
 from repositories.users import UserRepository
@@ -14,14 +13,11 @@ from tests.integration_tests.conftest import UserDict
 class TestUserRepository:
     async def test_repo_get_user_success(
         self,
-        db_session: AsyncSession,
+        user_repository: UserRepository,
         test_user: UserDict,
     ) -> None:
-        repo = UserRepository(db_session)
-        result = await repo.get(test_user['tg_id'])
-
         assert_that(
-            result,
+            await user_repository.get(test_user['tg_id']),
             has_properties(
                 tg_id=all_of(
                     instance_of(int),
@@ -38,8 +34,7 @@ class TestUserRepository:
 
     async def test_repo_get_user_not_found(
         self,
-        db_session: AsyncSession,
+        user_repository: UserRepository,
     ) -> None:
-        repo = UserRepository(db_session)
         with pytest.raises(NotFoundInDbError, match=r'User with id=\d+ not found'):
-            await repo.get(123456)
+            await user_repository.get(123456)

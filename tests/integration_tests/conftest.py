@@ -7,6 +7,8 @@ from sqlalchemy import NullPool, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from core.config import settings
+from repositories.users import UserRepository
+from services.users import UserService
 
 async_engine: AsyncEngine = create_async_engine(
     url=settings.db.test_async_url,
@@ -36,6 +38,15 @@ async def db_session() -> AsyncGenerator[AsyncSession]:
         finally:
             await session.close()
             await transaction.rollback()
+
+
+@pytest_asyncio.fixture
+async def user_service(db_session: AsyncSession) -> UserService:
+    return UserService(db_session)
+
+@pytest_asyncio.fixture
+async def user_repository(db_session: AsyncSession) -> UserRepository:
+    return UserRepository(db_session)
 
 
 class UserDict(TypedDict):

@@ -2,7 +2,6 @@ from datetime import datetime
 
 import pytest
 from hamcrest import all_of, assert_that, equal_to, has_properties, instance_of
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from exceptions.http import NotFoundError
 from services.users import UserService
@@ -14,14 +13,11 @@ from tests.integration_tests.conftest import UserDict
 class TestUserService:
     async def test_service_get_user_success(
         self,
-        db_session: AsyncSession,
+        user_service: UserService,
         test_user: UserDict,
     ) -> None:
-        service = UserService(db_session)
-        result = await service.get(test_user['tg_id'])
-
         assert_that(
-            result,
+            await user_service.get(test_user['tg_id']),
             has_properties(
                 tg_id=all_of(
                     instance_of(int),
@@ -38,8 +34,7 @@ class TestUserService:
 
     async def test_service_get_user_not_found(
         self,
-        db_session: AsyncSession,
+        user_service: UserService,
     ) -> None:
-        service = UserService(db_session)
         with pytest.raises(NotFoundError, match=r'User with id=\d+ not found'):
-            await service.get(123456)
+            await user_service.get(123456)
