@@ -21,3 +21,15 @@ env "local" {
 
   schemas = ["public"]
 }
+
+env "local_test" {
+  url = "postgres://${local.envfile["APP__DB__USER"]}:${local.envfile["APP__DB__PASSWORD"]}@${local.envfile["APP__DB__HOST"]}:${local.envfile["APP__DB__PORT"]}/${local.envfile["APP__DB__NAME"]}_test?sslmode=disable"
+  dev = "docker://postgres/15/dev?search_path=public"
+  src = "file://database_schema/"
+
+  migration {
+    dir = "file://migrations"
+  }
+
+  schemas = ["public"]
+}

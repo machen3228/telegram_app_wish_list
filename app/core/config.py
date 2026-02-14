@@ -43,6 +43,17 @@ class DatabaseConfig(BaseModel):
             password=self.password.get_secret_value(),
         )
 
+    @property
+    def test_async_url(self) -> URL:
+        return URL.create(
+            drivername='postgresql+asyncpg',
+            database=f'{self.name}_test',
+            host='localhost',
+            port=self.port,
+            username=self.user,
+            password=self.password.get_secret_value(),
+        )
+
 
 class JWTConfig(BaseModel):
     secret_key: SecretStr

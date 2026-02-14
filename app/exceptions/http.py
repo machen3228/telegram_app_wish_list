@@ -19,3 +19,8 @@ class HttpError(HTTPException):
 class UnauthorizedError(HttpError):
     status_code: int = status_codes.HTTP_401_UNAUTHORIZED
     detail: str = 'Unauthorized'
+
+
+class NotFoundError(HttpError):
+    status_code: int = status_codes.HTTP_404_NOT_FOUND
+    detail: str = 'Not found'

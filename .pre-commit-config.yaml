@@ -22,7 +22,7 @@ repos:
         entry: pyupgrade --py313-plus --keep-percent-format
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.0
+    rev: v0.15.1
     hooks:
       - id: ruff
         files: ^(app)/
@@ -31,7 +31,7 @@ repos:
         files: ^(app)/
 
   - repo: https://github.com/machen3228/ty-pre-commit
-    rev: v0.0.1
+    rev: v0.0.3
     hooks:
       - id: ty
         name: ty check
