@@ -4,6 +4,20 @@ from unittest.mock import MagicMock
 
 import jwt
 import pytest
+from hamcrest import (
+    all_of,
+    assert_that,
+    equal_to,
+    greater_than,
+    greater_than_or_equal_to,
+    has_entries,
+    has_key,
+    has_length,
+    has_properties,
+    instance_of,
+    less_than_or_equal_to,
+    only_contains,
+)
 from litestar import Request
 
 from core.config import settings
@@ -17,10 +31,19 @@ class TestBaseJWTAuth:
         subject = 123456
         token_out = BaseJWTAuth.create_token(subject)
 
-        assert isinstance(token_out, TokenOut)
-        assert isinstance(token_out.access_token, str)
-        assert token_out.token_type == 'Bearer'  # noqa: S105
-        assert len(token_out.access_token) > 0
+        assert_that(
+            token_out,
+            all_of(
+                instance_of(TokenOut),
+                has_properties(
+                    access_token=all_of(
+                        instance_of(str),
+                        has_length(greater_than(0)),
+                    ),
+                    token_type=equal_to("Bearer"),
+                ),
+            ),
+        )
 
     def test_auth_jwt_create_token_payload_contains_correct_data(self) -> None:
         subject = 123456
@@ -32,9 +55,16 @@ class TestBaseJWTAuth:
             settings.jwt.algorithm,
         )
 
-        assert payload['sub'] == str(subject)
-        assert payload['type'] == 'access'
-        assert 'exp' in payload
+        assert_that(
+            payload,
+            all_of(
+                has_entries({
+                    "sub": str(subject),
+                    "type": "access",
+                }),
+                has_key("exp"),
+            ),
+        )
 
     def test_auth_jwt_create_token_expiration_time(self) -> None:
         subject = 123456
@@ -52,7 +82,13 @@ class TestBaseJWTAuth:
         expected_min = before_creation + settings.jwt.access_token_expires
         expected_max = after_creation + settings.jwt.access_token_expires
 
-        assert expected_min <= exp_time <= expected_max
+        assert_that(
+            exp_time,
+            all_of(
+                greater_than_or_equal_to(expected_min),
+                less_than_or_equal_to(expected_max),
+            ),
+        )
 
     def test_auth_jwt_verify_token(self) -> None:
         subject = 123456
@@ -60,10 +96,17 @@ class TestBaseJWTAuth:
 
         payload = BaseJWTAuth.verify_token(token_out.access_token)
 
-        assert isinstance(payload, dict)
-        assert isinstance(payload['exp'], int)
-        assert payload['sub'] == str(subject)
-        assert payload['type'] == 'access'
+        assert_that(
+            payload,
+            all_of(
+                instance_of(dict),
+                has_entries({
+                    "exp": instance_of(int),
+                    "sub": str(subject),
+                    "type": "access",
+                }),
+            ),
+        )
 
     def test_auth_jwt_verify_token_invalid_signature(self) -> None:
         payload = {
@@ -125,10 +168,8 @@ class TestBaseJWTAuth:
             settings.jwt.secret_key.get_secret_value(),
             algorithm=settings.jwt.algorithm,
         )
-        with pytest.raises(UnauthorizedError) as exc_info:
+        with pytest.raises(UnauthorizedError, match="Invalid token type: expected 'access'"):
             BaseJWTAuth.verify_token(token)
-
-        assert exc_info.value.detail == "Invalid token type: expected 'access'"
 
 
 @pytest.mark.unit
@@ -157,8 +198,13 @@ class TestAccessJWTAuth:
         mock_request.headers = {'Authorization': f'Bearer {valid_token}'}
         user_id = await auth(mock_request)
 
-        assert user_id == 123456  # noqa: PLR2004
-        assert isinstance(user_id, int)
+        assert_that(
+            user_id,
+            all_of(
+                instance_of(int),
+                equal_to(123456),
+            ),
+        )
 
     async def test_auth_jwt_call_without_authorization_header(
         self,
@@ -166,9 +212,8 @@ class TestAccessJWTAuth:
         mock_request: MagicMock,
     ) -> None:
         mock_request.headers = {}
-        with pytest.raises(UnauthorizedError) as exc_info:
+        with pytest.raises(UnauthorizedError, match='Unauthorized'):
             await auth(mock_request)
-        assert exc_info.value.detail == 'Unauthorized'
 
     async def test_auth_jwt_call_with_empty_authorization_header(
         self,
@@ -176,10 +221,8 @@ class TestAccessJWTAuth:
         mock_request: MagicMock,
     ) -> None:
         mock_request.headers = {'Authorization': ''}
-        with pytest.raises(UnauthorizedError) as exc_info:
+        with pytest.raises(UnauthorizedError, match='Invalid authorization scheme'):
             await auth(mock_request)
-
-        assert exc_info.value.detail == 'Invalid authorization scheme'
 
     async def test_auth_jwt_call_with_invalid_scheme(
         self,
@@ -188,10 +231,8 @@ class TestAccessJWTAuth:
         valid_token: str,
     ) -> None:
         mock_request.headers = {'Authorization': f'Basic {valid_token}'}
-        with pytest.raises(UnauthorizedError) as exc_info:
+        with pytest.raises(UnauthorizedError, match='Invalid authorization scheme'):
             await auth(mock_request)
-
-        assert exc_info.value.detail == 'Invalid authorization scheme'
 
     async def test_auth_jwt_call_with_empty_token(
         self,
@@ -199,10 +240,8 @@ class TestAccessJWTAuth:
         mock_request: MagicMock,
     ) -> None:
         mock_request.headers = {'Authorization': 'Bearer'}
-        with pytest.raises(UnauthorizedError) as exc_info:
+        with pytest.raises(UnauthorizedError, match='Invalid authorization scheme'):
             await auth(mock_request)
-
-        assert exc_info.value.detail == 'Invalid authorization scheme'
 
     async def test_auth_jwt_call_with_lowercase_bearer(
         self,
@@ -247,5 +286,10 @@ class TestAccessJWTAuth:
 
         results = await asyncio.gather(*[authenticate() for _ in range(10)])
 
-        assert all(user_id == 123456 for user_id in results)  # noqa: PLR2004
-        assert len(results) == 10  # noqa: PLR2004
+        assert_that(
+            results,
+            all_of(
+                has_length(10),
+                only_contains(123456),
+            ),
+        )
