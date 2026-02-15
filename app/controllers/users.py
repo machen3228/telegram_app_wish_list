@@ -2,9 +2,9 @@ from litestar import Controller, delete, get, post
 from litestar.di import Provide
 from litestar.dto import DataclassDTO
 
-from core.security.jwt_auth import AccessJWTAuth, TokenOut
+from core.security.jwt_auth import TokenOut
 from core.security.telegram_auth import TelegramInitData
-from dependencies import provide_telegram_init_data, provide_user_service
+from dependencies import provide_access_jwt_auth, provide_telegram_init_data, provide_user_service
 from domain.users import User
 from dto.users import FriendRequestDTO
 from services.users import UserService
@@ -18,7 +18,7 @@ class UserController(Controller):
     @post(
         '/auth',
         summary='Telegram Mini App auth',
-        dependencies={'init_data': Provide(provide_telegram_init_data)},
+        dependencies={'init_data': Provide(provide_telegram_init_data, sync_to_thread=False)},
     )
     async def telegram_login(
         self,
@@ -31,7 +31,7 @@ class UserController(Controller):
         '/me',
         return_dto=DataclassDTO[User],
         summary='Get current user',
-        dependencies={'current_user_id': Provide(AccessJWTAuth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
     )
     async def get_me(
         self,
@@ -52,7 +52,7 @@ class UserController(Controller):
         '/me/friends/{receiver_id:int}/request',
         status_code=201,
         summary='Send friend request',
-        dependencies={'current_user_id': Provide(AccessJWTAuth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
     )
     async def send_friend_request(
         self,
@@ -67,7 +67,7 @@ class UserController(Controller):
         '/me/friend-requests',
         status_code=200,
         summary='Get pending friend requests',
-        dependencies={'current_user_id': Provide(AccessJWTAuth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
     )
     async def get_friend_requests(
         self,
@@ -80,7 +80,7 @@ class UserController(Controller):
         '/me/friends/{sender_id:int}/accept',
         status_code=200,
         summary='Accept friend request',
-        dependencies={'current_user_id': Provide(AccessJWTAuth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
     )
     async def accept_friend_request(
         self,
@@ -95,7 +95,7 @@ class UserController(Controller):
         '/me/friends/{sender_id:int}/reject',
         status_code=200,
         summary='Reject friend request',
-        dependencies={'current_user_id': Provide(AccessJWTAuth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
     )
     async def reject_friend_request(
         self,
@@ -110,7 +110,7 @@ class UserController(Controller):
         '/me/friends/{friend_id:int}/delete',
         status_code=204,
         summary='Delete friend (mutual)',
-        dependencies={'current_user_id': Provide(AccessJWTAuth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
     )
     async def delete_friend(
         self,
@@ -123,7 +123,7 @@ class UserController(Controller):
     @get(
         '/me/friends',
         summary='Get my friends with details',
-        dependencies={'current_user_id': Provide(AccessJWTAuth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
     )
     async def get_my_friends(
         self,
