@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13.7"
 dependencies = [
+    "advanced-alchemy>=1.8.2",
     "asyncpg>=0.31.0",
     "greenlet>=3.3.0",
     "litestar[standard]>=2.21.0",
@@ -43,7 +44,7 @@ indent-width = 4
 select = ["ALL"]
 fixable = ["ALL"]
 ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "D203", "D213", "COM812","EM101", "EM102",
-    "Q000", "Q003", "PLR0913", "INP001", "TRY003", "TD002", "TD003", "FIX002", "S608", "S101",
+    "Q000", "Q003", "PLR0913", "INP001", "TRY003", "TD002", "TD003", "FIX002", "S608", "S101", "RUF012"
 ]
 
 [tool.ruff.format]
