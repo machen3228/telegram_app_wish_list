@@ -1,8 +1,9 @@
-from litestar import Controller, delete, post
+from litestar import Controller, delete, get, post
 from litestar.di import Provide
 
 from core.db import get_session
 from core.security.jwt_auth import AccessJWTAuth
+from domain.gifts import Gift
 from dto.gifts import GiftCreateDTO
 from services.gifts import GiftService
 
@@ -65,3 +66,17 @@ class GiftController(Controller):
         async with get_session() as session:
             service = GiftService(session)
             await service.delete_reservation_by_owner(gift_id, current_user_id)
+
+    @get(
+        '/user/{tg_id:int}',
+        summary='Get user wishlist',
+        dependencies={'current_user_id': Provide(AccessJWTAuth)},
+    )
+    async def get_user_gifts(
+        self,
+        tg_id: int,
+        current_user_id: int,
+    ) -> list[Gift]:
+        async with get_session() as session:
+            service = GiftService(session)
+            return await service.get_gifts_by_user_id(tg_id, current_user_id)
