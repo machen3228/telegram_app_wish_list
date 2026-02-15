@@ -16,27 +16,27 @@ source .venv/bin/activate
 ```
 To install dependencies run:
 ```bash
-uv sync
+uv sync --all-groups
 ```
 
 # Start project
-To launch database, run:
+To launch database, including creation test_db and running migrations, run:
 ```bash
 docker compose up --build -d
 ```
 
 # Work with migrations
 We work with **Atlas** to implement migrations.
-So, to work with in you need Atlas to be installed on your
+So, to work with it you need Atlas to be installed on your
 local machine. For instance, you can run:
 ```bash
 curl -sSf https://atlasgo.sh | sh
 ```
 You can implement changes in database. First, you need to
 change database schema in `/database_schema/schema.pg.hcl`
-Advise you to install `Atlas` plugin in Pycharm to see
+Advise you to install `Atlas` plugin in Pycharm (or other IDE) to see
 syntaxis hints. Schema has extension `.pg.hcl`, so it will
-help you to minimize errors while working with postgres schema.
+help you to minimize errors while working with DB schema.
 
 To create migration file, fun:
 ```bash
