@@ -1,9 +1,7 @@
-from collections.abc import AsyncGenerator
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.db import get_session
 from services.users import UserService
 
 
-async def provide_user_service() -> AsyncGenerator[UserService]:
-    async with get_session() as session:
-        yield UserService(session)
+async def provide_user_service(db_session: AsyncSession) -> UserService:
+    return UserService(db_session)
