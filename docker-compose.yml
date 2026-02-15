@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${APP__DB__USER}
+      POSTGRES_PASSWORD: ${APP__DB__PASSWORD}
+      POSTGRES_DB: ${APP__DB__NAME}
+    ports:
+      - ${APP__DB__PORT}:5432
+    volumes:
+      - ${VOLUMES_DIR}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${APP__DB__USER} -d ${APP__DB__NAME}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-test-setup:
+    image: postgres:15
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: ${APP__DB__USER}
+      PGPASSWORD: ${APP__DB__PASSWORD}
+    command: >
+      bash -c "
+        psql -d postgres -tc \"SELECT 1 FROM pg_database WHERE datname = '${APP__DB__NAME}_test'\" | grep -q 1 || psql -d postgres -c 'CREATE DATABASE \"${APP__DB__NAME}_test\"';
+        echo 'Test database ready!'
+      "
+    restart: "no"
+
+  atlas-migrate:
+    image: arigaio/atlas:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+      - ./atlas.hcl:/atlas.hcl
+      - ./.env:/.env
+    command: migrate apply --env local
+    environment:
+      - ATLAS_NO_UPDATE_NOTIFIER=1
+    restart: "no"
+
+  atlas-migrate_test:
+    image: arigaio/atlas:latest
+    depends_on:
+      postgres-test-setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./migrations:/migrations
+      - ./atlas.hcl:/atlas.hcl
+      - ./.env:/.env
+    command: migrate apply --env local_test
+    environment:
+      - ATLAS_NO_UPDATE_NOTIFIER=1
+    restart: "no"

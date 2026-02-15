@@ -1,13 +1,6 @@
-from flask import Flask, render_template
-from flask.typing import ResponseReturnValue
+import uvicorn
 
-app = Flask(__name__)
-
-
-@app.route('/')  # type: ignore[misc]
-def web() -> ResponseReturnValue:
-    return render_template('index.html')
-
+import application  # noqa: F401
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port='80')  # noqa: S201 S104
+    uvicorn.run('application:app', host='0.0.0.0', port=80, reload=True)  # noqa: S104

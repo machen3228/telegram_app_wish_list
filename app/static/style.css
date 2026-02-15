@@ -1,0 +1,669 @@
+:root {
+    --tg-theme-bg-color: #ffffff;
+    --tg-theme-text-color: #000000;
+    --tg-theme-hint-color: #999999;
+    --tg-theme-link-color: #0088cc;
+    --tg-theme-button-color: #0088cc;
+    --tg-theme-button-text-color: #ffffff;
+    --tg-theme-secondary-bg-color: #f5f5f5;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 80px;
+}
+
+/* Табы навигации */
+.tabs {
+    display: flex;
+    background: var(--tg-theme-secondary-bg-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid var(--tg-theme-hint-color);
+}
+
+.tab {
+    flex: 1;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+    border: none;
+    background: transparent;
+    color: var(--tg-theme-text-color);
+}
+
+.tab:hover {
+    background: rgba(0, 136, 204, 0.1);
+}
+
+.tab.active {
+    color: var(--tg-theme-button-color);
+    border-bottom: 3px solid var(--tg-theme-button-color);
+    margin-bottom: -2px;
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+    animation: fadeIn 0.3s;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Статусы загрузки */
+.status {
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 500;
+}
+
+.status.loading {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status.error {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Профиль пользователя */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--tg-theme-button-color);
+    flex-shrink: 0;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.profile-username {
+    font-size: 14px;
+    color: var(--tg-theme-hint-color);
+    margin-bottom: 8px;
+}
+
+.profile-id {
+    font-size: 12px;
+    color: var(--tg-theme-hint-color);
+    font-family: monospace;
+}
+
+/* Секции */
+.section {
+    margin-bottom: 24px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--tg-theme-hint-color);
+    font-size: 14px;
+}
+
+/* Кнопки */
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    font-size: 14px;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.btn-danger {
+    background: #ef5350;
+    color: white;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Карточки подарков */
+.gifts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.gift-card {
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 12px;
+    padding: 16px;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.gift-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.gift-card.own .gift-delete-btn {
+    display: block;
+}
+
+.gift-delete-btn {
+    display: none;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: #ef5350;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+}
+
+.gift-delete-btn:hover {
+    background: #e53935;
+}
+
+.gift-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 12px;
+    padding-right: 40px;
+}
+
+.gift-name {
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.gift-wish-rate {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.gift-url {
+    display: inline-block;
+    color: var(--tg-theme-link-color);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 8px;
+    word-break: break-all;
+}
+
+.gift-url:hover {
+    text-decoration: underline;
+}
+
+.gift-price {
+    color: var(--tg-theme-button-color);
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.gift-note {
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--tg-theme-bg-color);
+    border-radius: 6px;
+    font-size: 14px;
+    color: var(--tg-theme-hint-color);
+    font-style: italic;
+}
+
+.gift-date {
+    font-size: 12px;
+    color: var(--tg-theme-hint-color);
+    margin-top: 8px;
+}
+
+/* Список друзей */
+.friends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.friend-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    position: relative;
+}
+
+.friend-card:hover {
+    transform: translateX(4px);
+    background: rgba(0, 136, 204, 0.1);
+}
+
+.friend-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 50%;
+    background: #ef5350;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.friend-card:hover .friend-delete-btn {
+    opacity: 1;
+}
+
+.friend-delete-btn:hover {
+    background: #e53935;
+}
+
+.friend-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--tg-theme-button-color);
+    flex-shrink: 0;
+}
+
+.friend-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.friend-name {
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.friend-username {
+    font-size: 12px;
+    color: var(--tg-theme-hint-color);
+}
+
+/* Модальные окна */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--tg-theme-bg-color);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.modal-buttons .btn {
+    flex: 1;
+}
+
+/* Формы */
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--tg-theme-hint-color);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--tg-theme-button-color);
+}
+
+textarea.form-input {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding-bottom: 60px;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 16px;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .gifts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .friends-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+}
+
+/* Добавьте эти стили в конец вашего style.css файла */
+
+/* Карточки заявок в друзья */
+.friend-requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.friend-request-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 12px;
+    border: 2px solid var(--tg-theme-button-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.friend-request-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.2);
+}
+
+.request-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.request-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .friend-request-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .request-actions {
+        width: 100%;
+    }
+
+    .request-actions .btn {
+        flex: 1;
+    }
+}
+
+/* Контролы сортировки */
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 8px;
+}
+
+.sort-label {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--tg-theme-text-color);
+    white-space: nowrap;
+}
+
+.sort-select {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--tg-theme-hint-color);
+    border-radius: 6px;
+    font-size: 14px;
+    background: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.sort-select:focus {
+    outline: none;
+    border-color: var(--tg-theme-button-color);
+}
+
+.sort-select:hover {
+    border-color: var(--tg-theme-button-color);
+}
+
+/* Кнопка копирования ID */
+.profile-id {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+}
+
+.id-text {
+    text-align: center;
+}
+
+.copy-id-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 0.2s, transform 0.1s;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.copy-id-btn:hover {
+    opacity: 0.9;
+}
+
+.copy-id-btn:active {
+    transform: scale(0.95);
+}
+
+/* Адаптивность для мобильных */
+@media (max-width: 480px) {
+    .sort-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sort-label {
+        text-align: center;
+    }
+}
+
+/* Бронирование подарков */
+.gift-card.reserved {
+    opacity: 0.6;
+    filter: brightness(0.85);
+}
+
+.gift-reservation-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    background: #ef5350;
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gift-reserve-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.gift-reserve-btn:hover {
+    opacity: 0.85;
+}
+
+.gift-reserve-btn:active {
+    transform: scale(0.98);
+}
+
+.gift-reserve-btn.reserve {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.gift-reserve-btn.unreserve {
+    background: #ef5350;
+    color: white;
+}
