@@ -15,7 +15,7 @@ class GiftController(Controller):
     @post(
         status_code=201,
         summary='Add gift',
-        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
     async def add(
         self,
@@ -30,7 +30,7 @@ class GiftController(Controller):
         '/{gift_id:int}',
         status_code=204,
         summary='Delete gift',
-        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
     async def delete_gift(
         self,
@@ -44,7 +44,7 @@ class GiftController(Controller):
         '/{gift_id:int}/reserve',
         status_code=201,
         summary='Add gift reservation',
-        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
     async def add_reservation(
         self,
@@ -58,7 +58,7 @@ class GiftController(Controller):
         '/{gift_id:int}/reserve/friend',
         status_code=204,
         summary='Withdraw reservation by friend',
-        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
     async def delete_reservation_by_friend(
         self,
@@ -72,7 +72,7 @@ class GiftController(Controller):
         '/{gift_id:int}/reserve/owner',
         status_code=204,
         summary='Withdraw reservation by owner',
-        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
     async def delete_reservation_by_owner(
         self,
@@ -85,7 +85,7 @@ class GiftController(Controller):
     @get(
         '/user/{tg_id:int}',
         summary='Get user wishlist',
-        dependencies={'current_user_id': Provide(provide_access_jwt_auth, sync_to_thread=False)},
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
     async def get_user_gifts(
         self,
