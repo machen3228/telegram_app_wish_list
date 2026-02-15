@@ -48,7 +48,7 @@ def validate_telegram_init_data(init_data: str, bot_token: str, max_age: int = 8
     return parsed_data
 
 
-async def get_telegram_init_data(request: Request) -> TelegramInitData:
+def get_telegram_init_data(request: Request) -> TelegramInitData:
     init_data = request.headers.get('X-Telegram-Init-Data')
     if not init_data:
         raise UnauthorizedError(detail='Missing X-Telegram-Init-Data header')

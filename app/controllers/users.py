@@ -3,8 +3,8 @@ from litestar.di import Provide
 from litestar.dto import DataclassDTO
 
 from core.security.jwt_auth import AccessJWTAuth, TokenOut
-from core.security.telegram_auth import TelegramInitData, get_telegram_init_data
-from dependencies import provide_user_service
+from core.security.telegram_auth import TelegramInitData
+from dependencies import provide_telegram_init_data, provide_user_service
 from domain.users import User
 from dto.users import FriendRequestDTO
 from services.users import UserService
@@ -18,7 +18,7 @@ class UserController(Controller):
     @post(
         '/auth',
         summary='Telegram Mini App auth',
-        dependencies={'init_data': Provide(get_telegram_init_data)},
+        dependencies={'init_data': Provide(provide_telegram_init_data)},
     )
     async def telegram_login(
         self,
