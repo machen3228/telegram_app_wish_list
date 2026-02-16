@@ -1,14 +1,19 @@
 from collections.abc import AsyncGenerator
-from datetime import UTC, datetime
+from datetime import UTC
+from datetime import datetime
 from typing import TypedDict
 
 import pytest_asyncio
-from sqlalchemy import NullPool, text
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import NullPool
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
 
-from core.config import settings
-from repositories.users import UserRepository
-from services.users import UserService
+from core import settings
+from repositories import UserRepository
+from services import UserService
 
 async_engine: AsyncEngine = create_async_engine(
     url=settings.db.test_async_url,
@@ -43,6 +48,7 @@ async def db_session() -> AsyncGenerator[AsyncSession]:
 @pytest_asyncio.fixture
 async def user_service(db_session: AsyncSession) -> UserService:
     return UserService(db_session)
+
 
 @pytest_asyncio.fixture
 async def user_repository(db_session: AsyncSession) -> UserRepository:

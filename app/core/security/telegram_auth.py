@@ -2,12 +2,13 @@ import hashlib
 import hmac
 import json
 import time
-from typing import NotRequired, TypedDict
+from typing import NotRequired
+from typing import TypedDict
 from urllib.parse import parse_qsl
 
 from litestar import Request
 
-from core.config import settings
+from core import settings
 from exceptions.http import UnauthorizedError
 
 

@@ -3,8 +3,10 @@ from logging import getLevelNamesMapping
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, SecretStr
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 from sqlalchemy import URL
 
 BASE_DIR = Path(__file__).resolve().parent

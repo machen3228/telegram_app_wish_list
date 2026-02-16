@@ -1,6 +1,4 @@
 class NotFoundInDbError(LookupError):
-    """Raised when entity is not found in the database."""
-
     def __init__(self, entity: str, entity_id: int | str) -> None:
         self.entity = entity
         self.entity_id = entity_id

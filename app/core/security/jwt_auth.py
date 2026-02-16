@@ -1,11 +1,13 @@
-from datetime import UTC, datetime
-from typing import Any, TypedDict
+from datetime import UTC
+from datetime import datetime
+from typing import Any
+from typing import TypedDict
 
 import jwt
 from litestar import Request
 from pydantic import BaseModel
 
-from core.config import settings
+from core import settings
 from exceptions.http import UnauthorizedError
 
 

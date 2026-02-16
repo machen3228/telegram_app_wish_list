@@ -1,27 +1,29 @@
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import UTC
+from datetime import datetime
+from datetime import timedelta
 from unittest.mock import MagicMock
 
+from hamcrest import all_of
+from hamcrest import assert_that
+from hamcrest import equal_to
+from hamcrest import greater_than
+from hamcrest import greater_than_or_equal_to
+from hamcrest import has_entries
+from hamcrest import has_key
+from hamcrest import has_length
+from hamcrest import has_properties
+from hamcrest import instance_of
+from hamcrest import less_than_or_equal_to
+from hamcrest import only_contains
 import jwt
-import pytest
-from hamcrest import (
-    all_of,
-    assert_that,
-    equal_to,
-    greater_than,
-    greater_than_or_equal_to,
-    has_entries,
-    has_key,
-    has_length,
-    has_properties,
-    instance_of,
-    less_than_or_equal_to,
-    only_contains,
-)
 from litestar import Request
+import pytest
 
 from core.config import settings
-from core.security.jwt_auth import AccessJWTAuth, BaseJWTAuth, TokenOut
+from core.security.jwt_auth import AccessJWTAuth
+from core.security.jwt_auth import BaseJWTAuth
+from core.security.jwt_auth import TokenOut
 from exceptions.http import UnauthorizedError
 
 
@@ -37,7 +39,7 @@ class TestBaseJWTAuth:
                         instance_of(str),
                         has_length(greater_than(0)),
                     ),
-                    token_type=equal_to("Bearer"),
+                    token_type=equal_to('Bearer'),
                 ),
             ),
         )
@@ -51,11 +53,13 @@ class TestBaseJWTAuth:
                 settings.jwt.algorithm,
             ),
             all_of(
-                has_entries({
-                    "sub": str(subject),
-                    "type": "access",
-                }),
-                has_key("exp"),
+                has_entries(
+                    {
+                        'sub': str(subject),
+                        'type': 'access',
+                    }
+                ),
+                has_key('exp'),
             ),
         )
 
@@ -91,11 +95,13 @@ class TestBaseJWTAuth:
             BaseJWTAuth.verify_token(token_out.access_token),
             all_of(
                 instance_of(dict),
-                has_entries({
-                    "exp": instance_of(int),
-                    "sub": str(subject),
-                    "type": "access",
-                }),
+                has_entries(
+                    {
+                        'exp': instance_of(int),
+                        'sub': str(subject),
+                        'type': 'access',
+                    }
+                ),
             ),
         )
 

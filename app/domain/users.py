@@ -1,9 +1,12 @@
 from collections.abc import Sequence
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
-from typing import Any, Self
+from dataclasses import dataclass
+from dataclasses import field
+from datetime import UTC
+from datetime import datetime
+from typing import Any
+from typing import Self
 
-from core.security.telegram_auth import TelegramInitData
+from core.security import TelegramInitData
 
 
 @dataclass

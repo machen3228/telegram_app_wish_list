@@ -1,10 +1,14 @@
 from datetime import datetime
 
+from hamcrest import all_of
+from hamcrest import assert_that
+from hamcrest import equal_to
+from hamcrest import has_properties
+from hamcrest import instance_of
 import pytest
-from hamcrest import all_of, assert_that, equal_to, has_properties, instance_of
 
 from exceptions.database import NotFoundInDbError
-from repositories.users import UserRepository
+from repositories import UserRepository
 from tests.integration_tests.conftest import UserDict
 
 
@@ -29,7 +33,7 @@ class TestUserRepository:
                 avatar_url=instance_of(str),
                 created_at=instance_of(datetime),
                 updated_at=instance_of(datetime),
-            )
+            ),
         )
 
     async def test_repo_get_user_not_found(
