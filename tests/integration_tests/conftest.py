@@ -17,15 +17,15 @@ from services import UserService
 
 async_engine: AsyncEngine = create_async_engine(
     url=settings.db.test_async_url,
-    echo=settings.db.echo,
+    echo=settings.db.engine.echo,
     poolclass=NullPool,
 )
 
 async_session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
-    autoflush=settings.db.autoflush,
+    autoflush=settings.db.session.autoflush,
     bind=async_engine,
     class_=AsyncSession,
-    expire_on_commit=settings.db.expire_on_commit,
+    expire_on_commit=settings.db.session.expire_on_commit,
 )
 
 

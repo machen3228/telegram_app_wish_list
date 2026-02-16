@@ -9,13 +9,13 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
     session_dependency_key='db_session',
     engine_dependency_key='db_engine',
     engine_config=EngineConfig(
-        echo=settings.db.echo,
-        pool_size=settings.db.pool_size,
-        max_overflow=settings.db.max_overflow,
-        pool_timeout=settings.db.pool_timeout,
-        pool_recycle=settings.db.pool_recycle,
-        pool_pre_ping=settings.db.pool_pre_ping,
-        pool_reset_on_return=settings.db.pool_reset_on_return,
+        echo=settings.db.engine.echo,
+        pool_size=settings.db.engine.pool_size,
+        max_overflow=settings.db.engine.max_overflow,
+        pool_timeout=settings.db.engine.pool_timeout,
+        pool_recycle=settings.db.engine.pool_recycle,
+        pool_pre_ping=settings.db.engine.pool_pre_ping,
+        pool_reset_on_return=settings.db.engine.pool_reset_on_return,
         connect_args={
             'server_settings': {
                 'application_name': 'wish_list_app',
@@ -26,7 +26,7 @@ sqlalchemy_config = SQLAlchemyAsyncConfig(
         },
     ),
     session_config=AsyncSessionConfig(
-        expire_on_commit=settings.db.expire_on_commit,
-        autoflush=settings.db.autoflush,
+        expire_on_commit=settings.db.session.expire_on_commit,
+        autoflush=settings.db.session.autoflush,
     ),
 )

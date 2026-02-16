@@ -3,14 +3,12 @@ from pydantic import SecretStr
 from sqlalchemy import URL
 
 
-class DatabaseConfig(BaseModel):
-    host: str
-    port: int
-    name: str
-    user: str
-    password: SecretStr
+class SessionConfig(BaseModel):
+    expire_on_commit: bool = False
+    autoflush: bool = True
 
-    # engine settings
+
+class EngineConfig(BaseModel):
     echo: bool = True
     pool_size: int = 10
     max_overflow: int = 10
@@ -19,9 +17,16 @@ class DatabaseConfig(BaseModel):
     pool_pre_ping: bool = True
     pool_reset_on_return: str = 'rollback'
 
-    # session settings
-    expire_on_commit: bool = False
-    autoflush: bool = True
+
+class DatabaseConfig(BaseModel):
+    host: str
+    port: int
+    name: str
+    user: str
+    password: SecretStr
+
+    session: SessionConfig = SessionConfig()
+    engine: EngineConfig = EngineConfig()
 
     @property
     def async_url(self) -> URL:
