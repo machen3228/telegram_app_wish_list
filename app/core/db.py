@@ -1,7 +1,10 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from core.config import settings
 
@@ -24,3 +27,6 @@ async def get_session() -> AsyncGenerator[AsyncSession]:
         except Exception:
             await session.rollback()
             raise
+
+
+# TODO: remove module
