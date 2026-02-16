@@ -45,6 +45,7 @@ jobs:
     needs: code-check
 
     env:
+      # Базовые переменные
       DB_USER: ${{ secrets.APP__DB__USER || 'postgres' }}
       DB_PASSWORD: ${{ secrets.APP__DB__PASSWORD || 'postgres' }}
       DB_NAME_BASE: ${{ secrets.APP__DB__NAME || 'wishlist' }}
@@ -55,6 +56,7 @@ jobs:
         env:
           POSTGRES_USER: ${{ secrets.APP__DB__USER || 'postgres' }}
           POSTGRES_PASSWORD: ${{ secrets.APP__DB__PASSWORD || 'postgres' }}
+          # PostgreSQL создает БД с _test
           POSTGRES_DB: ${{ format('{0}_test', secrets.APP__DB__NAME || 'wishlist') }}
         ports:
           - 5432:5432
@@ -99,6 +101,7 @@ jobs:
           APP__DB__PORT=5432
           APP__DB__NAME=${DB_NAME_BASE}
           EOF
+        # ВАЖНО: В .env БЕЗ _test, atlas.hcl добавит его сам
 
       - name: Install Atlas CLI
         run: |
@@ -107,6 +110,24 @@ jobs:
       - name: Run migrations on test database
         run: |
           atlas migrate apply --env local_test
+
+      - name: Debug - Check settings
+        run: |
+          uv run python -c "
+          from core.config import settings
+          print('='*50)
+          print(f'DB name from env: {settings.db.name}')
+          print(f'DB test_async_url: {settings.db.test_async_url}')
+          print('='*50)
+          "
+        env:
+          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
+          APP__DB__HOST: localhost
+          APP__DB__PORT: 5432
+          APP__DB__USER: ${{ env.DB_USER }}
+          APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
+          APP__DB__NAME: ${{ format('{0}_test', env.DB_NAME_BASE) }}
+          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
 
       - name: Run tests with pytest
         run: |
@@ -117,5 +138,8 @@ jobs:
           APP__DB__PORT: 5432
           APP__DB__USER: ${{ env.DB_USER }}
           APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
+          # КЛЮЧЕВОЙ МОМЕНТ:
+          # Если test_async_url использует self.name напрямую (БЕЗ добавления _test),
+          # то передаем полное имя БД С _test
           APP__DB__NAME: ${{ format('{0}_test', env.DB_NAME_BASE) }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
