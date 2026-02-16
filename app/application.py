@@ -3,6 +3,7 @@ from pathlib import Path
 from litestar import Litestar
 from litestar.contrib.sqlalchemy.plugins import SQLAlchemyPlugin
 from litestar.openapi import OpenAPIConfig
+
 from litestar.openapi.spec import Contact
 from litestar.static_files import create_static_files_router
 
