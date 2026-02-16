@@ -14,7 +14,7 @@ from services import GiftService
 class GiftController(Controller):
     path = '/gifts'
     tags = ('Gifts',)
-    dependencies = {'service': Provide(provide_gift_service)}
+    dependencies = {'service': Provide(provide_gift_service, sync_to_thread=False)}
 
     @post(
         status_code=201,
