@@ -44,6 +44,21 @@ jobs:
     runs-on: ubuntu-latest
     needs: code-check
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.APP__DB__USER || 'postgres' }}
+          POSTGRES_PASSWORD: ${{ secrets.APP__DB__PASSWORD || 'postgres' }}
+          POSTGRES_DB: ${{ format('{0}_test', secrets.APP__DB__NAME || 'wishlist') }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -62,14 +77,32 @@ jobs:
         run: |
           uv sync --all-groups
 
+      - name: Create .env file for Atlas
+        run: |
+          cat > .env << EOF
+          APP__DB__USER=${{ secrets.APP__DB__USER || 'postgres' }}
+          APP__DB__PASSWORD=${{ secrets.APP__DB__PASSWORD || 'postgres' }}
+          APP__DB__HOST=${{ secrets.APP__DB__HOST || 'localhost' }}
+          APP__DB__PORT=${{ secrets.APP__DB__PORT || 5432 }}
+          APP__DB__NAME=${{ secrets.APP__DB__NAME || 'wishlist' }}_test
+          EOF
+
+      - name: Install Atlas CLI
+        run: |
+          curl -sSf https://atlasgo.sh | sh
+
+      - name: Run migrations on test database
+        run: |
+          atlas migrate apply --env local_test
+
       - name: Run tests with pytest
         run: |
           uv run pytest -vv -n auto
         env:
-          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN }}
-          APP__DB__HOST: ${{ secrets.APP__DB__HOST }}
-          APP__DB__PORT: ${{ secrets.APP__DB__PORT }}
-          APP__DB__USER: ${{ secrets.APP__DB__USER }}
-          APP__DB__PASSWORD: ${{ secrets.APP__DB__PASSWORD }}
-          APP__DB__NAME: ${{ secrets.APP__DB__NAME }}
-          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY }}
+          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
+          APP__DB__HOST: ${{ secrets.APP__DB__HOST || 'localhost' }}
+          APP__DB__PORT: ${{ secrets.APP__DB__PORT || 5432 }}
+          APP__DB__USER: ${{ secrets.APP__DB__USER || 'postgres' }}
+          APP__DB__PASSWORD: ${{ secrets.APP__DB__PASSWORD || 'postgres' }}
+          APP__DB__NAME: ${{ secrets.APP__DB__NAME || 'wishlist' }}_test
+          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
