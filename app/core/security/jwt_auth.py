@@ -7,7 +7,7 @@ import jwt
 from litestar import Request
 from pydantic import BaseModel
 
-from core import settings
+from core.config import settings
 from exceptions.http import UnauthorizedError
 
 

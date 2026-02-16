@@ -18,12 +18,12 @@ from services import UserService
 class UserController(Controller):
     path = '/users'
     tags = ('Users',)
-    dependencies = {'service': Provide(provide_user_service)}
+    dependencies = {'service': Provide(provide_user_service, sync_to_thread=False)}
 
     @post(
         '/auth',
         summary='Telegram Mini App auth',
-        dependencies={'init_data': Provide(provide_telegram_init_data)},
+        dependencies={'init_data': Provide(provide_telegram_init_data, sync_to_thread=False)},
     )
     async def telegram_login(
         self,

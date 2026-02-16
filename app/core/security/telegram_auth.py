@@ -8,7 +8,7 @@ from urllib.parse import parse_qsl
 
 from litestar import Request
 
-from core import settings
+from core.config import settings
 from exceptions.http import UnauthorizedError
 
 
