@@ -1,1 +1,1 @@
-from .config import settings as settings
+from .config.config import settings as settings
