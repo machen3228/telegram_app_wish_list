@@ -65,3 +65,11 @@ jobs:
       - name: Run tests with pytest
         run: |
           uv run pytest -vv -n auto
+        env:
+          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN }}
+          APP__DB__HOST: ${{ secrets.APP__DB__HOST }}
+          APP__DB__PORT: ${{ secrets.APP__DB__PORT }}
+          APP__DB__USER: ${{ secrets.APP__DB__USER }}
+          APP__DB__PASSWORD: ${{ secrets.APP__DB__PASSWORD }}
+          APP__DB__NAME: ${{ secrets.APP__DB__NAME }}
+          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY }}
