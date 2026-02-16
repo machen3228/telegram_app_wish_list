@@ -113,13 +113,15 @@ jobs:
 
       - name: Debug - Check settings
         run: |
-          uv run python -c "
+          cat > debug_settings.py << 'EOFPYTHON'
           from core.config import settings
+          
           print('='*50)
           print(f'DB name from env: {settings.db.name}')
           print(f'DB test_async_url: {settings.db.test_async_url}')
           print('='*50)
-          "
+          EOFPYTHON
+          uv run python debug_settings.py
         env:
           APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
           APP__DB__HOST: localhost
@@ -143,3 +145,9 @@ jobs:
           # то передаем полное имя БД С _test
           APP__DB__NAME: ${{ format('{0}_test', env.DB_NAME_BASE) }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: success()
+        with:
+          fail_ci_if_error: false
