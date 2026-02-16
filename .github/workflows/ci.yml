@@ -119,9 +119,3 @@ jobs:
           APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
           APP__DB__NAME: ${{ env.DB_NAME }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v4
-        if: success()
-        with:
-          fail_ci_if_error: false
