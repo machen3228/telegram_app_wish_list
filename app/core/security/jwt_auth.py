@@ -29,7 +29,7 @@ class BaseJWTAuth:
             payload: dict[str, Any] = jwt.decode(
                 token,
                 settings.jwt.secret_key.get_secret_value(),
-                algorithms=settings.jwt.algorithm,
+                settings.jwt.algorithm,
             )
             if payload.get('type') != 'access':
                 raise UnauthorizedError(detail="Invalid token type: expected 'access'")
