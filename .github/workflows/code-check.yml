@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  pre-commit:
+  code-check:
     runs-on: ubuntu-latest
     
     steps:

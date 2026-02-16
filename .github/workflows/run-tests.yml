@@ -1,0 +1,36 @@
+name: Run Tests
+
+on:
+  workflow_run:
+    workflows: ["Code Check"]
+    types:
+      - completed
+    branches:
+      - '**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-groups
+
+      - name: Run tests with pytest
+        run: |
+          uv run pytest -vv -n auto
