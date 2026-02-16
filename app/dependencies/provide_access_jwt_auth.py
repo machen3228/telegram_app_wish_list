@@ -1,6 +1,6 @@
 from litestar import Request
 
-from core.security.jwt_auth import AccessJWTAuth
+from core.security import AccessJWTAuth
 
 _access_jwt_auth = AccessJWTAuth()
 

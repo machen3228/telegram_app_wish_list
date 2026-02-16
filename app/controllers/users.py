@@ -1,13 +1,18 @@
-from litestar import Controller, delete, get, post
+from litestar import Controller
+from litestar import delete
+from litestar import get
+from litestar import post
 from litestar.di import Provide
 from litestar.dto import DataclassDTO
 
-from core.security.jwt_auth import TokenOut
-from core.security.telegram_auth import TelegramInitData
-from dependencies import provide_access_jwt_auth, provide_telegram_init_data, provide_user_service
-from domain.users import User
+from core.security import TelegramInitData
+from core.security import TokenOut
+from dependencies import provide_access_jwt_auth
+from dependencies import provide_telegram_init_data
+from dependencies import provide_user_service
+from domain import User
 from dto.users import FriendRequestDTO
-from services.users import UserService
+from services import UserService
 
 
 class UserController(Controller):

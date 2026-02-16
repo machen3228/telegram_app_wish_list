@@ -1,8 +1,8 @@
 from litestar.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from domain.gifts import Gift
-from repositories.gifts import GiftRepository
+from domain import Gift
+from repositories import GiftRepository
 
 
 class GiftService:

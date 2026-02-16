@@ -2,13 +2,14 @@ from litestar.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.security.jwt_auth import BaseJWTAuth, TokenOut
-from core.security.telegram_auth import TelegramInitData
-from domain.users import User
+from core.security import BaseJWTAuth
+from core.security import TelegramInitData
+from core.security import TokenOut
+from domain import User
 from dto.users import FriendRequestDTO
 from exceptions.database import NotFoundInDbError
 from exceptions.http import NotFoundError
-from repositories.users import UserRepository
+from repositories import UserRepository
 
 
 class UserService:

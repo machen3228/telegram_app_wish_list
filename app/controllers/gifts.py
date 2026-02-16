@@ -1,10 +1,14 @@
-from litestar import Controller, delete, get, post
+from litestar import Controller
+from litestar import delete
+from litestar import get
+from litestar import post
 from litestar.di import Provide
 
-from dependencies import provide_access_jwt_auth, provide_gift_service
+from dependencies import provide_access_jwt_auth
+from dependencies import provide_gift_service
 from domain.gifts import Gift
 from dto.gifts import GiftCreateDTO
-from services.gifts import GiftService
+from services import GiftService
 
 
 class GiftController(Controller):

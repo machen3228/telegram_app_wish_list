@@ -1,14 +1,15 @@
 from pathlib import Path
 
 from litestar import Litestar
-from litestar.contrib.sqlalchemy.plugins import SQLAlchemyAsyncConfig, SQLAlchemyPlugin
+from litestar.contrib.sqlalchemy.plugins import SQLAlchemyAsyncConfig
+from litestar.contrib.sqlalchemy.plugins import SQLAlchemyPlugin
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.spec import Contact
 from litestar.static_files import create_static_files_router
 
-from controllers.gifts import GiftController
-from controllers.users import UserController
-from core.config import settings
+from controllers import GiftController
+from controllers import UserController
+from core import settings
 
 PARENT_DIR = Path(__file__).resolve().parent
 STATIC_DIR = PARENT_DIR / 'static'
