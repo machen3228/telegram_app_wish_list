@@ -21,9 +21,9 @@ from litestar import Request
 import pytest
 
 from core.config import settings
-from core.security.jwt_auth import AccessJWTAuth
-from core.security.jwt_auth import BaseJWTAuth
-from core.security.jwt_auth import TokenOut
+from core.security import AccessJWTAuth
+from core.security import BaseJWTAuth
+from core.security import TokenOut
 from exceptions.http import UnauthorizedError
 
 
