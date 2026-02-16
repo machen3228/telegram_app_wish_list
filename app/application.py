@@ -9,7 +9,7 @@ from litestar.static_files import create_static_files_router
 
 from controllers import GiftController
 from controllers import UserController
-from core.config import settings
+from core import settings
 
 PARENT_DIR = Path(__file__).resolve().parent
 STATIC_DIR = PARENT_DIR / 'static'
