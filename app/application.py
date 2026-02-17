@@ -8,6 +8,7 @@ from litestar.static_files import create_static_files_router
 
 from controllers import GiftController
 from controllers import UserController
+from core.config import settings
 from core.database import sqlalchemy_config
 
 PARENT_DIR = Path(__file__).resolve().parent
@@ -23,12 +24,12 @@ app = Litestar(
     route_handlers=[UserController, GiftController, static_files_router],
     plugins=[SQLAlchemyPlugin(config=sqlalchemy_config)],
     openapi_config=OpenAPIConfig(
-        title='Wishlist API',
-        version='0.0.1',
-        description='Backend API for Telegram wishlist app',
+        title=settings.app.title,
+        version=settings.app.version,
+        description=settings.app.description,
         contact=Contact(
-            name='developer',
-            email='machen3228@gmail.com',
+            name=settings.app.developer_name,
+            email=settings.app.developer_email,
         ),
     ),
     debug=True,
