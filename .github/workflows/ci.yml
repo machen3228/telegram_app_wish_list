@@ -88,15 +88,15 @@ jobs:
             -d ${DB_NAME}_test \
             -c "SELECT version();"
 
-      - name: Create .env file for Atlas
-        run: |
-          cat > .env << EOF
-          APP__DB__USER=${DB_USER}
-          APP__DB__PASSWORD=${DB_PASSWORD}
-          APP__DB__HOST=localhost
-          APP__DB__PORT=5432
-          APP__DB__NAME=${DB_NAME}
-          EOF
+#      - name: Create .env file for Atlas
+#        run: |
+#          cat > .env << EOF
+#          APP__DB__USER=${DB_USER}
+#          APP__DB__PASSWORD=${DB_PASSWORD}
+#          APP__DB__HOST=localhost
+#          APP__DB__PORT=5432
+#          APP__DB__NAME=${DB_NAME}
+#          EOF
 
       - name: Install Atlas CLI
         run: |
@@ -104,15 +104,17 @@ jobs:
 
       - name: Run migrations on test database
         run: |
-          atlas migrate apply --env local_test
+          atlas migrate apply \
+            --dir "file://migrations" \
+            --url "postgres://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}_test?sslmode=disable"
 
       - name: Run tests with pytest
         run: uv run pytest -vv -n auto
-#        env:
-#          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
-#          APP__DB__HOST: localhost
-#          APP__DB__PORT: 5432
-#          APP__DB__USER: ${{ env.DB_USER }}
-#          APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
-#          APP__DB__NAME: ${{ env.DB_NAME }}
-#          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
+        env:
+          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
+          APP__DB__HOST: localhost
+          APP__DB__PORT: 5432
+          APP__DB__USER: ${{ env.DB_USER }}
+          APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
+          APP__DB__NAME: ${{ env.DB_NAME }}
+          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
