@@ -88,19 +88,8 @@ jobs:
             -d ${DB_NAME}_test \
             -c "SELECT version();"
 
-#      - name: Create .env file for Atlas
-#        run: |
-#          cat > .env << EOF
-#          APP__DB__USER=${DB_USER}
-#          APP__DB__PASSWORD=${DB_PASSWORD}
-#          APP__DB__HOST=localhost
-#          APP__DB__PORT=5432
-#          APP__DB__NAME=${DB_NAME}
-#          EOF
-
       - name: Install Atlas CLI
-        run: |
-          curl -sSf https://atlasgo.sh | sh
+        uses: ariga/setup-atlas@master
 
       - name: Run migrations on test database
         run: |
