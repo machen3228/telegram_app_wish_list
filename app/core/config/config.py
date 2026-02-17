@@ -3,6 +3,7 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+from core.config.app import AppConfig
 from core.config.bot import BotConfig
 from core.config.database import DatabaseConfig
 from core.config.jwt import JWTConfig
@@ -22,6 +23,7 @@ class Settings(BaseSettings):
         extra='ignore',
     )
 
+    app: AppConfig = AppConfig()
     logger: LoggerConfig = LoggerConfig()
     bot: BotConfig
     db: DatabaseConfig
