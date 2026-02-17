@@ -48,8 +48,7 @@ def extract_auth_timestamp(parsed_data: dict) -> int:
         raise UnauthorizedError(detail='Invalid auth_date format') from e
 
 
-def check_data_freshness(auth_timestamp: int) -> None:
-    max_age = settings.app.max_tg_token_age
+def check_data_freshness(auth_timestamp: int, max_age: int = settings.app.max_tg_token_age) -> None:
     age = int(time.time()) - auth_timestamp
     if age > max_age:
         raise UnauthorizedError(detail=f'Init data expired (age: {age}s, max: {max_age}s)')
@@ -59,8 +58,7 @@ def build_data_check_string(parsed_data: dict) -> str:
     return '\n'.join(f'{k}={v}' for k, v in sorted(parsed_data.items()))
 
 
-def compute_hmac_signature(data_check_string: str) -> str:
-    bot_token = settings.bot.token.get_secret_value()
+def compute_hmac_signature(data_check_string: str, bot_token: str = settings.bot.token.get_secret_value()) -> str:
     secret_key = hmac.new(b'WebAppData', bot_token.encode(), hashlib.sha256).digest()
     return hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
 
