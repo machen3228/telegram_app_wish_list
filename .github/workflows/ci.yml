@@ -24,8 +24,7 @@ jobs:
           enable-cache: true
 
       - name: Install pre-commit
-        run: |
-          uv tool install pre-commit
+        run: uv tool install pre-commit
 
       - name: Cache pre-commit hooks
         uses: actions/cache@v4
