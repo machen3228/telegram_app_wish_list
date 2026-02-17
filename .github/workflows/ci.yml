@@ -27,7 +27,7 @@ jobs:
         run: uv tool install pre-commit
 
       - name: Cache pre-commit hooks
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
@@ -107,13 +107,12 @@ jobs:
           atlas migrate apply --env local_test
 
       - name: Run tests with pytest
-        run: |
-          uv run pytest -vv -n auto
-        env:
-          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
-          APP__DB__HOST: localhost
-          APP__DB__PORT: 5432
-          APP__DB__USER: ${{ env.DB_USER }}
-          APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
-          APP__DB__NAME: ${{ env.DB_NAME }}
-          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
+        run: uv run pytest -vv -n auto
+#        env:
+#          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
+#          APP__DB__HOST: localhost
+#          APP__DB__PORT: 5432
+#          APP__DB__USER: ${{ env.DB_USER }}
+#          APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
+#          APP__DB__NAME: ${{ env.DB_NAME }}
+#          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
