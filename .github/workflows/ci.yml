@@ -105,13 +105,6 @@ jobs:
             --cov=app \
             --cov-report=xml \
             --cov-report=term-missing
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-app
-          fail_ci_if_error: true
         env:
           APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
           APP__DB__HOST: localhost
@@ -120,3 +113,11 @@ jobs:
           APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
           APP__DB__NAME: ${{ env.DB_NAME }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-app
+          fail_ci_if_error: true
