@@ -103,7 +103,8 @@ jobs:
             -vv \
             -n auto \
             --cov=app \
-            --cov-report=xml \
+            --cov-report=xml:/app/coverage_output/coverage.xml \
+            --cov-report=html:/app/coverage_output/html \
             --cov-report=term-missing
         env:
           APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
@@ -114,10 +115,14 @@ jobs:
           APP__DB__NAME: ${{ env.DB_NAME }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-app
-          fail_ci_if_error: true
+      - name: Extract coverage %
+        id: coverage
+        run: |
+          COVERAGE=$(python3 -c " \
+          import xml.etree.ElementTree as ET \
+          tree = ET.parse('/app/coverage_output/coverage.xml') \
+          root = tree.getroot() \
+          print(int(float(root.attrib['line-rate']) * 100)) \
+          ") \
+              echo "Coverage=${COVERAGE}" \
+          echo "COVERAGE=${COVERAGE}" >> $GITHUB_ENV
