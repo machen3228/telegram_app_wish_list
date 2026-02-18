@@ -98,7 +98,20 @@ jobs:
             --url "postgres://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}_test?sslmode=disable"
 
       - name: Run tests with pytest
-        run: uv run pytest -vv -n auto
+        run: |
+          uv run pytest \
+            -vv \
+            -n auto \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term-missing
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-app
+          fail_ci_if_error: true
         env:
           APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
           APP__DB__HOST: localhost
