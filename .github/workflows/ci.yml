@@ -116,15 +116,9 @@ jobs:
 
       - name: Generate coverage badge
         run: |
-          uv run coverage-badge -o coverage-badge.svg -f
-        env:
-          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
-          APP__DB__HOST: localhost
-          APP__DB__PORT: 5432
-          APP__DB__USER: ${{ env.DB_USER }}
-          APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
-          APP__DB__NAME: ${{ env.DB_NAME }}
-          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
+          uv run genbadge coverage \
+            -i coverage_output/coverage.xml \
+            -o coverage-badge.svg
 
       - name: Commit coverage badge
         uses: stefanzweifel/git-auto-commit-action@v5
