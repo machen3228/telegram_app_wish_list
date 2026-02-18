@@ -25,6 +25,7 @@ dev = [
     "ty>=0.0.15",
 ]
 test = [
+    "genbadge[coverage]>=1.1.3",
     "pyhamcrest>=2.1.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=0.23.8",
