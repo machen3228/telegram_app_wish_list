@@ -1,4 +1,10 @@
 # telegram_app_wish_list
+
+[![CI](https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml/badge.svg)]
+(https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/machen3228/telegram_app_wish_list/branch/main/graph/badge.svg)]
+(https://codecov.io/gh/machen3228/telegram_app_wish_list)
+
 This is a Telegram-embedded app that lets users share their preferred gifts with friends. It helps people choose suitable presents, for example for birthdays, and removes the hassle of guessing what to buy
 
 # VENV
