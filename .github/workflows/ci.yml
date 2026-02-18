@@ -99,14 +99,12 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          mkdir -p coverage_output/html \
           uv run pytest \
-            -vv \
-            -n auto \
-            --cov=app \
-            --cov-report=xml:coverage_output/coverage.xml \
-            --cov-report=html:coverage_output/html \
-            --cov-report=term-missing
+          -vv \
+          -n auto \
+          --cov=app \
+          --cov-report=xml:coverage_output/coverage.xml \
+          --cov-report=term-missing
         env:
           APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
           APP__DB__HOST: localhost
@@ -116,14 +114,20 @@ jobs:
           APP__DB__NAME: ${{ env.DB_NAME }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
 
-      - name: Extract coverage %
-        id: coverage
+      - name: Generate coverage badge
         run: |
-          COVERAGE=$(python3 -c " \
-          import xml.etree.ElementTree as ET \
-          tree = ET.parse('/app/coverage_output/coverage.xml') \
-          root = tree.getroot() \
-          print(int(float(root.attrib['line-rate']) * 100)) \
-          ") \
-              echo "Coverage=${COVERAGE}" \
-          echo "COVERAGE=${COVERAGE}" >> $GITHUB_ENV
+          uv run coverage-badge -o coverage-badge.svg -f
+        env:
+          APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
+          APP__DB__HOST: localhost
+          APP__DB__PORT: 5432
+          APP__DB__USER: ${{ env.DB_USER }}
+          APP__DB__PASSWORD: ${{ env.DB_PASSWORD }}
+          APP__DB__NAME: ${{ env.DB_NAME }}
+          APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
+
+      - name: Commit coverage badge
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update coverage badge"
+          file_pattern: coverage-badge.svg

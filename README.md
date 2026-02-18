@@ -1,8 +1,7 @@
 # telegram_app_wish_list
 
-[![CI](https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml/badge.svg)]
-(https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/Coverage-${{ env.COVERAGE }}%25-brightgreen)](./coverage_output/html/index.html)
+[![CI](https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml/badge.svg)](https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml)
+[![Coverage](https://raw.githubusercontent.com/machen3228/telegram_app_wish_list/main/coverage-badge.svg)](https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml)
 
 This is a Telegram-embedded app that lets users share their preferred gifts with friends. It helps people choose suitable presents, for example for birthdays, and removes the hassle of guessing what to buy
 
