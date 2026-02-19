@@ -77,8 +77,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: |
-          uv sync --all-groups
+        run: uv sync --all-groups
 
       - name: Verify PostgreSQL connection
         run: |
@@ -103,8 +102,7 @@ jobs:
           -vv \
           -n auto \
           --cov=app \
-          --cov-report=xml:coverage_output/coverage.xml \
-          --cov-report=term-missing
+          --cov-report=xml:coverage.xml
         env:
           APP__BOT__TOKEN: ${{ secrets.APP__BOT__TOKEN || 'test_token_123' }}
           APP__DB__HOST: localhost
@@ -114,14 +112,9 @@ jobs:
           APP__DB__NAME: ${{ env.DB_NAME }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
 
-      - name: Generate coverage badge
-        run: |
-          uv run genbadge coverage \
-            -i coverage_output/coverage.xml \
-            -o coverage-badge.svg
-
-      - name: Commit coverage badge
-        uses: stefanzweifel/git-auto-commit-action@v5
+      - name: Report Coveralls
+        uses: coverallsapp/github-action@v2
         with:
-          commit_message: "chore: update coverage badge"
-          file_pattern: coverage-badge.svg
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          files: coverage.xml
+          format: cobertura
