@@ -1,4 +1,4 @@
-h1:HO19NExqrRe5TFNtSavyTdjyskzHGn/C7gcjd/UMJR0=
+h1:Q9dnDOUWecgX+w0Hrlsy8YOM0Ea4HUIx7fhHXKNuoEo=
 20251215205013_initial.sql h1:RNPJPXdrCTy75rnxrCMpYJelB2GMoOeLl1HLGKR+6dw=
 20251223192138_gifts_add_price_note_columns.sql h1:EhC0uM4SUFfEHk2FCHG1/JyHM0wTz77JU9XUsbkrATI=
 20251223214759_update_timestamt_types.sql h1:0opewA7oJ/fTjWvjfN6sLosG86AEMhMUAc8MbzgfVLM=
@@ -6,3 +6,4 @@ h1:HO19NExqrRe5TFNtSavyTdjyskzHGn/C7gcjd/UMJR0=
 20260129194855_create_friend_requests_table.sql h1:Aq+QrZ9GfmBzliHFEqC1bACcelWaBgC/cs1Rn5ExvfE=
 20260201173405_Create_gifts_reservations_table.sql h1:xQSEB3InaGNoUtnvYwtuIfn2nDYnmZ44obcF2SJn38s=
 20260202193129_inrease_avatar_url_lenght.sql h1:sZersb+2lagsYF8s548pSTNgr7xLXb9uCegHawrZQC8=
+20260220194055_make nullable user fields.sql h1:9gW+4eAuXpFlzFCj03A+CCNqVS9WBWUR/t5WNLXqd/U=

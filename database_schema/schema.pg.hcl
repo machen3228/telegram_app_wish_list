@@ -9,11 +9,11 @@ table "users" {
     type = bigint
   }
   column "tg_username" {
-    null = false
+    null = true
     type = varchar(30)
   }
   column "first_name" {
-    null = false
+    null = true
     type = varchar(30)
   }
   column "last_name" {
