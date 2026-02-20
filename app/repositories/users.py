@@ -53,14 +53,7 @@ class UserRepository(BaseRepository[User]):
 
     async def get(self, obj_id: int) -> User:
         query = text("""
-          SELECT
-            u.tg_id,
-            u.tg_username,
-            u.first_name,
-            u.last_name,
-            u.avatar_url,
-            u.created_at,
-            u.updated_at
+          SELECT *
           FROM users u
           WHERE u.tg_id = :tg_id;
         """)
