@@ -6,8 +6,11 @@ from hamcrest import equal_to
 from hamcrest import greater_than
 from hamcrest import has_properties
 from hamcrest import instance_of
+from hamcrest import none
 import pytest
 
+from domain import User
+from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from repositories import UserRepository
 from tests.integration_tests.conftest import UserDict
@@ -50,43 +53,15 @@ class TestUserRepository:
         test_user: UserDict,
     ) -> None:
         await user_repository.update(test_user['tg_id'], tg_username='new_username', first_name='new_first_name')
-        updated_user = await user_repository.get(test_user['tg_id'])
 
         assert_that(
-            updated_user,
+            await user_repository.get(test_user['tg_id']),
             has_properties(
                 tg_username=equal_to('new_username'),
                 first_name=equal_to('new_first_name'),
-            ),
-        )
-
-    async def test_repo_update_user_updates_updated_at(
-        self,
-        user_repository: UserRepository,
-        test_user: UserDict,
-    ) -> None:
-        await user_repository.update(test_user['tg_id'], first_name='new_first_name')
-        updated_user = await user_repository.get(test_user['tg_id'])
-
-        assert_that(
-            updated_user.updated_at,
-            greater_than(test_user['updated_at']),
-        )
-
-    async def test_repo_update_user_does_not_change_other_fields(
-        self,
-        user_repository: UserRepository,
-        test_user: UserDict,
-    ) -> None:
-        await user_repository.update(test_user['tg_id'], first_name='new_first_name')
-        updated_user = await user_repository.get(test_user['tg_id'])
-
-        assert_that(
-            updated_user,
-            has_properties(
-                tg_username=equal_to(test_user['tg_username']),
                 last_name=equal_to(test_user['last_name']),
                 avatar_url=equal_to(test_user['avatar_url']),
+                updated_at=greater_than(test_user['updated_at']),
             ),
         )
 
@@ -107,23 +82,81 @@ class TestUserRepository:
             ),
         )
 
-    @pytest.mark.parametrize(
-        ('field', 'value'),
-        [
-            pytest.param('tg_username', 'updated_username', id='update_tg_username'),
-            pytest.param('first_name', 'updated_first_name', id='update_first_name'),
-            pytest.param('last_name', 'updated_last_name', id='update_last_name'),
-            pytest.param('avatar_url', 'updated_avatar_url', id='update_avatar_url'),
-        ],
-    )
-    async def test_repo_update_user_single_field(
+    async def test_repo_add_user_success(
+        self,
+        user_repository: UserRepository,
+    ) -> None:
+        user = User.create(
+            tg_id=999999,
+            tg_username='new_user',
+            first_name='New',
+            last_name='User',
+            avatar_url='https://avatar.jpg',
+        )
+
+        assert_that(await user_repository.add(user), equal_to(user.tg_id))
+        assert_that(
+            await user_repository.get(user.tg_id),
+            has_properties(
+                tg_id=equal_to(user.tg_id),
+                tg_username=equal_to(user.tg_username),
+                first_name=equal_to(user.first_name),
+                last_name=equal_to(user.last_name),
+                avatar_url=equal_to(user.avatar_url),
+            ),
+        )
+
+    async def test_repo_add_user_with_nullable_fields(
+        self,
+        user_repository: UserRepository,
+    ) -> None:
+        user = User.create(
+            tg_id=999998,
+            tg_username=None,
+            first_name=None,
+            last_name=None,
+            avatar_url=None,
+        )
+        await user_repository.add(user)
+
+        assert_that(
+            await user_repository.get(user.tg_id),
+            has_properties(
+                tg_username=none(),
+                first_name=none(),
+                last_name=none(),
+                avatar_url=none(),
+            ),
+        )
+
+    async def test_repo_add_user_duplicate_tg_id_raises(
         self,
         user_repository: UserRepository,
         test_user: UserDict,
-        field: str,
-        value: str,
     ) -> None:
-        await user_repository.update(test_user['tg_id'], **{field: value})
-        updated_user = await user_repository.get(test_user['tg_id'])
+        user = User.create(
+            tg_id=test_user['tg_id'],
+            tg_username='another_username',
+            first_name='Another',
+            last_name=None,
+            avatar_url=None,
+        )
 
-        assert_that(updated_user, has_properties(**{field: equal_to(value)}))
+        with pytest.raises(AlreadyExistsInDbError, match=r"User with this 'tg_id' already exists"):
+            await user_repository.add(user)
+
+    async def test_repo_add_user_duplicate_tg_username_raises(
+        self,
+        user_repository: UserRepository,
+        test_user: UserDict,
+    ) -> None:
+        user = User.create(
+            tg_id=999997,
+            tg_username=test_user['tg_username'],
+            first_name='Another',
+            last_name=None,
+            avatar_url=None,
+        )
+
+        with pytest.raises(AlreadyExistsInDbError, match=r"User with this 'tg_username' already exists"):
+            await user_repository.add(user)
