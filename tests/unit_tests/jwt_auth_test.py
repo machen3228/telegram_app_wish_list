@@ -53,12 +53,10 @@ class TestBaseJWTAuth:
                 settings.jwt.algorithm,
             ),
             all_of(
-                has_entries(
-                    {
-                        'sub': str(subject),
-                        'type': 'access',
-                    }
-                ),
+                has_entries({
+                    'sub': str(subject),
+                    'type': 'access',
+                }),
                 has_key('exp'),
             ),
         )
@@ -95,13 +93,11 @@ class TestBaseJWTAuth:
             BaseJWTAuth.verify_token(token_out.access_token),
             all_of(
                 instance_of(dict),
-                has_entries(
-                    {
-                        'exp': instance_of(int),
-                        'sub': str(subject),
-                        'type': 'access',
-                    }
-                ),
+                has_entries({
+                    'exp': instance_of(int),
+                    'sub': str(subject),
+                    'type': 'access',
+                }),
             ),
         )
 
