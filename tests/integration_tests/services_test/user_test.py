@@ -9,6 +9,8 @@ from hamcrest import none
 from litestar.exceptions import HTTPException
 import pytest
 
+from core.security import TelegramInitData
+from core.security import TokenOut
 from exceptions.http import NotFoundError
 from services import UserService
 from tests.integration_tests.conftest import UserDict
@@ -111,5 +113,76 @@ class TestUserService:
             has_properties(
                 status_code=equal_to(400),
                 detail=equal_to("User with this 'tg_id' already exists"),
+            ),
+        )
+
+    async def test_service_telegram_login_new_user_success(
+        self,
+        user_service: UserService,
+    ) -> None:
+        init_data: TelegramInitData = {
+            'id': 999999,
+            'first_name': 'John',
+            'username': 'john',
+            'last_name': 'Doe',
+            'photo_url': 'https://avatar.jpg',
+        }
+
+        assert_that(await user_service.telegram_login(init_data), instance_of(TokenOut))
+
+    async def test_service_telegram_login_new_user_is_saved(
+        self,
+        user_service: UserService,
+    ) -> None:
+        init_data: TelegramInitData = {
+            'id': 999999,
+            'first_name': 'John',
+            'username': 'john',
+            'last_name': 'Doe',
+            'photo_url': 'https://avatar.jpg',
+        }
+        await user_service.telegram_login(init_data)
+
+        assert_that(
+            await user_service.get(init_data['id']),
+            has_properties(
+                tg_id=equal_to(init_data['id']),
+                tg_username=equal_to(init_data['username']),
+                first_name=equal_to(init_data['first_name']),
+                last_name=equal_to(init_data['last_name']),
+                avatar_url=equal_to(init_data['photo_url']),
+            ),
+        )
+
+    async def test_service_telegram_login_existing_user_success(
+        self,
+        user_service: UserService,
+        test_user: UserDict,
+    ) -> None:
+        init_data: TelegramInitData = {
+            'id': test_user['tg_id'],
+            'first_name': test_user['first_name'],
+            'username': test_user['tg_username'],
+        }
+
+        assert_that(await user_service.telegram_login(init_data), instance_of(TokenOut))
+
+    async def test_service_telegram_login_existing_user_updates_changed_fields(
+        self,
+        user_service: UserService,
+        test_user: UserDict,
+    ) -> None:
+        init_data: TelegramInitData = {
+            'id': test_user['tg_id'],
+            'first_name': 'UpdatedName',
+            'username': 'updated_username',
+        }
+        await user_service.telegram_login(init_data)
+
+        assert_that(
+            await user_service.get(test_user['tg_id']),
+            has_properties(
+                tg_username=equal_to('updated_username'),
+                first_name=equal_to('UpdatedName'),
             ),
         )
