@@ -22,7 +22,7 @@ class UserService:
             fields_to_update = user.get_changed_fields(init_data)
             if fields_to_update:
                 await self._repository.update(init_data['id'], **fields_to_update)
-        except KeyError:
+        except NotFoundInDbError:
             await self.add(
                 tg_id=init_data['id'],
                 tg_username=init_data.get('username', ''),
