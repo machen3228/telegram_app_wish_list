@@ -4,9 +4,15 @@ from typing import TYPE_CHECKING
 from typing import TypedDict
 from typing import Unpack
 
+from hamcrest import all_of
 from hamcrest import assert_that
 from hamcrest import equal_to
+from hamcrest import greater_than_or_equal_to
 from hamcrest import has_entries
+from hamcrest import has_properties
+from hamcrest import instance_of
+from hamcrest import less_than_or_equal_to
+from hamcrest import none
 import pytest
 
 from domain import User
@@ -164,3 +170,60 @@ class TestUserDomain:
                 avatar_url=equal_to('https://new.jpg'),
             ),
         )
+
+    def test_create_user_success(self) -> None:
+        before = datetime.now(UTC)
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name='Doe',
+            avatar_url='https://avatar.jpg',
+        )
+        after = datetime.now(UTC)
+
+        assert_that(
+            user,
+            has_properties(
+                tg_id=equal_to(1),
+                tg_username=equal_to('john'),
+                first_name=equal_to('John'),
+                last_name=equal_to('Doe'),
+                avatar_url=equal_to('https://avatar.jpg'),
+                created_at=all_of(greater_than_or_equal_to(before), less_than_or_equal_to(after)),
+                updated_at=all_of(greater_than_or_equal_to(before), less_than_or_equal_to(after)),
+            ),
+        )
+
+    def test_create_user_created_at_equals_updated_at(self) -> None:
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name=None,
+            avatar_url=None,
+        )
+
+        assert_that(user.created_at, equal_to(user.updated_at))
+
+    def test_create_user_with_nullable_fields(self) -> None:
+        user = User.create(
+            tg_id=1,
+            tg_username=None,
+            first_name=None,
+            last_name=None,
+            avatar_url=None,
+        )
+
+        assert_that(user, has_properties(tg_username=none(), first_name=none(), last_name=none(), avatar_url=none()))
+
+    def test_create_user_returns_user_instance(self) -> None:
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name=None,
+            avatar_url=None,
+        )
+
+        assert_that(user, instance_of(User))
