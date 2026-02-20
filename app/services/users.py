@@ -1,5 +1,4 @@
 from litestar.exceptions import HTTPException
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import BaseJWTAuth
@@ -7,6 +6,7 @@ from core.security import TelegramInitData
 from core.security import TokenOut
 from domain import User
 from dto.users import FriendRequestDTO
+from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from exceptions.http import NotFoundError
 from repositories import UserRepository
@@ -49,8 +49,8 @@ class UserService:
         )
         try:
             tg_id = await self._repository.add(user)
-        except IntegrityError as e:
-            raise HTTPException(status_code=400, detail='User already exists') from e
+        except AlreadyExistsInDbError as e:
+            raise HTTPException(status_code=400, detail=str(e)) from e
         return await self._repository.get(tg_id)
 
     async def get(self, tg_id: int) -> User:
