@@ -35,8 +35,8 @@ class UserService:
     async def add(
         self,
         tg_id: int,
-        tg_username: str,
-        first_name: str,
+        tg_username: str | None,
+        first_name: str | None,
         last_name: str | None,
         avatar_url: str | None,
     ) -> User:
