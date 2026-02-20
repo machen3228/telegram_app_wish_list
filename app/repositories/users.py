@@ -2,11 +2,14 @@ from datetime import UTC
 from datetime import datetime
 
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from domain.users import User
 from dto.users import FriendRequestDTO
+from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
+from utils import extract_integrity_error_conflict_field
 
 
 class UserRepository(BaseRepository[User]):
@@ -24,7 +27,11 @@ class UserRepository(BaseRepository[User]):
             'created_at': obj.created_at,
             'updated_at': obj.updated_at,
         }
-        await self._session.execute(stmt, params)
+        try:
+            await self._session.execute(stmt, params)
+        except IntegrityError as e:
+            field = extract_integrity_error_conflict_field(e)
+            raise AlreadyExistsInDbError('User', field) from None
         return obj.tg_id
 
     async def update(self, tg_id: int, **fields: str | int | datetime) -> None:
@@ -53,14 +60,7 @@ class UserRepository(BaseRepository[User]):
 
     async def get(self, obj_id: int) -> User:
         query = text("""
-          SELECT
-            u.tg_id,
-            u.tg_username,
-            u.first_name,
-            u.last_name,
-            u.avatar_url,
-            u.created_at,
-            u.updated_at
+          SELECT *
           FROM users u
           WHERE u.tg_id = :tg_id;
         """)

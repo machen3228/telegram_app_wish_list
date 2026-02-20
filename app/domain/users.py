@@ -1,9 +1,9 @@
-from collections.abc import Sequence
 from dataclasses import dataclass
 from dataclasses import field
 from datetime import UTC
 from datetime import datetime
 from typing import Any
+from typing import Final
 from typing import Self
 
 from core.security import TelegramInitData
@@ -35,8 +35,8 @@ class User:
     def create(
         cls,
         tg_id: int,
-        tg_username: str,
-        first_name: str,
+        tg_username: str | None,
+        first_name: str | None,
         last_name: str | None,
         avatar_url: str | None,
     ) -> Self:
@@ -51,13 +51,11 @@ class User:
             updated_at=now,
         )
 
-    def add_friends(self, friends: Sequence[int]) -> None:
-        self._friends_ids.update(friends)
-
     def can_add_friend(self, friend: 'User') -> bool:
         return friend.tg_id not in self._friends_ids
 
     def get_changed_fields(self, init_data: TelegramInitData) -> dict[str, Any]:
+        nullable_fields: Final = {'last_name', 'avatar_url'}
         field_mapping = {
             'username': 'tg_username',
             'first_name': 'first_name',
@@ -67,12 +65,8 @@ class User:
         update_fields: dict[str, Any] = {}
 
         for telegram_key, model_key in field_mapping.items():
-            telegram_value = init_data.get(telegram_key, '')
-            current_value = getattr(self, model_key)
-
-            if model_key in ('last_name', 'avatar_url'):
-                telegram_value = telegram_value or None
-                current_value = current_value or None
+            telegram_value = init_data.get(telegram_key) or (None if model_key in nullable_fields else '')
+            current_value = getattr(self, model_key) or (None if model_key in nullable_fields else '')
 
             if current_value != telegram_value:
                 update_fields[model_key] = telegram_value
