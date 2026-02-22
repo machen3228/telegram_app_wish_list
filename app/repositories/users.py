@@ -96,22 +96,22 @@ class UserRepository(BaseRepository[User]):
         rows = result.mappings().all()
 
         friends_ids: set[int] = set()
-        incoming: dict[int, str] = {}
-        outgoing: dict[int, str] = {}
+        incoming: set[int] = set()
+        outgoing: set[int] = set()
 
         for row in rows:
             match row['relation_type']:
                 case 'friend':
                     friends_ids.add(row['target_id'])
                 case 'incoming':
-                    incoming[row['target_id']] = row['status']
+                    incoming.add(row['target_id'])
                 case 'outgoing':
-                    outgoing[row['target_id']] = row['status']
+                    outgoing.add(row['target_id'])
 
         return UserRelationsDTO(
             friends_ids=friends_ids,
-            incoming_requests=incoming,
-            outgoing_requests=outgoing,
+            incoming_request_ids=incoming,
+            outgoing_request_ids=outgoing,
         )
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
