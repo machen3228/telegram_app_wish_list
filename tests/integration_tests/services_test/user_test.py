@@ -3,14 +3,18 @@ from datetime import datetime
 from hamcrest import all_of
 from hamcrest import assert_that
 from hamcrest import equal_to
+from hamcrest import has_entries
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import none
 from litestar.exceptions import HTTPException
 import pytest
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import TelegramInitData
 from core.security import TokenOut
+from exceptions.http import BadRequestError
 from exceptions.http import NotFoundError
 from services import UserService
 from tests.integration_tests.conftest import UserDict
@@ -186,3 +190,107 @@ class TestUserService:
                 first_name=equal_to('UpdatedName'),
             ),
         )
+
+    async def test_service_send_friend_request_self_request_raises(
+        self,
+        user_service: UserService,
+        test_user_bob: UserDict,
+    ) -> None:
+        with pytest.raises(BadRequestError, match='Cannot send friend request to yourself'):
+            await user_service.send_friend_request(
+                sender_id=test_user_bob['tg_id'],
+                receiver_id=test_user_bob['tg_id'],
+            )
+
+    async def test_service_send_friend_request_sender_not_found_raises(
+        self,
+        user_service: UserService,
+        test_user_bob: UserDict,
+    ) -> None:
+        with pytest.raises(NotFoundError):
+            await user_service.send_friend_request(
+                sender_id=999999,
+                receiver_id=test_user_bob['tg_id'],
+            )
+
+    async def test_service_send_friend_request_receiver_not_found_raises(
+        self,
+        user_service: UserService,
+        test_user_bob: UserDict,
+    ) -> None:
+        with pytest.raises(NotFoundError):
+            await user_service.send_friend_request(
+                sender_id=test_user_bob['tg_id'],
+                receiver_id=999999,
+            )
+
+    async def test_service_send_friend_request_already_friends_raises(
+        self,
+        user_service: UserService,
+        test_user_with_friend: int,
+        test_user_john: UserDict,
+    ) -> None:
+        with pytest.raises(BadRequestError, match='Already friends'):
+            await user_service.send_friend_request(
+                sender_id=test_user_with_friend,
+                receiver_id=test_user_john['tg_id'],
+            )
+
+    async def test_service_send_friend_request_success(
+        self,
+        db_session: AsyncSession,
+        user_service: UserService,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.send_friend_request(
+            sender_id=test_user_bob['tg_id'],
+            receiver_id=test_user_john['tg_id'],
+        )
+
+        result = await db_session.execute(
+            text("""
+                SELECT status
+                FROM friend_requests
+                WHERE sender_tg_id = :sender_id AND receiver_tg_id = :receiver_id
+            """),
+            {'sender_id': test_user_bob['tg_id'], 'receiver_id': test_user_john['tg_id']},
+        )
+
+        assert_that(result.mappings().first(), has_entries(status=equal_to('pending')))  # ty:ignore[no-matching-overload]
+
+    async def test_service_send_friend_request_duplicate_does_not_raise(
+        self,
+        user_service: UserService,
+        test_user_with_outgoing_request: int,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.send_friend_request(
+            sender_id=test_user_with_outgoing_request,
+            receiver_id=test_user_john['tg_id'],
+        )
+
+    async def test_service_send_friend_request_mutual_creates_friendship(
+        self,
+        db_session: AsyncSession,
+        user_service: UserService,
+        test_user_with_incoming_request: int,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.send_friend_request(
+            sender_id=test_user_with_incoming_request,
+            receiver_id=test_user_john['tg_id'],
+        )
+
+        result = await db_session.execute(
+            text("""
+            SELECT COUNT(*) as cnt
+            FROM friends
+            WHERE (user_tg_id = :user1 AND friend_tg_id = :user2)
+               OR (user_tg_id = :user2 AND friend_tg_id = :user1)
+            """),
+            {'user1': test_user_with_incoming_request, 'user2': test_user_john['tg_id']},
+        )
+        row = result.mappings().first()
+
+        assert_that(row, has_entries(cnt=equal_to(2)))  # ty:ignore[no-matching-overload]

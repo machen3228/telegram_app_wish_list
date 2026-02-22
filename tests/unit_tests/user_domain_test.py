@@ -16,6 +16,8 @@ from hamcrest import none
 import pytest
 
 from domain import User
+from domain.users import FriendAction
+from dto.users import UserRelationsDTO
 
 if TYPE_CHECKING:
     from core.security import TelegramInitData
@@ -228,54 +230,6 @@ class TestUserDomain:
 
         assert_that(user, instance_of(User))
 
-    def test_add_friends_adds_ids_to_set(self) -> None:
-        user = make_user()
-        user.add_friends([2, 3, 4])
-        assert user._friends_ids == {2, 3, 4}  # noqa: SLF001
-
-    def test_add_friends_empty_list_does_nothing(self) -> None:
-        user = make_user()
-        user.add_friends([])
-        assert user._friends_ids == set()  # noqa: SLF001
-
-    def test_add_friends_ignores_duplicates(self) -> None:
-        user = make_user()
-        user.add_friends([2, 2, 3])
-        assert user._friends_ids == {2, 3}  # noqa: SLF001
-
-    def test_add_friends_accumulates_on_multiple_calls(self) -> None:
-        user = make_user()
-        user.add_friends([2, 3])
-        user.add_friends([4, 5])
-        assert user._friends_ids == {2, 3, 4, 5}  # noqa: SLF001
-
-    def test_add_friends_does_not_add_self(self) -> None:
-        self_id = 1
-        user = make_user(tg_id=self_id)
-        user.add_friends([self_id])
-        assert 1 not in user._friends_ids  # noqa: SLF001
-
-    def test_can_add_friend_returns_true_if_not_friend(self) -> None:
-        user = make_user(tg_id=1)
-        friend = make_user(tg_id=2)
-        assert user.can_add_friend(friend) is True
-
-    def test_can_add_friend_returns_false_if_already_friend(self) -> None:
-        user = make_user(tg_id=1)
-        friend = make_user(tg_id=2)
-        user.add_friends([2])
-        assert user.can_add_friend(friend) is False
-
-    def test_can_add_friend_self(self) -> None:
-        user = make_user(tg_id=1)
-        assert user.can_add_friend(user) is False
-
-    def test_can_add_friend_after_adding_other_friends(self) -> None:
-        user = make_user(tg_id=1)
-        user.add_friends([3, 4, 5])
-        friend = make_user(tg_id=2)
-        assert user.can_add_friend(friend) is True
-
     def test_repr_contains_tg_id(self) -> None:
         user = make_user(tg_id=42)
         assert repr(user) == '<User 42>'
@@ -319,3 +273,150 @@ class TestUserDomain:
         user = make_user(tg_id=1)
         d = {user: 'value'}
         assert d[make_user(tg_id=1)] == 'value'
+
+    def test_load_relations_sets_friends_ids(self) -> None:
+        user = make_user(tg_id=1)
+        relations = UserRelationsDTO(
+            friends_ids={2, 3},
+            incoming_requests={},
+            outgoing_requests={},
+        )
+        user.load_relations(relations)
+
+        assert user._friends_ids == {2, 3}  # noqa: SLF001
+
+    def test_load_relations_sets_incoming_request_ids(self) -> None:
+        user = make_user(tg_id=1)
+        relations = UserRelationsDTO(
+            friends_ids=set(),
+            incoming_requests={2: 'pending', 3: 'pending'},
+            outgoing_requests={},
+        )
+        user.load_relations(relations)
+
+        assert user._incoming_request_ids == {2, 3}  # noqa: SLF001
+
+    def test_load_relations_sets_outgoing_request_ids(self) -> None:
+        user = make_user(tg_id=1)
+        relations = UserRelationsDTO(
+            friends_ids=set(),
+            incoming_requests={},
+            outgoing_requests={2: 'pending', 3: 'pending'},
+        )
+        user.load_relations(relations)
+
+        assert user._outgoing_request_ids == {2, 3}  # noqa: SLF001
+
+    def test_load_relations_excludes_self_from_friends(self) -> None:
+        user = make_user(tg_id=1)
+        relations = UserRelationsDTO(
+            friends_ids={1, 2, 3},
+            incoming_requests={},
+            outgoing_requests={},
+        )
+        user.load_relations(relations)
+
+        assert 1 not in user._friends_ids  # noqa: SLF001
+        assert user._friends_ids == {2, 3}  # noqa: SLF001
+
+    def test_load_relations_excludes_self_from_incoming(self) -> None:
+        user = make_user(tg_id=1)
+        relations = UserRelationsDTO(
+            friends_ids=set(),
+            incoming_requests={1: 'pending', 2: 'pending'},
+            outgoing_requests={},
+        )
+        user.load_relations(relations)
+
+        assert 1 not in user._incoming_request_ids  # noqa: SLF001
+        assert user._incoming_request_ids == {2}  # noqa: SLF001
+
+    def test_load_relations_excludes_self_from_outgoing(self) -> None:
+        user = make_user(tg_id=1)
+        relations = UserRelationsDTO(
+            friends_ids=set(),
+            incoming_requests={},
+            outgoing_requests={1: 'pending', 2: 'pending'},
+        )
+        user.load_relations(relations)
+
+        assert 1 not in user._outgoing_request_ids  # noqa: SLF001
+        assert user._outgoing_request_ids == {2}  # noqa: SLF001
+
+    def test_load_relations_empty(self) -> None:
+        user = make_user(tg_id=1)
+        relations = UserRelationsDTO(
+            friends_ids=set(),
+            incoming_requests={},
+            outgoing_requests={},
+        )
+        user.load_relations(relations)
+
+        assert user._friends_ids == set()  # noqa: SLF001
+        assert user._incoming_request_ids == set()  # noqa: SLF001
+        assert user._outgoing_request_ids == set()  # noqa: SLF001
+
+    def test_resolve_friend_action_already_friends(self) -> None:
+        user = make_user(tg_id=1)
+        friend = make_user(tg_id=2)
+        user.load_relations(
+            UserRelationsDTO(
+                friends_ids={2},
+                incoming_requests={},
+                outgoing_requests={},
+            )
+        )
+
+        assert user.resolve_friend_action(friend) == FriendAction.ALREADY_FRIENDS
+
+    def test_resolve_friend_action_add_friend(self) -> None:
+        user = make_user(tg_id=1)
+        friend = make_user(tg_id=2)
+        user.load_relations(
+            UserRelationsDTO(
+                friends_ids=set(),
+                incoming_requests={2: 'pending'},
+                outgoing_requests={},
+            )
+        )
+
+        assert user.resolve_friend_action(friend) == FriendAction.ADD_FRIEND
+
+    def test_resolve_friend_action_request_already_sent(self) -> None:
+        user = make_user(tg_id=1)
+        friend = make_user(tg_id=2)
+        user.load_relations(
+            UserRelationsDTO(
+                friends_ids=set(),
+                incoming_requests={},
+                outgoing_requests={2: 'pending'},
+            )
+        )
+
+        assert user.resolve_friend_action(friend) == FriendAction.REQUEST_ALREADY_SENT
+
+    def test_resolve_friend_action_send_request(self) -> None:
+        user = make_user(tg_id=1)
+        friend = make_user(tg_id=2)
+        user.load_relations(
+            UserRelationsDTO(
+                friends_ids=set(),
+                incoming_requests={},
+                outgoing_requests={},
+            )
+        )
+
+        assert user.resolve_friend_action(friend) == FriendAction.SEND_REQUEST
+
+    def test_resolve_friend_action_priority_friends_over_incoming(self) -> None:
+        user = make_user(tg_id=1)
+        friend = make_user(tg_id=2)
+        user.load_relations(
+            UserRelationsDTO(
+                friends_ids={2},
+                incoming_requests={2: 'pending'},
+                outgoing_requests={},
+            )
+        )
+
+        assert user.resolve_friend_action(friend) == FriendAction.ALREADY_FRIENDS
