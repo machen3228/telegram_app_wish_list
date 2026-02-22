@@ -51,8 +51,11 @@ class User:
             updated_at=now,
         )
 
+    def add_friends(self, friend_ids: list[int]) -> None:
+        self._friends_ids.update([tg_id for tg_id in friend_ids if tg_id != self.tg_id])
+
     def can_add_friend(self, friend: 'User') -> bool:
-        return friend.tg_id not in self._friends_ids
+        return (friend.tg_id not in self._friends_ids) and (self != friend)
 
     def get_changed_fields(self, init_data: TelegramInitData) -> dict[str, Any]:
         nullable_fields: Final = {'last_name', 'avatar_url'}
