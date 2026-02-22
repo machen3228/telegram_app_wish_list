@@ -75,19 +75,19 @@ class UserRepository(BaseRepository[User]):
 
     async def get_user_relations(self, user_id: int) -> UserRelationsDTO:
         stmt = text("""
-            SELECT 'friend' AS relation_type, f.friend_tg_id AS target_id, NULL AS status
+            SELECT 'friend' AS relation_type, f.friend_tg_id AS target_id
             FROM friends f
             WHERE f.user_tg_id = :user_id
 
             UNION ALL
 
-            SELECT 'incoming', fr.sender_tg_id, fr.status
+            SELECT 'incoming', fr.sender_tg_id
             FROM friend_requests fr
             WHERE fr.receiver_tg_id = :user_id AND fr.status = 'pending'
 
             UNION ALL
 
-            SELECT 'outgoing', fr.receiver_tg_id, fr.status
+            SELECT 'outgoing', fr.receiver_tg_id
             FROM friend_requests fr
             WHERE fr.sender_tg_id = :user_id AND fr.status = 'pending'
         """)
