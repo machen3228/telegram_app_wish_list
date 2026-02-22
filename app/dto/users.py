@@ -15,5 +15,5 @@ class FriendRequestDTO:
 @dataclass
 class UserRelationsDTO:
     friends_ids: set[int]
-    incoming_requests: dict[int, str]
-    outgoing_requests: dict[int, str]
+    incoming_request_ids: set[int]
+    outgoing_request_ids: set[int]
