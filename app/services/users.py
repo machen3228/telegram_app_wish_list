@@ -8,6 +8,7 @@ from domain import User
 from dto.users import FriendRequestDTO
 from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
+from exceptions.http import BadRequestError
 from exceptions.http import NotFoundError
 from repositories import UserRepository
 
@@ -60,16 +61,16 @@ class UserService:
             raise NotFoundError(detail=str(e)) from e
 
     async def get_friends(self, user_id: int) -> list[User]:
-        return await self._repository.get_friends(user_id)
+        return await self._repository.get_friends(user_id, return_type='full')
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         if sender_id == receiver_id:
-            raise HTTPException(status_code=400, detail='Cannot send friend request to yourself')
+            raise BadRequestError(detail='Cannot send friend request to yourself')
         try:
             user = await self._repository.get(sender_id)
             friend = await self._repository.get(receiver_id)
-        except KeyError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
         if not user.can_add_friend(friend):
             raise HTTPException(status_code=400, detail='Already friends') from None
         await self._repository.send_friend_request(sender_id, receiver_id)
