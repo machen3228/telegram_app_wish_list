@@ -1,13 +1,12 @@
 from datetime import UTC
 from datetime import datetime
-from typing import Literal
-from typing import overload
 
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from domain.users import User
 from dto.users import FriendRequestDTO
+from dto.users import UserRelationsDTO
 from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
@@ -47,16 +46,9 @@ class UserRepository(BaseRepository[User]):
         params = {'tg_id': tg_id, **fields}
         await self._session.execute(stmt, params)
 
-    @overload
-    async def get_friends(self, user_id: int, return_type: Literal['full'] = ...) -> list[User]: ...
-
-    @overload
-    async def get_friends(self, user_id: int, return_type: Literal['short']) -> list[int]: ...
-
-    async def get_friends(self, user_id: int, return_type: Literal['full', 'short'] = 'full'):
-        select_clause = 'u.*' if return_type == 'full' else 'u.tg_id'
-        query = text(f"""
-          SELECT {select_clause}
+    async def get_friends(self, user_id: int) -> list[User]:
+        query = text("""
+          SELECT u.*
           FROM users u
           JOIN friends f ON f.friend_tg_id = u.tg_id
           WHERE f.user_tg_id = :tg_id
@@ -65,9 +57,7 @@ class UserRepository(BaseRepository[User]):
         query_result = await self._session.execute(query, params)
         rows = query_result.mappings().all()
 
-        if return_type == 'full':
-            return [User(**row) for row in rows]
-        return [row['tg_id'] for row in rows]
+        return [User(**row) for row in rows]
 
     async def get(self, obj_id: int) -> User:
         query = text("""
@@ -82,6 +72,47 @@ class UserRepository(BaseRepository[User]):
             raise NotFoundInDbError('User', obj_id)
 
         return User(**row)
+
+    async def get_user_relations(self, user_id: int) -> UserRelationsDTO:
+        stmt = text("""
+            SELECT 'friend' AS relation_type, f.friend_tg_id AS target_id, NULL AS status
+            FROM friends f
+            WHERE f.user_tg_id = :user_id
+
+            UNION ALL
+
+            SELECT 'incoming', fr.sender_tg_id, fr.status
+            FROM friend_requests fr
+            WHERE fr.receiver_tg_id = :user_id AND fr.status = 'pending'
+
+            UNION ALL
+
+            SELECT 'outgoing', fr.receiver_tg_id, fr.status
+            FROM friend_requests fr
+            WHERE fr.sender_tg_id = :user_id AND fr.status = 'pending'
+        """)
+
+        result = await self._session.execute(stmt, {'user_id': user_id})
+        rows = result.mappings().all()
+
+        friends_ids: set[int] = set()
+        incoming: dict[int, str] = {}
+        outgoing: dict[int, str] = {}
+
+        for row in rows:
+            match row['relation_type']:
+                case 'friend':
+                    friends_ids.add(row['target_id'])
+                case 'incoming':
+                    incoming[row['target_id']] = row['status']
+                case 'outgoing':
+                    outgoing[row['target_id']] = row['status']
+
+        return UserRelationsDTO(
+            friends_ids=friends_ids,
+            incoming_requests=incoming,
+            outgoing_requests=outgoing,
+        )
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         stmt = text("""
