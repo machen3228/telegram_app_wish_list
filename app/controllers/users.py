@@ -66,7 +66,7 @@ class UserController(Controller):
         receiver_id: int,
     ) -> dict[str, str]:
         await service.send_friend_request(current_user_id, receiver_id)
-        return {'message': 'Friend request sent'}
+        return {'message': 'Friend request has been sent'}
 
     @get(
         '/me/friend-requests',

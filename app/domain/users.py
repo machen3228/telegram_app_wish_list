@@ -2,11 +2,20 @@ from dataclasses import dataclass
 from dataclasses import field
 from datetime import UTC
 from datetime import datetime
+import enum
 from typing import Any
 from typing import Final
 from typing import Self
 
 from core.security import TelegramInitData
+from dto.users import UserRelationsDTO
+
+
+class FriendAction(enum.StrEnum):
+    ADD_FRIEND = 'add_friend'
+    SEND_REQUEST = 'send_request'
+    ALREADY_FRIENDS = 'already_friends'
+    REQUEST_ALREADY_SENT = 'request_already_sent'
 
 
 @dataclass
@@ -19,6 +28,8 @@ class User:
     created_at: datetime
     updated_at: datetime
     _friends_ids: set[int] = field(default_factory=set, repr=False)
+    _incoming_request_ids: set[int] = field(default_factory=set, repr=False)
+    _outgoing_request_ids: set[int] = field(default_factory=set, repr=False)
 
     def __repr__(self) -> str:
         return f'<User {self.tg_id}>'
@@ -51,8 +62,19 @@ class User:
             updated_at=now,
         )
 
-    def can_add_friend(self, friend: 'User') -> bool:
-        return friend.tg_id not in self._friends_ids
+    def load_relations(self, relations: UserRelationsDTO) -> None:
+        self._friends_ids = relations.friends_ids - {self.tg_id}
+        self._incoming_request_ids = relations.incoming_request_ids - {self.tg_id}
+        self._outgoing_request_ids = relations.outgoing_request_ids - {self.tg_id}
+
+    def resolve_friend_action(self, friend: 'User') -> FriendAction:
+        if friend.tg_id in self._friends_ids:
+            return FriendAction.ALREADY_FRIENDS
+        if friend.tg_id in self._incoming_request_ids:
+            return FriendAction.ADD_FRIEND
+        if friend.tg_id in self._outgoing_request_ids:
+            return FriendAction.REQUEST_ALREADY_SENT
+        return FriendAction.SEND_REQUEST
 
     def get_changed_fields(self, init_data: TelegramInitData) -> dict[str, Any]:
         nullable_fields: Final = {'last_name', 'avatar_url'}

@@ -66,7 +66,7 @@ class UserDict(TypedDict):
 
 
 @pytest_asyncio.fixture
-async def test_user(db_session: AsyncSession) -> UserDict:
+async def test_user_bob(db_session: AsyncSession) -> UserDict:
     user_data = UserDict(
         tg_id=123456,
         tg_username='tg_username',
@@ -91,3 +91,87 @@ async def test_user(db_session: AsyncSession) -> UserDict:
     }
     await db_session.execute(stmt, params)
     return user_data
+
+
+@pytest_asyncio.fixture
+async def test_user_john(db_session: AsyncSession) -> UserDict:
+    user_data = UserDict(
+        tg_id=123457,
+        tg_username='tg_username_2',
+        first_name='first_name_2',
+        last_name='last_name_2',
+        avatar_url='avatar_url_2',
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    stmt = text("""
+        INSERT INTO users (tg_id, tg_username, first_name, last_name, avatar_url, created_at, updated_at)
+        VALUES (:tg_id, :tg_username, :first_name, :last_name, :avatar_url, :created_at, :updated_at)
+    """)
+    params = {
+        'tg_id': user_data['tg_id'],
+        'tg_username': user_data['tg_username'],
+        'first_name': user_data['first_name'],
+        'last_name': user_data['last_name'],
+        'avatar_url': user_data['avatar_url'],
+        'created_at': user_data['created_at'],
+        'updated_at': user_data['updated_at'],
+    }
+    await db_session.execute(stmt, params)
+    return user_data
+
+
+@pytest_asyncio.fixture
+async def test_user_with_friend(
+    db_session: AsyncSession,
+    test_user_bob: UserDict,
+    test_user_john: UserDict,
+) -> int:
+    stmt = text("""
+        INSERT INTO friends (user_tg_id, friend_tg_id)
+        VALUES (:user1, :user2),
+               (:user2, :user1)
+        ON CONFLICT DO NOTHING
+    """)
+    await db_session.execute(stmt, {'user1': test_user_bob['tg_id'], 'user2': test_user_john['tg_id']})
+    return test_user_bob['tg_id']
+
+
+@pytest_asyncio.fixture
+async def test_user_with_incoming_request(
+    db_session: AsyncSession,
+    test_user_bob: UserDict,
+    test_user_john: UserDict,
+) -> int:
+    stmt = text("""
+        INSERT INTO friend_requests (sender_tg_id, receiver_tg_id, status)
+        VALUES (:sender_id, :receiver_id, 'pending')
+    """)
+    await db_session.execute(
+        stmt,
+        {
+            'sender_id': test_user_john['tg_id'],
+            'receiver_id': test_user_bob['tg_id'],
+        },
+    )
+    return test_user_bob['tg_id']
+
+
+@pytest_asyncio.fixture
+async def test_user_with_outgoing_request(
+    db_session: AsyncSession,
+    test_user_bob: UserDict,
+    test_user_john: UserDict,
+) -> int:
+    stmt = text("""
+        INSERT INTO friend_requests (sender_tg_id, receiver_tg_id, status)
+        VALUES (:sender_id, :receiver_id, 'pending')
+    """)
+    await db_session.execute(
+        stmt,
+        {
+            'sender_id': test_user_bob['tg_id'],
+            'receiver_id': test_user_john['tg_id'],
+        },
+    )
+    return test_user_bob['tg_id']

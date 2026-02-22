@@ -10,3 +10,10 @@ class FriendRequestDTO:
     created_at: datetime
     sender_name: str | None = None
     sender_username: str | None = None
+
+
+@dataclass
+class UserRelationsDTO:
+    friends_ids: set[int]
+    incoming_request_ids: set[int]
+    outgoing_request_ids: set[int]

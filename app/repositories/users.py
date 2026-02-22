@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 from domain.users import User
 from dto.users import FriendRequestDTO
+from dto.users import UserRelationsDTO
 from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
@@ -71,6 +72,47 @@ class UserRepository(BaseRepository[User]):
             raise NotFoundInDbError('User', obj_id)
 
         return User(**row)
+
+    async def get_user_relations(self, user_id: int) -> UserRelationsDTO:
+        stmt = text("""
+            SELECT 'friend' AS relation_type, f.friend_tg_id AS target_id
+            FROM friends f
+            WHERE f.user_tg_id = :user_id
+
+            UNION ALL
+
+            SELECT 'incoming', fr.sender_tg_id
+            FROM friend_requests fr
+            WHERE fr.receiver_tg_id = :user_id AND fr.status = 'pending'
+
+            UNION ALL
+
+            SELECT 'outgoing', fr.receiver_tg_id
+            FROM friend_requests fr
+            WHERE fr.sender_tg_id = :user_id AND fr.status = 'pending'
+        """)
+
+        result = await self._session.execute(stmt, {'user_id': user_id})
+        rows = result.mappings().all()
+
+        friends_ids: set[int] = set()
+        incoming: set[int] = set()
+        outgoing: set[int] = set()
+
+        for row in rows:
+            match row['relation_type']:
+                case 'friend':
+                    friends_ids.add(row['target_id'])
+                case 'incoming':
+                    incoming.add(row['target_id'])
+                case 'outgoing':
+                    outgoing.add(row['target_id'])
+
+        return UserRelationsDTO(
+            friends_ids=friends_ids,
+            incoming_request_ids=incoming,
+            outgoing_request_ids=outgoing,
+        )
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         stmt = text("""
