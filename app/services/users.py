@@ -5,6 +5,7 @@ from core.security import BaseJWTAuth
 from core.security import TelegramInitData
 from core.security import TokenOut
 from domain import User
+from domain.users import FriendAction
 from dto.users import FriendRequestDTO
 from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
@@ -61,7 +62,7 @@ class UserService:
             raise NotFoundError(detail=str(e)) from e
 
     async def get_friends(self, user_id: int) -> list[User]:
-        return await self._repository.get_friends(user_id, return_type='full')
+        return await self._repository.get_friends(user_id)
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         if sender_id == receiver_id:
@@ -71,9 +72,19 @@ class UserService:
             friend = await self._repository.get(receiver_id)
         except NotFoundInDbError as e:
             raise NotFoundError(detail=str(e)) from e
-        if not user.can_add_friend(friend):
-            raise HTTPException(status_code=400, detail='Already friends') from None
-        await self._repository.send_friend_request(sender_id, receiver_id)
+
+        relations = await self._repository.get_user_relations(sender_id)
+        user.load_relations(relations)
+
+        match user.resolve_friend_action(friend):
+            case FriendAction.ALREADY_FRIENDS:
+                raise BadRequestError(detail='Already friends')
+            case FriendAction.ADD_FRIEND:
+                await self._repository.accept_friend_request(sender_id, receiver_id)
+            case FriendAction.REQUEST_ALREADY_SENT:
+                return
+            case FriendAction.SEND_REQUEST:
+                await self._repository.send_friend_request(sender_id, receiver_id)
 
     async def get_pending_requests(self, user_id: int) -> list[FriendRequestDTO]:
         return await self._repository.get_pending_requests(user_id)
