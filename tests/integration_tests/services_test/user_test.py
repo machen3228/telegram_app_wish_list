@@ -22,14 +22,14 @@ class TestUserService:
     async def test_service_get_user_success(
         self,
         user_service: UserService,
-        test_user: UserDict,
+        test_user_bob: UserDict,
     ) -> None:
         assert_that(
-            await user_service.get(test_user['tg_id']),
+            await user_service.get(test_user_bob['tg_id']),
             has_properties(
                 tg_id=all_of(
                     instance_of(int),
-                    equal_to(test_user['tg_id']),
+                    equal_to(test_user_bob['tg_id']),
                 ),
                 tg_username=instance_of(str),
                 first_name=instance_of(str),
@@ -97,11 +97,11 @@ class TestUserService:
     async def test_service_add_user_duplicate_raises_http_exception(
         self,
         user_service: UserService,
-        test_user: UserDict,
+        test_user_bob: UserDict,
     ) -> None:
         with pytest.raises(HTTPException) as exc_info:
             await user_service.add(
-                tg_id=test_user['tg_id'],
+                tg_id=test_user_bob['tg_id'],
                 tg_username='another_username',
                 first_name='Another',
                 last_name=None,
@@ -157,12 +157,12 @@ class TestUserService:
     async def test_service_telegram_login_existing_user_success(
         self,
         user_service: UserService,
-        test_user: UserDict,
+        test_user_bob: UserDict,
     ) -> None:
         init_data: TelegramInitData = {
-            'id': test_user['tg_id'],
-            'first_name': test_user['first_name'],
-            'username': test_user['tg_username'],
+            'id': test_user_bob['tg_id'],
+            'first_name': test_user_bob['first_name'],
+            'username': test_user_bob['tg_username'],
         }
 
         assert_that(await user_service.telegram_login(init_data), instance_of(TokenOut))
@@ -170,17 +170,17 @@ class TestUserService:
     async def test_service_telegram_login_existing_user_updates_changed_fields(
         self,
         user_service: UserService,
-        test_user: UserDict,
+        test_user_bob: UserDict,
     ) -> None:
         init_data: TelegramInitData = {
-            'id': test_user['tg_id'],
+            'id': test_user_bob['tg_id'],
             'first_name': 'UpdatedName',
             'username': 'updated_username',
         }
         await user_service.telegram_login(init_data)
 
         assert_that(
-            await user_service.get(test_user['tg_id']),
+            await user_service.get(test_user_bob['tg_id']),
             has_properties(
                 tg_username=equal_to('updated_username'),
                 first_name=equal_to('UpdatedName'),
