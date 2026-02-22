@@ -227,3 +227,95 @@ class TestUserDomain:
         )
 
         assert_that(user, instance_of(User))
+
+    def test_add_friends_adds_ids_to_set(self) -> None:
+        user = make_user()
+        user.add_friends([2, 3, 4])
+        assert user._friends_ids == {2, 3, 4}  # noqa: SLF001
+
+    def test_add_friends_empty_list_does_nothing(self) -> None:
+        user = make_user()
+        user.add_friends([])
+        assert user._friends_ids == set()  # noqa: SLF001
+
+    def test_add_friends_ignores_duplicates(self) -> None:
+        user = make_user()
+        user.add_friends([2, 2, 3])
+        assert user._friends_ids == {2, 3}  # noqa: SLF001
+
+    def test_add_friends_accumulates_on_multiple_calls(self) -> None:
+        user = make_user()
+        user.add_friends([2, 3])
+        user.add_friends([4, 5])
+        assert user._friends_ids == {2, 3, 4, 5}  # noqa: SLF001
+
+    def test_add_friends_does_not_add_self(self) -> None:
+        self_id = 1
+        user = make_user(tg_id=self_id)
+        user.add_friends([self_id])
+        assert 1 not in user._friends_ids  # noqa: SLF001
+
+    def test_can_add_friend_returns_true_if_not_friend(self) -> None:
+        user = make_user(tg_id=1)
+        friend = make_user(tg_id=2)
+        assert user.can_add_friend(friend) is True
+
+    def test_can_add_friend_returns_false_if_already_friend(self) -> None:
+        user = make_user(tg_id=1)
+        friend = make_user(tg_id=2)
+        user.add_friends([2])
+        assert user.can_add_friend(friend) is False
+
+    def test_can_add_friend_self(self) -> None:
+        user = make_user(tg_id=1)
+        assert user.can_add_friend(user) is False
+
+    def test_can_add_friend_after_adding_other_friends(self) -> None:
+        user = make_user(tg_id=1)
+        user.add_friends([3, 4, 5])
+        friend = make_user(tg_id=2)
+        assert user.can_add_friend(friend) is True
+
+    def test_repr_contains_tg_id(self) -> None:
+        user = make_user(tg_id=42)
+        assert repr(user) == '<User 42>'
+
+    def test_eq_same_tg_id_returns_true(self) -> None:
+        user1 = make_user(tg_id=1)
+        user2 = make_user(tg_id=1)
+        assert user1 == user2
+
+    def test_eq_different_tg_id_returns_false(self) -> None:
+        user1 = make_user(tg_id=1)
+        user2 = make_user(tg_id=2)
+        assert user1 != user2
+
+    def test_eq_with_non_user_returns_false(self) -> None:
+        user = make_user(tg_id=1)
+        assert user != 1
+        assert user != 'user'
+        assert user is not None
+
+    def test_eq_same_instance(self) -> None:
+        user = make_user(tg_id=1)
+        assert user == user  # noqa: PLR0124
+
+    def test_hash_same_tg_id_same_hash(self) -> None:
+        user1 = make_user(tg_id=1)
+        user2 = make_user(tg_id=1)
+        assert hash(user1) == hash(user2)
+
+    def test_hash_different_tg_id_different_hash(self) -> None:
+        user1 = make_user(tg_id=1)
+        user2 = make_user(tg_id=2)
+        assert hash(user1) != hash(user2)
+
+    def test_hash_usable_in_set(self) -> None:
+        user1 = make_user(tg_id=1)
+        user2 = make_user(tg_id=1)
+        assert len({user1, user2}) == 1
+
+    def test_hash_usable_as_dict_key(self) -> None:
+        user = make_user(tg_id=1)
+        d = {user: 'value'}
+        assert d[make_user(tg_id=1)] == 'value'
