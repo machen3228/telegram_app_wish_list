@@ -201,8 +201,8 @@ class TestUserRepository:
             await user_repository.get_user_relations(test_user_bob['tg_id']),
             has_properties(
                 friends_ids=equal_to(set()),
-                incoming_requests=equal_to({}),
-                outgoing_requests=equal_to({}),
+                incoming_request_ids=equal_to(set()),
+                outgoing_request_ids=equal_to(set()),
             ),
         )
 
@@ -214,8 +214,8 @@ class TestUserRepository:
             await user_repository.get_user_relations(999999),
             has_properties(
                 friends_ids=equal_to(set()),
-                incoming_requests=equal_to({}),
-                outgoing_requests=equal_to({}),
+                incoming_request_ids=equal_to(set()),
+                outgoing_request_ids=equal_to(set()),
             ),
         )
 
@@ -229,8 +229,8 @@ class TestUserRepository:
             await user_repository.get_user_relations(test_user_with_friend),
             has_properties(
                 friends_ids=contains_inanyorder(test_user_john['tg_id']),
-                incoming_requests=equal_to({}),
-                outgoing_requests=equal_to({}),
+                incoming_request_ids=equal_to(set()),
+                outgoing_request_ids=equal_to(set()),
             ),
         )
 
@@ -244,8 +244,8 @@ class TestUserRepository:
             await user_repository.get_user_relations(test_user_with_incoming_request),
             has_properties(
                 friends_ids=equal_to(set()),
-                incoming_requests=equal_to({test_user_john['tg_id']: 'pending'}),
-                outgoing_requests=equal_to({}),
+                incoming_request_ids=equal_to({test_user_john['tg_id']}),
+                outgoing_request_ids=equal_to(set()),
             ),
         )
 
@@ -259,8 +259,8 @@ class TestUserRepository:
             await user_repository.get_user_relations(test_user_with_outgoing_request),
             has_properties(
                 friends_ids=equal_to(set()),
-                incoming_requests=equal_to({}),
-                outgoing_requests=equal_to({test_user_john['tg_id']: 'pending'}),
+                incoming_request_ids=equal_to(set()),
+                outgoing_request_ids=equal_to({test_user_john['tg_id']}),
             ),
         )
 
@@ -287,8 +287,8 @@ class TestUserRepository:
             await user_repository.get_user_relations(test_user_bob['tg_id']),
             has_properties(
                 friends_ids=equal_to(set()),
-                incoming_requests=equal_to({}),
-                outgoing_requests=equal_to({}),
+                incoming_request_ids=equal_to(set()),
+                outgoing_request_ids=equal_to(set()),
             ),
         )
 
@@ -328,7 +328,7 @@ class TestUserRepository:
             await user_repository.get_user_relations(test_user_bob['tg_id']),
             has_properties(
                 friends_ids=contains_inanyorder(third_user_id),
-                incoming_requests=equal_to({test_user_john['tg_id']: 'pending'}),
-                outgoing_requests=equal_to({}),
+                incoming_request_ids=equal_to({test_user_john['tg_id']}),
+                outgoing_request_ids=equal_to(set()),
             ),
         )

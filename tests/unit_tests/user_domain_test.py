@@ -48,7 +48,7 @@ def make_user(**kwargs: Unpack[UserFactory]) -> User:
 
 @pytest.mark.unit
 class TestUserDomain:
-    def test_get_changed_fields_returns_empty_when_nothing_changed(self) -> None:
+    def test_user_domain_get_changed_fields_returns_empty_when_nothing_changed(self) -> None:
         user = make_user()
         init_data: TelegramInitData = {'id': 1, 'first_name': 'John', 'username': 'john'}
         result = user.get_changed_fields(init_data)
@@ -88,7 +88,7 @@ class TestUserDomain:
             ),
         ],
     )
-    def test_get_changed_fields_detects_changed_field(
+    def test_user_domain_get_changed_fields_detects_changed_field(
         self,
         field: dict,
         init_data_override: dict,
@@ -115,7 +115,7 @@ class TestUserDomain:
             pytest.param('Smith', 'Smith', {}, id='last_name_same'),
         ],
     )
-    def test_get_changed_fields_nullable_last_name(
+    def test_user_domain_get_changed_fields_nullable_last_name(
         self,
         last_name: str | None,
         init_data_last_name: str | None,
@@ -138,7 +138,7 @@ class TestUserDomain:
             pytest.param('https://same.jpg', 'https://same.jpg', {}, id='avatar_same'),
         ],
     )
-    def test_get_changed_fields_nullable_avatar_url(
+    def test_user_domain_get_changed_fields_nullable_avatar_url(
         self,
         avatar_url: str | None,
         init_data_photo_url: str | None,
@@ -152,7 +152,7 @@ class TestUserDomain:
 
         assert result == expected
 
-    def test_get_changed_fields_returns_all_changed_fields(self) -> None:
+    def test_user_domain_get_changed_fields_returns_all_changed_fields(self) -> None:
         user = make_user(tg_username='old', first_name='Old', last_name='Old', avatar_url='https://old.jpg')
         init_data: TelegramInitData = {
             'id': 1,
@@ -173,7 +173,7 @@ class TestUserDomain:
             ),
         )
 
-    def test_create_user_success(self) -> None:
+    def test_user_domain_create_user_success(self) -> None:
         before = datetime.now(UTC)
         user = User.create(
             tg_id=1,
@@ -197,7 +197,7 @@ class TestUserDomain:
             ),
         )
 
-    def test_create_user_created_at_equals_updated_at(self) -> None:
+    def test_user_domain_create_user_created_at_equals_updated_at(self) -> None:
         user = User.create(
             tg_id=1,
             tg_username='john',
@@ -208,7 +208,7 @@ class TestUserDomain:
 
         assert_that(user.created_at, equal_to(user.updated_at))
 
-    def test_create_user_with_nullable_fields(self) -> None:
+    def test_user_domain_create_user_with_nullable_fields(self) -> None:
         user = User.create(
             tg_id=1,
             tg_username=None,
@@ -219,7 +219,7 @@ class TestUserDomain:
 
         assert_that(user, has_properties(tg_username=none(), first_name=none(), last_name=none(), avatar_url=none()))
 
-    def test_create_user_returns_user_instance(self) -> None:
+    def test_user_domain_create_user_returns_user_instance(self) -> None:
         user = User.create(
             tg_id=1,
             tg_username='john',
@@ -230,192 +230,194 @@ class TestUserDomain:
 
         assert_that(user, instance_of(User))
 
-    def test_repr_contains_tg_id(self) -> None:
+    def test_user_domain_repr_contains_tg_id(self) -> None:
         user = make_user(tg_id=42)
         assert repr(user) == '<User 42>'
 
-    def test_eq_same_tg_id_returns_true(self) -> None:
+    def test_user_domain_eq_same_tg_id_returns_true(self) -> None:
         user1 = make_user(tg_id=1)
         user2 = make_user(tg_id=1)
         assert user1 == user2
 
-    def test_eq_different_tg_id_returns_false(self) -> None:
+    def test_user_domain_eq_different_tg_id_returns_false(self) -> None:
         user1 = make_user(tg_id=1)
         user2 = make_user(tg_id=2)
         assert user1 != user2
 
-    def test_eq_with_non_user_returns_false(self) -> None:
+    def test_user_domain_eq_with_non_user_returns_false(self) -> None:
         user = make_user(tg_id=1)
         assert user != 1
         assert user != 'user'
         assert user is not None
 
-    def test_eq_same_instance(self) -> None:
+    def test_user_domain_eq_same_instance(self) -> None:
         user = make_user(tg_id=1)
         assert user == user  # noqa: PLR0124
 
-    def test_hash_same_tg_id_same_hash(self) -> None:
+    def test_user_domain_hash_same_tg_id_same_hash(self) -> None:
         user1 = make_user(tg_id=1)
         user2 = make_user(tg_id=1)
         assert hash(user1) == hash(user2)
 
-    def test_hash_different_tg_id_different_hash(self) -> None:
+    def test_user_domain_hash_different_tg_id_different_hash(self) -> None:
         user1 = make_user(tg_id=1)
         user2 = make_user(tg_id=2)
         assert hash(user1) != hash(user2)
 
-    def test_hash_usable_in_set(self) -> None:
+    def test_user_domain_hash_usable_in_set(self) -> None:
         user1 = make_user(tg_id=1)
         user2 = make_user(tg_id=1)
         assert len({user1, user2}) == 1
 
-    def test_hash_usable_as_dict_key(self) -> None:
+    def test_user_domain_hash_usable_as_dict_key(self) -> None:
         user = make_user(tg_id=1)
         d = {user: 'value'}
         assert d[make_user(tg_id=1)] == 'value'
 
-    def test_load_relations_sets_friends_ids(self) -> None:
+    def test_user_domain_load_relations_sets_friends_ids(self) -> None:
         user = make_user(tg_id=1)
         relations = UserRelationsDTO(
             friends_ids={2, 3},
-            incoming_requests={},
-            outgoing_requests={},
+            incoming_request_ids=set(),
+            outgoing_request_ids=set(),
         )
         user.load_relations(relations)
 
         assert user._friends_ids == {2, 3}  # noqa: SLF001
 
-    def test_load_relations_sets_incoming_request_ids(self) -> None:
+    def test_user_domain_load_relations_sets_incoming_request_ids(self) -> None:
         user = make_user(tg_id=1)
         relations = UserRelationsDTO(
             friends_ids=set(),
-            incoming_requests={2: 'pending', 3: 'pending'},
-            outgoing_requests={},
+            incoming_request_ids={2, 3},
+            outgoing_request_ids=set(),
         )
         user.load_relations(relations)
 
         assert user._incoming_request_ids == {2, 3}  # noqa: SLF001
 
-    def test_load_relations_sets_outgoing_request_ids(self) -> None:
+    def test_user_domain_load_relations_sets_outgoing_request_ids(self) -> None:
         user = make_user(tg_id=1)
         relations = UserRelationsDTO(
             friends_ids=set(),
-            incoming_requests={},
-            outgoing_requests={2: 'pending', 3: 'pending'},
+            incoming_request_ids=set(),
+            outgoing_request_ids={2, 3},
         )
         user.load_relations(relations)
 
         assert user._outgoing_request_ids == {2, 3}  # noqa: SLF001
 
-    def test_load_relations_excludes_self_from_friends(self) -> None:
+    def test_user_domain_load_relations_excludes_self_from_friends(self) -> None:
         user = make_user(tg_id=1)
         relations = UserRelationsDTO(
             friends_ids={1, 2, 3},
-            incoming_requests={},
-            outgoing_requests={},
+            incoming_request_ids=set(),
+            outgoing_request_ids=set(),
         )
         user.load_relations(relations)
 
-        assert 1 not in user._friends_ids  # noqa: SLF001
-        assert user._friends_ids == {2, 3}  # noqa: SLF001
+        assert_that(user, has_properties(_friends_ids=equal_to({2, 3})))
 
-    def test_load_relations_excludes_self_from_incoming(self) -> None:
+    def test_user_domain_load_relations_excludes_self_from_incoming(self) -> None:
         user = make_user(tg_id=1)
         relations = UserRelationsDTO(
             friends_ids=set(),
-            incoming_requests={1: 'pending', 2: 'pending'},
-            outgoing_requests={},
+            incoming_request_ids={1, 2},
+            outgoing_request_ids=set(),
         )
         user.load_relations(relations)
 
-        assert 1 not in user._incoming_request_ids  # noqa: SLF001
-        assert user._incoming_request_ids == {2}  # noqa: SLF001
+        assert_that(user, has_properties(_incoming_request_ids=equal_to({2})))
 
-    def test_load_relations_excludes_self_from_outgoing(self) -> None:
+    def test_user_domain_load_relations_excludes_self_from_outgoing(self) -> None:
         user = make_user(tg_id=1)
         relations = UserRelationsDTO(
             friends_ids=set(),
-            incoming_requests={},
-            outgoing_requests={1: 'pending', 2: 'pending'},
+            incoming_request_ids=set(),
+            outgoing_request_ids={1, 2},
         )
         user.load_relations(relations)
 
-        assert 1 not in user._outgoing_request_ids  # noqa: SLF001
-        assert user._outgoing_request_ids == {2}  # noqa: SLF001
+        assert_that(user, has_properties(_outgoing_request_ids=equal_to({2})))
 
-    def test_load_relations_empty(self) -> None:
+    def test_user_domain_load_relations_empty(self) -> None:
         user = make_user(tg_id=1)
         relations = UserRelationsDTO(
             friends_ids=set(),
-            incoming_requests={},
-            outgoing_requests={},
+            incoming_request_ids=set(),
+            outgoing_request_ids=set(),
         )
         user.load_relations(relations)
 
-        assert user._friends_ids == set()  # noqa: SLF001
-        assert user._incoming_request_ids == set()  # noqa: SLF001
-        assert user._outgoing_request_ids == set()  # noqa: SLF001
+        assert_that(
+            user,
+            has_properties(
+                _friends_ids=equal_to(set()),
+                _incoming_request_ids=equal_to(set()),
+                _outgoing_request_ids=equal_to(set()),
+            ),
+        )
 
-    def test_resolve_friend_action_already_friends(self) -> None:
+    def test_user_domain_resolve_friend_action_already_friends(self) -> None:
         user = make_user(tg_id=1)
         friend = make_user(tg_id=2)
         user.load_relations(
             UserRelationsDTO(
                 friends_ids={2},
-                incoming_requests={},
-                outgoing_requests={},
+                incoming_request_ids=set(),
+                outgoing_request_ids=set(),
             )
         )
 
         assert user.resolve_friend_action(friend) == FriendAction.ALREADY_FRIENDS
 
-    def test_resolve_friend_action_add_friend(self) -> None:
+    def test_user_domain_resolve_friend_action_add_friend(self) -> None:
         user = make_user(tg_id=1)
         friend = make_user(tg_id=2)
         user.load_relations(
             UserRelationsDTO(
                 friends_ids=set(),
-                incoming_requests={2: 'pending'},
-                outgoing_requests={},
+                incoming_request_ids={2},
+                outgoing_request_ids=set(),
             )
         )
 
         assert user.resolve_friend_action(friend) == FriendAction.ADD_FRIEND
 
-    def test_resolve_friend_action_request_already_sent(self) -> None:
+    def test_user_domain_resolve_friend_action_request_already_sent(self) -> None:
         user = make_user(tg_id=1)
         friend = make_user(tg_id=2)
         user.load_relations(
             UserRelationsDTO(
                 friends_ids=set(),
-                incoming_requests={},
-                outgoing_requests={2: 'pending'},
+                incoming_request_ids=set(),
+                outgoing_request_ids={2},
             )
         )
 
         assert user.resolve_friend_action(friend) == FriendAction.REQUEST_ALREADY_SENT
 
-    def test_resolve_friend_action_send_request(self) -> None:
+    def test_user_domain_resolve_friend_action_send_request(self) -> None:
         user = make_user(tg_id=1)
         friend = make_user(tg_id=2)
         user.load_relations(
             UserRelationsDTO(
                 friends_ids=set(),
-                incoming_requests={},
-                outgoing_requests={},
+                incoming_request_ids=set(),
+                outgoing_request_ids=set(),
             )
         )
 
         assert user.resolve_friend_action(friend) == FriendAction.SEND_REQUEST
 
-    def test_resolve_friend_action_priority_friends_over_incoming(self) -> None:
+    def test_user_domain_resolve_friend_action_priority_friends_over_incoming(self) -> None:
         user = make_user(tg_id=1)
         friend = make_user(tg_id=2)
         user.load_relations(
             UserRelationsDTO(
                 friends_ids={2},
-                incoming_requests={2: 'pending'},
-                outgoing_requests={},
+                incoming_request_ids={2},
+                outgoing_request_ids=set(),
             )
         )
 

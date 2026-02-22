@@ -38,7 +38,7 @@ class TestTelegramAuth:
         ],
         ids=['full_data', 'minimal_data', 'empty_string'],
     )
-    def test_parse_init_data(self, init_data: str, expected: dict) -> None:
+    def test_tg_auth_parse_init_data(self, init_data: str, expected: dict) -> None:
         result = telegram_auth.parse_init_data(init_data)
 
         assert result == expected
@@ -57,7 +57,7 @@ class TestTelegramAuth:
         ],
         ids=['full_data', 'only_hash'],
     )
-    def test_extract_hash_success(
+    def test_tg_auth_extract_hash_success(
         self,
         parsed_data: dict,
         expected_hash: str,
@@ -66,13 +66,13 @@ class TestTelegramAuth:
 
         assert result == expected_hash
 
-    def test_extract_hash_remove_hash_from_dict(self) -> None:
+    def test_tg_auth_extract_hash_remove_hash_from_dict(self) -> None:
         initial_data = {'auth_date': '1700000000', 'user': '{"id":123}', 'hash': 'abc123'}
         telegram_auth.extract_hash(initial_data)
 
         assert initial_data == {'auth_date': '1700000000', 'user': '{"id":123}'}
 
-    def test_extract_hash_missing(self) -> None:
+    def test_tg_auth_extract_hash_missing(self) -> None:
         with pytest.raises(UnauthorizedError, match='Hash not found'):
             telegram_auth.extract_hash({'auth_date': '1700000000'})
 
@@ -84,7 +84,7 @@ class TestTelegramAuth:
         ],
         ids=['valid_timestamp', 'zero_timestamp'],
     )
-    def test_extract_auth_timestamp_success(
+    def test_tg_auth_extract_auth_timestamp_success(
         self,
         parsed_data: dict,
         expected_timestamp: int,
@@ -101,7 +101,7 @@ class TestTelegramAuth:
         ],
         ids=['missing_auth_date', 'invalid_format'],
     )
-    def test_extract_auth_timestamp_failure(
+    def test_tg_auth_extract_auth_timestamp_failure(
         self,
         parsed_data: dict,
         expected_error: str,
@@ -109,7 +109,7 @@ class TestTelegramAuth:
         with pytest.raises(UnauthorizedError, match=expected_error):
             telegram_auth.extract_auth_timestamp(parsed_data)
 
-    def test_check_data_freshness_success(self) -> None:
+    def test_tg_auth_check_data_freshness_success(self) -> None:
 
         fresh_timestamp = int(time.time()) - 100
         telegram_auth.check_data_freshness(fresh_timestamp)
@@ -122,7 +122,7 @@ class TestTelegramAuth:
         ],
         ids=['just_expired', 'very_old'],
     )
-    def test_check_data_freshness_expired(
+    def test_tg_auth_check_data_freshness_expired(
         self,
         age_offset: int,
         max_age: int,
@@ -150,7 +150,7 @@ class TestTelegramAuth:
         ],
         ids=['sorted_order', 'unsorted_input', 'single_field'],
     )
-    def test_build_data_check_string(
+    def test_tg_auth_build_data_check_string(
         self,
         parsed_data: dict,
         expected: str,
@@ -159,7 +159,7 @@ class TestTelegramAuth:
 
         assert result == expected
 
-    def test_compute_hmac_signature_returns_hex_string(
+    def test_tg_auth_compute_hmac_signature_returns_hex_string(
         self,
     ) -> None:
         result = telegram_auth.compute_hmac_signature('auth_date=1700000000')
@@ -172,7 +172,7 @@ class TestTelegramAuth:
             ),
         )
 
-    def test_compute_hmac_signature_deterministic(
+    def test_tg_auth_compute_hmac_signature_deterministic(
         self,
     ) -> None:
         result_1 = telegram_auth.compute_hmac_signature('auth_date=1700000000')
@@ -180,7 +180,7 @@ class TestTelegramAuth:
 
         assert result_1 == result_2
 
-    def test_compute_hmac_signature_different_inputs(
+    def test_tg_auth_compute_hmac_signature_different_inputs(
         self,
     ) -> None:
         result_1 = telegram_auth.compute_hmac_signature('auth_date=1700000000')
@@ -188,10 +188,10 @@ class TestTelegramAuth:
 
         assert result_1 != result_2
 
-    def test_verify_signature_success(self) -> None:
+    def test_tg_auth_verify_signature_success(self) -> None:
         telegram_auth.verify_signature('abc123', 'abc123')
 
-    def test_verify_signature_failure(self) -> None:
+    def test_tg_auth_verify_signature_failure(self) -> None:
         with pytest.raises(UnauthorizedError, match='Invalid hash'):
             telegram_auth.verify_signature('abc123', 'wrong_hash')
 
@@ -209,7 +209,7 @@ class TestTelegramAuth:
         ],
         ids=['minimal_fields', 'with_username'],
     )
-    def test_parse_user_json_success(
+    def test_tg_auth_parse_user_json_success(
         self,
         validated_data: dict,
         expected: dict,
@@ -226,7 +226,7 @@ class TestTelegramAuth:
         ],
         ids=['missing_user', 'invalid_json'],
     )
-    def test_parse_user_json_failure(
+    def test_tg_auth_parse_user_json_failure(
         self,
         validated_data: dict,
         expected_error: str,
@@ -242,7 +242,7 @@ class TestTelegramAuth:
         ],
         ids=['minimal_fields', 'full_fields'],
     )
-    def test_validate_user_fields_success(
+    def test_tg_auth_validate_user_fields_success(
         self,
         user_data: dict,
     ) -> None:
@@ -257,7 +257,7 @@ class TestTelegramAuth:
         ],
         ids=['missing_id', 'missing_first_name', 'empty_dict'],
     )
-    def test_validate_user_fields_failure(
+    def test_tg_auth_validate_user_fields_failure(
         self,
         user_data: dict,
     ) -> None:
@@ -298,7 +298,7 @@ class TestTelegramAuth:
         ],
         ids=['minimal_fields', 'with_username', 'with_last_name', 'full_fields'],
     )
-    def test_build_telegram_init_data(
+    def test_tg_auth_build_telegram_init_data(
         self,
         user_data: dict,
         expected: dict,
@@ -320,7 +320,7 @@ class TestTelegramAuth:
         data['hash'] = signature
         return urlencode(data)
 
-    def test_validate_telegram_init_data_success(
+    def test_tg_auth_validate_telegram_init_data_success(
         self,
     ) -> None:
         result = telegram_auth.validate_telegram_init_data(self._build_valid_init_data())
@@ -345,7 +345,7 @@ class TestTelegramAuth:
         ],
         ids=['invalid_hash', 'missing_hash', 'missing_auth_date'],
     )
-    def test_validate_telegram_init_data_failure(
+    def test_tg_auth_validate_telegram_init_data_failure(
         self,
         init_data_builder: Callable,
         expected_error: str,
@@ -353,7 +353,7 @@ class TestTelegramAuth:
         with pytest.raises(UnauthorizedError, match=expected_error):
             telegram_auth.validate_telegram_init_data(init_data_builder())
 
-    def test_get_telegram_init_data_success(
+    def test_tg_auth_get_telegram_init_data_success(
         self,
     ) -> None:
         init_data = self._build_valid_init_data()
@@ -364,7 +364,7 @@ class TestTelegramAuth:
 
         assert_that(result, equal_to({'id': 123, 'first_name': 'Ivan'}))
 
-    def test_get_telegram_init_data_missing_header(self) -> None:
+    def test_tg_auth_get_telegram_init_data_missing_header(self) -> None:
         request = MagicMock()
         request.headers.get.return_value = None
 
