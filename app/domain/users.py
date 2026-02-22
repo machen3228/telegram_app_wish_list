@@ -64,8 +64,8 @@ class User:
 
     def load_relations(self, relations: UserRelationsDTO) -> None:
         self._friends_ids = relations.friends_ids - {self.tg_id}
-        self._incoming_request_ids = set(relations.incoming_requests.keys()) - {self.tg_id}
-        self._outgoing_request_ids = set(relations.outgoing_requests.keys()) - {self.tg_id}
+        self._incoming_request_ids = relations.incoming_request_ids - {self.tg_id}
+        self._outgoing_request_ids = relations.outgoing_request_ids - {self.tg_id}
 
     def resolve_friend_action(self, friend: 'User') -> FriendAction:
         if friend.tg_id in self._friends_ids:
