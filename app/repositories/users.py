@@ -1,5 +1,7 @@
 from datetime import UTC
 from datetime import datetime
+from typing import Literal
+from typing import overload
 
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -45,9 +47,16 @@ class UserRepository(BaseRepository[User]):
         params = {'tg_id': tg_id, **fields}
         await self._session.execute(stmt, params)
 
-    async def get_friends(self, user_id: int) -> list[User]:
-        query = text("""
-          SELECT u.*
+    @overload
+    async def get_friends(self, user_id: int, return_type: Literal['full'] = ...) -> list[User]: ...
+
+    @overload
+    async def get_friends(self, user_id: int, return_type: Literal['short']) -> list[int]: ...
+
+    async def get_friends(self, user_id: int, return_type: Literal['full', 'short'] = 'full'):
+        select_clause = 'u.*' if return_type == 'full' else 'u.tg_id'
+        query = text(f"""
+          SELECT {select_clause}
           FROM users u
           JOIN friends f ON f.friend_tg_id = u.tg_id
           WHERE f.user_tg_id = :tg_id
@@ -56,7 +65,9 @@ class UserRepository(BaseRepository[User]):
         query_result = await self._session.execute(query, params)
         rows = query_result.mappings().all()
 
-        return [User(**row) for row in rows]
+        if return_type == 'full':
+            return [User(**row) for row in rows]
+        return [row['tg_id'] for row in rows]
 
     async def get(self, obj_id: int) -> User:
         query = text("""
