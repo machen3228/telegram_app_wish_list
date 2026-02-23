@@ -2,6 +2,7 @@ from datetime import datetime
 
 from hamcrest import all_of
 from hamcrest import assert_that
+from hamcrest import contains_exactly
 from hamcrest import equal_to
 from hamcrest import has_entries
 from hamcrest import has_properties
@@ -14,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import TelegramInitData
 from core.security import TokenOut
+from dto.users import FriendRequestDTO
 from exceptions.http import BadRequestError
 from exceptions.http import NotFoundError
 from services import UserService
@@ -294,3 +296,32 @@ class TestUserService:
         row = result.mappings().first()
 
         assert_that(row, has_entries(cnt=equal_to(2)))  # ty:ignore[no-matching-overload]
+
+    @pytest.mark.usefixtures('test_user_with_incoming_request')
+    async def test_service_get_pending_requests_success(
+        self,
+        user_service: UserService,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        assert_that(
+            await user_service.get_pending_requests(test_user_bob['tg_id']),
+            contains_exactly(
+                all_of(
+                    instance_of(FriendRequestDTO),
+                    has_properties(
+                        sender_tg_id=equal_to(test_user_john['tg_id']),
+                        receiver_tg_id=equal_to(test_user_bob['tg_id']),
+                        status=equal_to('pending'),
+                    ),
+                )
+            ),
+        )
+
+    async def test_service_get_pending_requests_not_found(
+        self,
+        user_service: UserService,
+    ) -> None:
+        result = await user_service.get_pending_requests(123456)
+
+        assert result == []
