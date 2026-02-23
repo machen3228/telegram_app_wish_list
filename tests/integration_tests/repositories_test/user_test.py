@@ -2,6 +2,7 @@ from datetime import datetime
 
 from hamcrest import all_of
 from hamcrest import assert_that
+from hamcrest import contains_exactly
 from hamcrest import contains_inanyorder
 from hamcrest import equal_to
 from hamcrest import greater_than
@@ -13,6 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain import User
+from dto.users import FriendRequestDTO
 from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from repositories import UserRepository
@@ -332,3 +334,33 @@ class TestUserRepository:
                 outgoing_request_ids=equal_to(set()),
             ),
         )
+
+    @pytest.mark.usefixtures('test_user_with_incoming_request')
+    async def test_repo_get_pending_requests_success(
+        self,
+        user_repository: UserRepository,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+
+        assert_that(
+            await user_repository.get_pending_requests(test_user_bob['tg_id']),
+            contains_exactly(
+                all_of(
+                    instance_of(FriendRequestDTO),
+                    has_properties(
+                        sender_tg_id=equal_to(test_user_john['tg_id']),
+                        receiver_tg_id=equal_to(test_user_bob['tg_id']),
+                        status=equal_to('pending'),
+                    ),
+                )
+            ),
+        )
+
+    async def test_repo_get_pending_requests_not_found(
+        self,
+        user_repository: UserRepository,
+    ) -> None:
+        result = await user_repository.get_pending_requests(123456)
+
+        assert result == []
