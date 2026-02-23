@@ -42,7 +42,7 @@ Advise you to install `Atlas` plugin in Pycharm (or other IDE) to see
 syntaxis hints. Schema has extension `.pg.hcl`, so it will
 help you to minimize errors while working with DB schema.
 
-To create migration file, fun:
+To create migration file, run:
 ```bash
 atlas migrate diff {migration_name} --env local
 ```
