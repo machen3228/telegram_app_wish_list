@@ -382,3 +382,36 @@ class TestUserService:
         test_user_john: UserDict,
     ) -> None:
         await user_service.accept_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+    @pytest.mark.usefixtures('test_user_with_incoming_request')
+    async def test_service_reject_friend_request_set_rejected_status(
+        self,
+        db_session: AsyncSession,
+        user_service: UserService,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.reject_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+        query = await db_session.execute(
+            text(
+                """
+                SELECT status
+                FROM friend_requests
+                WHERE sender_tg_id = :sender_tg_id
+                  AND receiver_tg_id = :receiver_tg_id
+                """
+            ),
+            {'sender_tg_id': test_user_john['tg_id'], 'receiver_tg_id': test_user_bob['tg_id']},
+        )
+        rows = query.mappings().first()
+
+        assert rows['status'] == 'rejected'  # ty:ignore[not-subscriptable]
+
+    async def test_service_reject_friend_request_empty_dont_raise(
+        self,
+        user_service: UserService,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.reject_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
