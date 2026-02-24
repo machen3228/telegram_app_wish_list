@@ -1,6 +1,7 @@
 from litestar import Controller
 from litestar import delete
 from litestar import get
+from litestar import patch
 from litestar import post
 from litestar.di import Provide
 from litestar.dto import DataclassDTO
@@ -81,9 +82,8 @@ class UserController(Controller):
     ) -> list[FriendRequestDTO]:
         return await service.get_pending_requests(current_user_id)
 
-    @post(
+    @patch(
         '/me/friends/{sender_id:int}/accept',
-        status_code=200,
         summary='Accept friend request',
         dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
@@ -96,9 +96,8 @@ class UserController(Controller):
         await service.accept_friend_request(current_user_id, sender_id)
         return {'message': 'Friend request accepted'}
 
-    @post(
+    @patch(
         '/me/friends/{sender_id:int}/reject',
-        status_code=200,
         summary='Reject friend request',
         dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
