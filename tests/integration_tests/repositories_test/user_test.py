@@ -364,3 +364,94 @@ class TestUserRepository:
         result = await user_repository.get_pending_requests(123456)
 
         assert result == []
+
+    @pytest.mark.usefixtures('test_user_with_incoming_request')
+    async def test_repo_accept_friend_request_set_accept_status(
+        self,
+        db_session: AsyncSession,
+        user_repository: UserRepository,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+
+        await user_repository.accept_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+        query = await db_session.execute(
+            text(
+                """
+                SELECT status
+                FROM friend_requests
+                WHERE sender_tg_id = :sender_tg_id AND receiver_tg_id = :receiver_tg_id
+                """
+            ),
+            {'sender_tg_id': test_user_john['tg_id'], 'receiver_tg_id': test_user_bob['tg_id']},
+        )
+        rows = query.mappings().first()
+
+        assert rows['status'] == 'accepted'  # ty:ignore[not-subscriptable]
+
+    @pytest.mark.usefixtures('test_user_with_incoming_request')
+    async def test_repo_accept_friend_request_add_friends(
+        self,
+        db_session: AsyncSession,
+        user_repository: UserRepository,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_repository.accept_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+        query = await db_session.execute(
+            text(
+                """
+                SELECT user_tg_id, friend_tg_id
+                FROM friends
+                WHERE (user_tg_id = :user_tg_id AND friend_tg_id = :friend_tg_id)
+                OR (user_tg_id = :friend_tg_id AND friend_tg_id = :user_tg_id)
+                """
+            ),
+            {'user_tg_id': test_user_john['tg_id'], 'friend_tg_id': test_user_bob['tg_id']},
+        )
+        rows = query.mappings().all()
+
+        assert len(rows) == 2  # noqa: PLR2004
+
+    async def test_repo_accept_friend_request_empty_dont_raise(
+        self,
+        user_repository: UserRepository,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_repository.accept_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+    @pytest.mark.usefixtures('test_user_with_incoming_request')
+    async def test_repo_reject_friend_request_set_rejected_status(
+        self,
+        db_session: AsyncSession,
+        user_repository: UserRepository,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_repository.reject_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+        query = await db_session.execute(
+            text(
+                """
+                SELECT status
+                FROM friend_requests
+                WHERE sender_tg_id = :sender_tg_id
+                  AND receiver_tg_id = :receiver_tg_id
+                """
+            ),
+            {'sender_tg_id': test_user_john['tg_id'], 'receiver_tg_id': test_user_bob['tg_id']},
+        )
+        rows = query.mappings().first()
+
+        assert rows['status'] == 'rejected'  # ty:ignore[not-subscriptable]
+
+    async def test_repo_reject_friend_request_empty_dont_raise(
+        self,
+        user_repository: UserRepository,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_repository.reject_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
