@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import TelegramInitData
 from core.security import TokenOut
+from domain import User
 from dto.users import FriendRequestDTO
 from exceptions.http import BadRequestError
 from exceptions.http import NotFoundError
@@ -473,3 +474,30 @@ class TestUserService:
         test_user_john: UserDict,
     ) -> None:
         await user_service.delete_friend(test_user_john['tg_id'], test_user_bob['tg_id'])
+
+    async def test_service_get_friends_success(
+        self,
+        user_service: UserService,
+        test_user_with_friend: int,
+        test_user_john: UserDict,
+    ) -> None:
+        result = await user_service.get_friends(test_user_with_friend)
+
+        assert result == [User(**test_user_john)]
+
+    async def test_service_get_friends_user_not_found(
+        self,
+        user_service: UserService,
+    ) -> None:
+        result = await user_service.get_friends(123)
+
+        assert result == []
+
+    async def test_service_get_friends_no_friends(
+        self,
+        user_service: UserService,
+        test_user_bob: UserDict,
+    ) -> None:
+        result = await user_service.get_friends(test_user_bob['tg_id'])
+
+        assert result == []
