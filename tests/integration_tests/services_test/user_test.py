@@ -415,3 +415,61 @@ class TestUserService:
         test_user_john: UserDict,
     ) -> None:
         await user_service.reject_friend_request(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+    @pytest.mark.usefixtures('test_user_with_friend')
+    async def test_service_delete_friend_success_by_1st_user(
+        self,
+        db_session: AsyncSession,
+        user_service: UserService,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.delete_friend(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+        query = await db_session.execute(
+            text(
+                """
+                SELECT *
+                FROM friends
+                WHERE (user_tg_id = :user_tg_id AND friend_tg_id = :friend_tg_id)
+                   OR (user_tg_id = :friend_tg_id AND friend_tg_id = :user_tg_id)
+                """
+            ),
+            {'user_tg_id': test_user_bob['tg_id'], 'friend_tg_id': test_user_john['tg_id']},
+        )
+        rows = query.mappings().all()
+
+        assert rows == []
+
+    @pytest.mark.usefixtures('test_user_with_friend')
+    async def test_service_delete_friend_success_by_2nd_user(
+        self,
+        db_session: AsyncSession,
+        user_service: UserService,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.delete_friend(test_user_john['tg_id'], test_user_bob['tg_id'])
+
+        query = await db_session.execute(
+            text(
+                """
+                SELECT *
+                FROM friends
+                WHERE (user_tg_id = :user_tg_id AND friend_tg_id = :friend_tg_id)
+                   OR (user_tg_id = :friend_tg_id AND friend_tg_id = :user_tg_id)
+                """
+            ),
+            {'user_tg_id': test_user_john['tg_id'], 'friend_tg_id': test_user_bob['tg_id']},
+        )
+        rows = query.mappings().all()
+
+        assert rows == []
+
+    async def test_service_delete_friend_empty_dont_raise(
+        self,
+        user_service: UserService,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_service.delete_friend(test_user_john['tg_id'], test_user_bob['tg_id'])
