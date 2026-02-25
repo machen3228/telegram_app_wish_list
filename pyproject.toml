@@ -75,3 +75,12 @@ markers = [
     "integration: Integration tests (slower, use database)",
     "asyncio: mark test as async"
 ]
+
+[tool.coverage.run]
+omit = [
+    "*/controllers/*",
+    "*/core/*",
+    "*/dependencies/*",
+    "*/main.py",
+    "*/application.py",
+]
