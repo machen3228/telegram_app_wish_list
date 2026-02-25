@@ -112,9 +112,9 @@ jobs:
           APP__DB__NAME: ${{ env.DB_NAME }}
           APP__JWT__SECRET_KEY: ${{ secrets.APP__JWT__SECRET_KEY || 'test_secret_key_for_ci_min_32_chars' }}
 
-      - name: Report Coveralls
-        uses: coverallsapp/github-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          files: coverage.xml
-          format: cobertura
+#      - name: Report Coveralls
+#        uses: coverallsapp/github-action@v2
+#        with:
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          files: coverage.xml
+#          format: cobertura
