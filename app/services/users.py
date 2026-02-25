@@ -61,9 +61,6 @@ class UserService:
         except NotFoundInDbError as e:
             raise NotFoundError(detail=str(e)) from e
 
-    async def get_friends(self, user_id: int) -> list[User]:
-        return await self._repository.get_friends(user_id)
-
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         if sender_id == receiver_id:
             raise BadRequestError(detail='Cannot send friend request to yourself')
@@ -97,3 +94,6 @@ class UserService:
 
     async def delete_friend(self, user_id: int, friend_id: int) -> None:
         await self._repository.delete_friend(user_id, friend_id)
+
+    async def get_friends(self, user_id: int) -> list[User]:
+        return await self._repository.get_friends(user_id)
