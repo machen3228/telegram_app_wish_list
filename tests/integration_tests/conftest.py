@@ -12,7 +12,9 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from core.config import settings
+from repositories import GiftRepository
 from repositories import UserRepository
+from services import GiftService
 from services import UserService
 
 async_engine: AsyncEngine = create_async_engine(
@@ -53,6 +55,16 @@ async def user_service(db_session: AsyncSession) -> UserService:
 @pytest_asyncio.fixture
 async def user_repository(db_session: AsyncSession) -> UserRepository:
     return UserRepository(db_session)
+
+
+@pytest_asyncio.fixture
+async def gift_service(db_session: AsyncSession) -> GiftService:
+    return GiftService(db_session)
+
+
+@pytest_asyncio.fixture
+async def gift_repository(db_session: AsyncSession) -> GiftRepository:
+    return GiftRepository(db_session)
 
 
 class UserDict(TypedDict):
@@ -175,3 +187,14 @@ async def test_user_with_outgoing_request(
         },
     )
     return test_user_bob['tg_id']
+
+
+@pytest_asyncio.fixture
+def gift_data() -> dict:
+    return {
+        'name': 'Plane',
+        'url': 'https://www.google.com/',
+        'wish_rate': 10,
+        'price': 1_000_000,
+        'note': 'white',
+    }
