@@ -2,6 +2,8 @@ from litestar.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain import Gift
+from exceptions.database import NotFoundInDbError
+from exceptions.http import NotFoundError
 from repositories import GiftRepository
 
 
@@ -26,7 +28,10 @@ class GiftService:
             price=price,
             note=note,
         )
-        return await self._repository.add(gift)
+        try:
+            return await self._repository.add(gift)
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
 
     async def get(self, gift_id: int, current_user_id: int) -> Gift:
         try:

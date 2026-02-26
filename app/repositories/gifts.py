@@ -2,8 +2,10 @@ from datetime import UTC
 from datetime import datetime
 
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 
 from domain.gifts import Gift
+from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
 
 
@@ -24,7 +26,10 @@ class GiftRepository(BaseRepository[Gift]):
             'created_at': obj.created_at,
             'updated_at': obj.updated_at,
         }
-        result = await self._session.execute(stmt, params)
+        try:
+            result = await self._session.execute(stmt, params)
+        except IntegrityError:
+            raise NotFoundInDbError('User', obj.user_id) from None
         return result.scalar_one()
 
     async def get(self, obj_id: int, current_user_id: int) -> Gift:
