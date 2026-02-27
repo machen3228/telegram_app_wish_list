@@ -52,7 +52,7 @@ class GiftRepository(BaseRepository[Gift]):
         query_result = await self._session.execute(query, params)
         result = query_result.mappings().one_or_none()
         if result is None:
-            raise KeyError(f'Gift with id={obj_id} not found')
+            raise NotFoundInDbError('Gift', obj_id)
         return Gift(**dict(result))
 
     async def get_gifts_by_user_id(self, tg_id: int, current_user_id: int) -> list[Gift]:

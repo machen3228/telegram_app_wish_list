@@ -26,15 +26,14 @@ class TestGiftRepository:
         gift = Gift.create(**gift_data, user_id=test_user_bob['tg_id'])
         gift_id = await gift_repository.add(gift)
 
-        async with db_session as session:
-            query = await session.execute(
-                text("""
-                    SELECT *
-                    FROM gifts
-                    WHERE id = :gift_id
-                """),
-                {'gift_id': gift_id},
-            )
+        query = await db_session.execute(
+            text("""
+                SELECT *
+                FROM gifts
+                WHERE id = :gift_id
+            """),
+            {'gift_id': gift_id},
+        )
 
         assert_that(
             query.mappings().first(),
@@ -68,15 +67,14 @@ class TestGiftRepository:
     ) -> None:
         await gift_repository.delete(test_bob_gift['id'])
 
-        async with db_session as session:
-            query = await session.execute(
-                text("""
-                    SELECT *
-                    FROM gifts
-                    WHERE id = :gift_id
-                """),
-                {'gift_id': test_bob_gift['id']},
-            )
+        query = await db_session.execute(
+            text("""
+                SELECT *
+                FROM gifts
+                WHERE id = :gift_id
+            """),
+            {'gift_id': test_bob_gift['id']},
+        )
 
         assert query.mappings().one_or_none() is None
 
