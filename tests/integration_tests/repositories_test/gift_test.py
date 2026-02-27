@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain import Gift
 from exceptions.database import NotFoundInDbError
 from repositories import GiftRepository
+from tests.integration_tests.conftest import GiftDict
 from tests.integration_tests.conftest import UserDict
 
 
@@ -58,3 +59,29 @@ class TestGiftRepository:
 
         with pytest.raises(NotFoundInDbError, match='User with id=123456 not found'):
             await gift_repository.add(gift)
+
+    async def test_repo_delete_gift_success(
+        self,
+        db_session: AsyncSession,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        await gift_repository.delete(test_bob_gift['id'])
+
+        async with db_session as session:
+            query = await session.execute(
+                text("""
+                    SELECT *
+                    FROM gifts
+                    WHERE id = :gift_id
+                """),
+                {'gift_id': test_bob_gift['id']},
+            )
+
+        assert query.mappings().one_or_none() is None
+
+    async def test_repo_delete_gift_not_exists_dont_raise(
+        self,
+        gift_repository: GiftRepository,
+    ) -> None:
+        await gift_repository.delete(123456)

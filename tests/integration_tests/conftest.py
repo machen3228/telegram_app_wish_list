@@ -78,6 +78,7 @@ class UserDict(TypedDict):
 
 
 class GiftDict(TypedDict):
+    id: int
     user_id: int
     name: str
     url: str
@@ -217,20 +218,22 @@ async def test_bob_gift(
     test_user_bob: UserDict,
 ) -> GiftDict:
     now = datetime.now(UTC)
-    gift_data = GiftDict(
-        user_id=test_user_bob['tg_id'],
-        name='Plane',
-        url='https://www.google.com/',
-        wish_rate=10,
-        price=1_000_000,
-        note='white',
-        created_at=now,
-        updated_at=now,
-    )
+    gift_data = {
+        'user_id': test_user_bob['tg_id'],
+        'name': 'Plane',
+        'url': 'https://www.google.com/',
+        'wish_rate': 10,
+        'price': 1_000_000,
+        'note': 'white',
+        'created_at': now,
+        'updated_at': now,
+    }
     stmt = text("""
         INSERT INTO gifts (user_id, name, url, wish_rate, price, note, created_at, updated_at)
         VALUES (:user_id, :name, :url, :wish_rate, :price, :note, :created_at, :updated_at)
         RETURNING id
     """)
-    await db_session.execute(stmt, gift_data)
-    return gift_data
+    result = await db_session.execute(stmt, gift_data)
+    await db_session.flush()
+    gift_id = result.scalar_one()
+    return GiftDict(id=gift_id, **gift_data)  # ty:ignore[missing-typed-dict-key]
