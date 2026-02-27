@@ -6,8 +6,10 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from exceptions.http import ForbiddenError
 from exceptions.http import NotFoundError
 from services import GiftService
+from tests.integration_tests.conftest import GiftDict
 from tests.integration_tests.conftest import UserDict
 
 
@@ -23,15 +25,14 @@ class TestGiftService:
     ) -> None:
         gift_id = await gift_service.add(**gift_data, current_user_id=test_user_bob['tg_id'])
 
-        async with db_session as session:
-            query = await session.execute(
-                text("""
-                    SELECT *
-                    FROM gifts
-                    WHERE id = :gift_id
-                """),
-                {'gift_id': gift_id},
-            )
+        query = await db_session.execute(
+            text("""
+                SELECT *
+                FROM gifts
+                WHERE id = :gift_id
+            """),
+            {'gift_id': gift_id},
+        )
 
         assert_that(
             query.mappings().first(),
@@ -54,3 +55,38 @@ class TestGiftService:
     ) -> None:
         with pytest.raises(NotFoundError, match='User with id=123456 not found'):
             await gift_service.add(**gift_data, current_user_id=123456)
+
+    async def test_service_delete_gift_success(
+        self,
+        db_session: AsyncSession,
+        gift_service: GiftService,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        await gift_service.delete(test_bob_gift['id'], test_bob_gift['user_id'])
+
+        query = await db_session.execute(
+            text("""
+                SELECT *
+                FROM gifts
+                WHERE id = :gift_id
+            """),
+            {'gift_id': test_bob_gift['id']},
+        )
+
+        assert query.mappings().one_or_none() is None
+
+    async def test_service_delete_gift_not_exists_raise(
+        self,
+        gift_service: GiftService,
+        test_user_bob: UserDict,
+    ) -> None:
+        with pytest.raises(NotFoundError, match='Gift with id=123456 not found'):
+            await gift_service.delete(123456, test_user_bob['tg_id'])
+
+    async def test_service_delete_gift_not_owner(
+        self,
+        gift_service: GiftService,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        with pytest.raises(ForbiddenError):
+            await gift_service.delete(test_bob_gift['id'], 666666)

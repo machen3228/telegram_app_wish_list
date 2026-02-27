@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain import Gift
 from exceptions.database import NotFoundInDbError
+from exceptions.http import ForbiddenError
 from exceptions.http import NotFoundError
 from repositories import GiftRepository
 
@@ -33,20 +34,22 @@ class GiftService:
         except NotFoundInDbError as e:
             raise NotFoundError(detail=str(e)) from e
 
-    async def get(self, gift_id: int, current_user_id: int) -> Gift:
+    async def get(self, gift_id: int, current_user_id: int) -> Gift:  # TODO: add tests
         try:
             return await self._repository.get(gift_id, current_user_id)
-        except KeyError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
 
     async def get_gifts_by_user_id(self, tg_id: int, current_user_id: int) -> list[Gift]:
         return await self._repository.get_gifts_by_user_id(tg_id, current_user_id)
 
     async def delete(self, gift_id: int, current_user_id: int) -> None:
         try:
-            await self._repository.get(gift_id, current_user_id)
-        except KeyError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
+            gift = await self._repository.get(gift_id, current_user_id)
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
+        if gift.user_id != current_user_id:
+            raise ForbiddenError
         return await self._repository.delete(gift_id)
 
     async def add_reservation(self, gift_id: int, current_user_id: int) -> None:
