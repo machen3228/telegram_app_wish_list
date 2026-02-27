@@ -77,6 +77,17 @@ class UserDict(TypedDict):
     updated_at: datetime
 
 
+class GiftDict(TypedDict):
+    user_id: int
+    name: str
+    url: str
+    wish_rate: int
+    price: int
+    note: str
+    created_at: datetime
+    updated_at: datetime
+
+
 @pytest_asyncio.fixture
 async def test_user_bob(db_session: AsyncSession) -> UserDict:
     user_data = UserDict(
@@ -198,3 +209,28 @@ def gift_data() -> dict:
         'price': 1_000_000,
         'note': 'white',
     }
+
+
+@pytest_asyncio.fixture
+async def test_bob_gift(
+    db_session: AsyncSession,
+    test_user_bob: UserDict,
+) -> GiftDict:
+    now = datetime.now(UTC)
+    gift_data = GiftDict(
+        user_id=test_user_bob['tg_id'],
+        name='Plane',
+        url='https://www.google.com/',
+        wish_rate=10,
+        price=1_000_000,
+        note='white',
+        created_at=now,
+        updated_at=now,
+    )
+    stmt = text("""
+        INSERT INTO gifts (user_id, name, url, wish_rate, price, note, created_at, updated_at)
+        VALUES (:user_id, :name, :url, :wish_rate, :price, :note, :created_at, :updated_at)
+        RETURNING id
+    """)
+    await db_session.execute(stmt, gift_data)
+    return gift_data
