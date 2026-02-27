@@ -1,12 +1,28 @@
 from datetime import UTC
 from datetime import datetime
 
+from sqlalchemy import TextClause
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from domain.gifts import Gift
 from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
+
+
+def _gift_select_query(where_clause: str) -> TextClause:
+    return text(f"""
+        SELECT
+            g.*,
+            gr.gift_id IS NOT NULL AS is_reserved,
+            CASE
+                WHEN gr.reserved_by_tg_id = :current_user_id THEN gr.reserved_by_tg_id
+                ELSE NULL
+            END AS reserved_by
+        FROM gifts g
+        LEFT JOIN gift_reservations gr ON g.id = gr.gift_id
+        WHERE {where_clause}
+    """)
 
 
 class GiftRepository(BaseRepository[Gift]):
@@ -33,48 +49,19 @@ class GiftRepository(BaseRepository[Gift]):
         return result.scalar_one()
 
     async def get(self, obj_id: int, current_user_id: int) -> Gift:
-        query = text("""
-          SELECT
-            g.*,
-            gr.gift_id IS NOT NULL AS is_reserved,
-            CASE
-              WHEN gr.reserved_by_tg_id = :current_user_id THEN gr.reserved_by_tg_id
-              ELSE NULL
-            END AS reserved_by
-          FROM gifts g
-          LEFT JOIN gift_reservations gr ON g.id = gr.gift_id
-          WHERE g.id = :gift_id
-         """)
-        params = {
-            'gift_id': obj_id,
-            'current_user_id': current_user_id,
-        }
-        query_result = await self._session.execute(query, params)
-        result = query_result.mappings().one_or_none()
-        if result is None:
+        query = _gift_select_query('g.id = :gift_id')
+        params = {'gift_id': obj_id, 'current_user_id': current_user_id}
+        result = await self._session.execute(query, params)
+        row = result.mappings().one_or_none()
+        if row is None:
             raise NotFoundInDbError('Gift', obj_id)
-        return Gift(**dict(result))
+        return Gift(**row)
 
     async def get_gifts_by_user_id(self, tg_id: int, current_user_id: int) -> list[Gift]:
-        query = text("""
-          SELECT
-            g.*,
-            gr.gift_id IS NOT NULL AS is_reserved,
-            CASE
-              WHEN gr.reserved_by_tg_id = :current_user_id THEN gr.reserved_by_tg_id
-              ELSE NULL
-            END AS reserved_by
-          FROM gifts g
-          LEFT JOIN gift_reservations gr ON g.id = gr.gift_id
-          WHERE g.user_id = :user_id
-        """)
-        params = {
-            'user_id': tg_id,
-            'current_user_id': current_user_id,
-        }
-        query_result = await self._session.execute(query, params)
-        rows = query_result.mappings().all()
-        return [Gift(**row) for row in rows]
+        query = _gift_select_query('g.user_id = :user_id')
+        params = {'user_id': tg_id, 'current_user_id': current_user_id}
+        result = await self._session.execute(query, params)
+        return [Gift(**row) for row in result.mappings()]
 
     async def delete(self, obj_id: int) -> None:
         stmt = text("""
