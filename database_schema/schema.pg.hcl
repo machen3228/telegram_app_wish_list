@@ -208,6 +208,9 @@ table "gift_reservations" {
   primary_key {
     columns = [column.gift_id]
   }
+  unique "uk_gift_reservations_gift_id" {
+    columns = [column.gift_id]
+  }
   foreign_key "fk_gift_reservations_gift" {
     columns     = [column.gift_id]
     ref_columns = [table.gifts.column.id]
