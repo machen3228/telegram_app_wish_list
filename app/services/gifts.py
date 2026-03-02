@@ -55,10 +55,10 @@ class GiftService:
     async def add_reservation(self, gift_id: int, current_user_id: int) -> None:
         try:
             await self._repository.get(gift_id, current_user_id)
-        except KeyError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
         if not await self._repository.is_friend_or_owner(gift_id, current_user_id):
-            raise HTTPException(status_code=403, detail='Not a friend or owner')
+            raise ForbiddenError(detail='Not a friend or owner')
         return await self._repository.add_reservation(gift_id, current_user_id)
 
     async def delete_reservation_by_friend(self, gift_id: int, current_user_id: int) -> None:

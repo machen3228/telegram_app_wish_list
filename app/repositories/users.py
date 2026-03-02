@@ -10,7 +10,7 @@ from dto.users import UserRelationsDTO
 from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
-from utils import extract_integrity_error_conflict_field
+from utils import handle_integrity_error_message
 
 
 class UserRepository(BaseRepository[User]):
@@ -31,8 +31,9 @@ class UserRepository(BaseRepository[User]):
         try:
             await self._session.execute(stmt, params)
         except IntegrityError as e:
-            field = extract_integrity_error_conflict_field(e)
-            raise AlreadyExistsInDbError('User', field) from None
+            context = {'tg_id': obj.tg_id, 'tg_username': obj.tg_username}
+            message = handle_integrity_error_message(e, context)
+            raise AlreadyExistsInDbError(message) from None
         return obj.tg_id
 
     async def update(self, tg_id: int, **fields: str | int | datetime) -> None:
@@ -69,7 +70,7 @@ class UserRepository(BaseRepository[User]):
         row = result.mappings().one_or_none()
 
         if row is None:
-            raise NotFoundInDbError('User', obj_id)
+            raise NotFoundInDbError(f'User with id={obj_id} not found')
 
         return User(**row)
 
