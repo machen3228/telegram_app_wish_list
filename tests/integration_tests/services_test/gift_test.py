@@ -90,3 +90,75 @@ class TestGiftService:
     ) -> None:
         with pytest.raises(ForbiddenError):
             await gift_service.delete(test_bob_gift['id'], 666666)
+
+    @pytest.mark.usefixtures('test_user_with_friend')
+    async def test_service_add_reservation_success(
+        self,
+        db_session: AsyncSession,
+        gift_service: GiftService,
+        test_bob_gift: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await gift_service.add_reservation(
+            gift_id=test_bob_gift['id'],
+            current_user_id=test_user_john['tg_id'],
+        )
+        query = await db_session.execute(
+            text("""
+                SELECT *
+                FROM gift_reservations
+                WHERE gift_id = :gift_id
+            """),
+            {'gift_id': test_bob_gift['id']},
+        )
+
+        reservation = query.mappings().first()
+        assert_that(
+            reservation,
+            has_properties(
+                gift_id=equal_to(test_bob_gift['id']),
+                reserved_by_tg_id=equal_to(test_user_john['tg_id']),
+                created_at=not_none(),
+            ),
+        )
+
+    @pytest.mark.usefixtures('test_user_with_friend')
+    async def test_service_add_reservation_gift_not_found(
+        self,
+        gift_service: GiftService,
+        test_user_john: UserDict,
+    ) -> None:
+        with pytest.raises(NotFoundError, match='Gift with id=999999 not found'):
+            await gift_service.add_reservation(
+                gift_id=999999,
+                current_user_id=test_user_john['tg_id'],
+            )
+
+    async def test_service_add_reservation_not_friend_or_owner(
+        self,
+        gift_service: GiftService,
+        test_bob_gift: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        with pytest.raises(ForbiddenError, match='Not a friend or owner'):
+            await gift_service.add_reservation(
+                gift_id=test_bob_gift['id'],
+                current_user_id=test_user_john['tg_id'],
+            )
+
+    async def test_service_add_reservation_duplicate_raises(
+        self,
+        gift_service: GiftService,
+        test_bob_gift: GiftDict,
+        test_user_bob: UserDict,
+    ) -> None:
+        await gift_service.add_reservation(
+            gift_id=test_bob_gift['id'],
+            current_user_id=test_user_bob['tg_id'],
+        )
+
+        with pytest.raises(NotFoundError, match=f'Gift with id={test_bob_gift["id"]} already reserved'):
+            await gift_service.add_reservation(
+                gift_id=test_bob_gift['id'],
+                current_user_id=test_user_bob['tg_id'],
+            )

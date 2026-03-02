@@ -59,7 +59,11 @@ class GiftService:
             raise NotFoundError(detail=str(e)) from e
         if not await self._repository.is_friend_or_owner(gift_id, current_user_id):
             raise ForbiddenError(detail='Not a friend or owner')
-        return await self._repository.add_reservation(gift_id, current_user_id)
+        try:
+            result = await self._repository.add_reservation(gift_id, current_user_id)
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
+        return result
 
     async def delete_reservation_by_friend(self, gift_id: int, current_user_id: int) -> None:
         try:
