@@ -277,3 +277,12 @@ class TestGiftRepository:
     ) -> None:
         with pytest.raises(NotFoundInDbError, match='Gift with id=666666 not found'):
             await gift_repository.add_reservation(666_666, test_bob_gift['user_id'])
+
+    async def test_repo_add_reservation_twice(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])
+        with pytest.raises(NotFoundInDbError, match=f'Gift with id={test_bob_gift["id"]} already reserved'):
+            await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])

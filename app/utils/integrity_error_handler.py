@@ -9,6 +9,7 @@ CONSTRAINT_TO_MESSAGE: Final = {
     'fk_gifts_user': 'User with id={user_id} not found',
     'fk_gift_reservations_gift': 'Gift with id={gift_id} not found',
     'fk_gift_reservations_reserved_by': 'User with id={reserved_by_tg_id} not found',
+    'gift_reservations_pkey': 'Gift with id={gift_id} already reserved',
 }
 
 
