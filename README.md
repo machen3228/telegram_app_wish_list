@@ -3,6 +3,7 @@
 [![CI](https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml/badge.svg)](https://github.com/machen3228/telegram_app_wish_list/actions/workflows/ci.yml)
 [![Coverage Status](https://coveralls.io/repos/github/machen3228/telegram_app_wish_list/badge.svg?branch=main)](https://coveralls.io/github/machen3228/telegram_app_wish_list?branch=main)
 
+
 This is a Telegram-embedded app that lets users share their preferred gifts with friends. It helps people choose suitable presents, for example for birthdays, and removes the hassle of guessing what to buy
 
 # VENV
