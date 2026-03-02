@@ -176,3 +176,34 @@ class TestGiftRepository:
                 reserved_by=is_(none()),
             ),
         )
+
+    async def test_repo_is_friend_or_owner_by_owner(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+        test_user_with_friend: int,
+    ) -> None:
+        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_with_friend)
+
+        assert result is True
+
+    @pytest.mark.usefixtures('test_user_with_friend')
+    async def test_repo_is_friend_or_owner_by_friend(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_john['tg_id'])
+
+        assert result is True
+
+    async def test_repo_is_friend_or_owner_by_another_user(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_john['tg_id'])
+
+        assert result is False
