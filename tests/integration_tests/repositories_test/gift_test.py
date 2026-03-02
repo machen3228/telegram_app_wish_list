@@ -1,5 +1,6 @@
 from hamcrest import assert_that
 from hamcrest import equal_to
+from hamcrest import has_entries
 from hamcrest import has_properties
 from hamcrest import is_
 from hamcrest import none
@@ -176,3 +177,112 @@ class TestGiftRepository:
                 reserved_by=is_(none()),
             ),
         )
+
+    async def test_repo_is_friend_or_owner_by_owner(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+        test_user_with_friend: int,
+    ) -> None:
+        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_with_friend)
+
+        assert result is True
+
+    @pytest.mark.usefixtures('test_user_with_friend')
+    async def test_repo_is_friend_or_owner_by_friend(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_john['tg_id'])
+
+        assert result is True
+
+    async def test_repo_is_friend_or_owner_by_another_user(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_john['tg_id'])
+
+        assert result is False
+
+    @pytest.mark.usefixtures('test_user_with_friend')
+    async def test_repo_add_reservation_by_friend(
+        self,
+        db_session: AsyncSession,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await gift_repository.add_reservation(test_bob_gift['id'], test_user_john['tg_id'])
+
+        reservation = await db_session.execute(
+            text("""
+                SELECT *
+                FROM gift_reservations
+                WHERE gift_id = :gift_id AND reserved_by_tg_id = :reserved_by_tg_id
+            """),
+            {'gift_id': test_bob_gift['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
+        )
+
+        assert_that(
+            reservation.mappings().first(),
+            has_entries(
+                gift_id=equal_to(test_bob_gift['id']),
+                reserved_by_tg_id=equal_to(test_user_john['tg_id']),
+            ),
+        )  # ty:ignore[no-matching-overload]
+
+    async def test_repo_add_reservation_by_owner(
+        self,
+        db_session: AsyncSession,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])
+
+        reservation = await db_session.execute(
+            text("""
+                 SELECT *
+                 FROM gift_reservations
+                 WHERE gift_id = :gift_id
+                   AND reserved_by_tg_id = :reserved_by_tg_id
+                 """),
+            {'gift_id': test_bob_gift['id'], 'reserved_by_tg_id': test_bob_gift['user_id']},
+        )
+
+        assert_that(
+            reservation.mappings().first(),
+            has_entries(
+                gift_id=equal_to(test_bob_gift['id']),
+                reserved_by_tg_id=equal_to(test_bob_gift['user_id']),
+            ),
+        )  # ty:ignore[no-matching-overload]
+
+    async def test_repo_add_reservation_by_unexisting_user(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        with pytest.raises(NotFoundInDbError, match='User with id=666666 not found'):
+            await gift_repository.add_reservation(test_bob_gift['id'], 666_666)
+
+    async def test_repo_add_reservation_gift_not_exists(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        with pytest.raises(NotFoundInDbError, match='Gift with id=666666 not found'):
+            await gift_repository.add_reservation(666_666, test_bob_gift['user_id'])
+
+    async def test_repo_add_reservation_twice(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])
+        with pytest.raises(NotFoundInDbError, match=f'Gift with id={test_bob_gift["id"]} already reserved'):
+            await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])

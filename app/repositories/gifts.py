@@ -8,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from domain.gifts import Gift
 from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
+from utils import handle_integrity_error_message
 
 
 def _gift_select_query(where_clause: str) -> TextClause:
@@ -44,8 +45,10 @@ class GiftRepository(BaseRepository[Gift]):
         }
         try:
             result = await self._session.execute(stmt, params)
-        except IntegrityError:
-            raise NotFoundInDbError('User', obj.user_id) from None
+        except IntegrityError as e:
+            context = {'user_id': obj.user_id}
+            message = handle_integrity_error_message(e, context)
+            raise NotFoundInDbError(message) from None
         return result.scalar_one()
 
     async def get(self, obj_id: int, current_user_id: int) -> Gift:
@@ -54,7 +57,7 @@ class GiftRepository(BaseRepository[Gift]):
         result = await self._session.execute(query, params)
         row = result.mappings().one_or_none()
         if row is None:
-            raise NotFoundInDbError('Gift', obj_id)
+            raise NotFoundInDbError(f'Gift with id={obj_id} not found')
         return Gift(**row)
 
     async def get_gifts_by_user_id(self, tg_id: int, current_user_id: int) -> list[Gift]:
@@ -80,7 +83,15 @@ class GiftRepository(BaseRepository[Gift]):
             'reserved_by_tg_id': current_user_id,
             'created_at': datetime.now(UTC),
         }
-        await self._session.execute(stmt, params)
+        try:
+            await self._session.execute(stmt, params)
+        except IntegrityError as e:
+            context = {
+                'gift_id': gift_id,
+                'reserved_by_tg_id': current_user_id,
+            }
+            message = handle_integrity_error_message(e, context)
+            raise NotFoundInDbError(message) from None
 
     async def delete_reservation_by_friend(self, gift_id: int, current_user_id: int) -> None:
         stmt = text("""

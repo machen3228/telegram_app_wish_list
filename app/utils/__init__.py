@@ -1,1 +1,1 @@
-from .integrity_error_handler import extract_integrity_error_conflict_field as extract_integrity_error_conflict_field
+from .integrity_error_handler import handle_integrity_error_message as handle_integrity_error_message
