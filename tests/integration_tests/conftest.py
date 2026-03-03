@@ -3,6 +3,7 @@ from datetime import UTC
 from datetime import datetime
 from typing import TypedDict
 
+import pytest
 import pytest_asyncio
 from sqlalchemy import NullPool
 from sqlalchemy import text
@@ -237,3 +238,24 @@ async def test_bob_gift(
     await db_session.flush()
     gift_id = result.scalar_one()
     return GiftDict(id=gift_id, **gift_data)  # ty:ignore[missing-typed-dict-key]
+
+
+@pytest_asyncio.fixture
+@pytest.mark.usefixtures('test_user_with_friend')
+async def test_bob_gift_with_reservation_by_john(
+    db_session: AsyncSession,
+    test_bob_gift: GiftDict,
+    test_user_john: UserDict,
+) -> GiftDict:
+    stmt = text("""
+        INSERT INTO gift_reservations (gift_id, reserved_by_tg_id, created_at)
+        VALUES (:gift_id, :reserved_by_tg_id, :created_at)
+    """)
+    params = {
+        'gift_id': test_bob_gift['id'],
+        'reserved_by_tg_id': test_user_john['tg_id'],
+        'created_at': datetime.now(UTC),
+    }
+    await db_session.execute(stmt, params)
+
+    return test_bob_gift
