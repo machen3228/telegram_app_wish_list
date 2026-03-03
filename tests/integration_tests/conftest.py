@@ -3,7 +3,6 @@ from datetime import UTC
 from datetime import datetime
 from typing import TypedDict
 
-import pytest
 import pytest_asyncio
 from sqlalchemy import NullPool
 from sqlalchemy import text
@@ -241,9 +240,9 @@ async def test_bob_gift(
 
 
 @pytest_asyncio.fixture
-@pytest.mark.usefixtures('test_user_with_friend')
 async def test_bob_gift_with_reservation_by_john(
     db_session: AsyncSession,
+    test_user_with_friend: int,  # noqa: ARG001
     test_bob_gift: GiftDict,
     test_user_john: UserDict,
 ) -> GiftDict:

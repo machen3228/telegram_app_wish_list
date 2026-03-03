@@ -300,7 +300,7 @@ class TestGiftRepository:
 
         query = await db_session.execute(
             text("""
-                SELECT id
+                SELECT gift_id
                 FROM gift_reservations
                 WHERE gift_id = :gift_id AND reserved_by_tg_id = :reserved_by_tg_id
             """),
