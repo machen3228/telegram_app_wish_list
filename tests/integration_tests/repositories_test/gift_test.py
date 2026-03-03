@@ -309,3 +309,11 @@ class TestGiftRepository:
         result = query.scalar()
 
         assert result is None
+
+    async def test_repo_delete_reservation_by_friend_no_reservation(
+        self,
+        gift_repository: GiftRepository,
+        test_user_john: UserDict,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        await gift_repository.delete_reservation_by_friend(test_bob_gift['id'], test_user_john['tg_id'])
