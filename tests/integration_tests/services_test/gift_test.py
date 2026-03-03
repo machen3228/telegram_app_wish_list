@@ -162,3 +162,42 @@ class TestGiftService:
                 gift_id=test_bob_gift['id'],
                 current_user_id=test_user_bob['tg_id'],
             )
+
+    async def test_service_delete_reservation_by_friend_success(
+        self,
+        db_session: AsyncSession,
+        gift_service: GiftService,
+        test_user_john: UserDict,
+        test_bob_gift_with_reservation_by_john: GiftDict,
+    ) -> None:
+        await gift_service.delete_reservation_by_friend(
+            test_bob_gift_with_reservation_by_john['id'], test_user_john['tg_id']
+        )
+
+        query = await db_session.execute(
+            text("""
+                SELECT gift_id
+                FROM gift_reservations
+                WHERE gift_id = :gift_id AND reserved_by_tg_id = :reserved_by_tg_id
+            """),
+            {'gift_id': test_bob_gift_with_reservation_by_john['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
+        )
+        result = query.scalar()
+
+        assert result is None
+
+    async def test_service_delete_reservation_by_friend_no_reservation(
+        self,
+        gift_service: GiftService,
+        test_user_john: UserDict,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        await gift_service.delete_reservation_by_friend(test_bob_gift['id'], test_user_john['tg_id'])
+
+    async def test_service_delete_reservation_by_friend_gift_not_found(
+        self,
+        gift_service: GiftService,
+        test_user_john: UserDict,
+    ) -> None:
+        with pytest.raises(NotFoundError, match='Gift with id=999999 not found'):
+            await gift_service.delete_reservation_by_friend(999_999, test_user_john['tg_id'])

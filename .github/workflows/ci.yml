@@ -100,7 +100,6 @@ jobs:
         run: |
           uv run pytest \
           -vv \
-          -n auto \
           --cov=app \
           --cov-report=xml:coverage.xml
         env:

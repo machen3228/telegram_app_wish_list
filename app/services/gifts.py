@@ -68,8 +68,8 @@ class GiftService:
     async def delete_reservation_by_friend(self, gift_id: int, current_user_id: int) -> None:
         try:
             await self._repository.get(gift_id, current_user_id)
-        except KeyError as e:
-            raise HTTPException(status_code=404, detail=str(e)) from e
+        except NotFoundInDbError as e:
+            raise NotFoundError(detail=str(e)) from e
         return await self._repository.delete_reservation_by_friend(gift_id, current_user_id)
 
     async def delete_reservation_by_owner(self, gift_id: int, current_user_id: int) -> None:
