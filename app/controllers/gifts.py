@@ -64,7 +64,7 @@ class GiftController(Controller):
         summary='Withdraw reservation',
         dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
-    async def delete_reservation_by_friend(
+    async def delete_reservation(
         self,
         service: GiftService,
         gift_id: int,
