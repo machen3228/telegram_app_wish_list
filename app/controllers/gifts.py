@@ -59,9 +59,9 @@ class GiftController(Controller):
         await service.add_reservation(gift_id, current_user_id)
 
     @delete(
-        '/{gift_id:int}/reserve/friend',
+        '/{gift_id:int}/reserve',
         status_code=204,
-        summary='Withdraw reservation by friend',
+        summary='Withdraw reservation',
         dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
     )
     async def delete_reservation_by_friend(
@@ -70,21 +70,7 @@ class GiftController(Controller):
         gift_id: int,
         current_user_id: int,
     ) -> None:
-        await service.delete_reservation_by_friend(gift_id, current_user_id)
-
-    @delete(
-        '/{gift_id:int}/reserve/owner',
-        status_code=204,
-        summary='Withdraw reservation by owner',
-        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
-    )
-    async def delete_reservation_by_owner(
-        self,
-        service: GiftService,
-        gift_id: int,
-        current_user_id: int,
-    ) -> None:
-        await service.delete_reservation_by_owner(gift_id, current_user_id)
+        await service.delete_reservation(gift_id, current_user_id)
 
     @get(
         '/user/{tg_id:int}',

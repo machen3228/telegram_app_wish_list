@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from exceptions.http import BadRequestError
 from exceptions.http import ForbiddenError
 from exceptions.http import NotFoundError
 from services import GiftService
@@ -170,34 +171,64 @@ class TestGiftService:
         test_user_john: UserDict,
         test_bob_gift_with_reservation_by_john: GiftDict,
     ) -> None:
-        await gift_service.delete_reservation_by_friend(
-            test_bob_gift_with_reservation_by_john['id'], test_user_john['tg_id']
-        )
+        await gift_service.delete_reservation(test_bob_gift_with_reservation_by_john['id'], test_user_john['tg_id'])
 
         query = await db_session.execute(
             text("""
                 SELECT gift_id
                 FROM gift_reservations
-                WHERE gift_id = :gift_id AND reserved_by_tg_id = :reserved_by_tg_id
+                WHERE gift_id = :gift_id
             """),
-            {'gift_id': test_bob_gift_with_reservation_by_john['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
+            {'gift_id': test_bob_gift_with_reservation_by_john['id']},
         )
         result = query.scalar()
 
         assert result is None
 
-    async def test_service_delete_reservation_by_friend_no_reservation(
+    async def test_service_delete_reservation_by_owner_success(
+        self,
+        db_session: AsyncSession,
+        gift_service: GiftService,
+        test_user_bob: UserDict,
+        test_bob_gift_with_reservation_by_john: GiftDict,
+    ) -> None:
+        await gift_service.delete_reservation(test_bob_gift_with_reservation_by_john['id'], test_user_bob['tg_id'])
+
+        query = await db_session.execute(
+            text("""
+                SELECT gift_id
+                FROM gift_reservations
+                WHERE gift_id = :gift_id
+            """),
+            {'gift_id': test_bob_gift_with_reservation_by_john['id']},
+        )
+        result = query.scalar()
+
+        assert result is None
+
+    async def test_service_delete_reservation_by_another_person(
         self,
         gift_service: GiftService,
-        test_user_john: UserDict,
+        test_bob_gift_with_reservation_by_john: GiftDict,
+        test_user_alice: UserDict,
+    ) -> None:
+        with pytest.raises(ForbiddenError):
+            await gift_service.delete_reservation(
+                test_bob_gift_with_reservation_by_john['id'], test_user_alice['tg_id']
+            )
+
+    async def test_service_delete_reservation_no_reservation(
+        self,
+        gift_service: GiftService,
         test_bob_gift: GiftDict,
     ) -> None:
-        await gift_service.delete_reservation_by_friend(test_bob_gift['id'], test_user_john['tg_id'])
+        with pytest.raises(BadRequestError, match='The gift has no reservation'):
+            await gift_service.delete_reservation(test_bob_gift['id'], test_bob_gift['user_id'])
 
-    async def test_service_delete_reservation_by_friend_gift_not_found(
+    async def test_service_delete_reservation_gift_not_found(
         self,
         gift_service: GiftService,
         test_user_john: UserDict,
     ) -> None:
         with pytest.raises(NotFoundError, match='Gift with id=999999 not found'):
-            await gift_service.delete_reservation_by_friend(999_999, test_user_john['tg_id'])
+            await gift_service.delete_reservation(999_999, test_user_john['tg_id'])
