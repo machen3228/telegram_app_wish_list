@@ -93,17 +93,7 @@ class GiftRepository(BaseRepository[Gift]):
             message = handle_integrity_error_message(e, context)
             raise NotFoundInDbError(message) from None
 
-    async def delete_reservation_by_friend(self, gift_id: int, current_user_id: int) -> None:
-        stmt = text("""
-          DELETE FROM gift_reservations WHERE gift_id = :gift_id AND reserved_by_tg_id = :reserved_by_tg_id
-        """)
-        params = {
-            'gift_id': gift_id,
-            'reserved_by_tg_id': current_user_id,
-        }
-        await self._session.execute(stmt, params)
-
-    async def delete_reservation_by_owner(self, gift_id: int) -> None:
+    async def delete_reservation(self, gift_id: int) -> None:
         stmt = text("""
           DELETE FROM gift_reservations WHERE gift_id = :gift_id
         """)

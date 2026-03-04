@@ -146,6 +146,34 @@ async def test_user_john(db_session: AsyncSession) -> UserDict:
 
 
 @pytest_asyncio.fixture
+async def test_user_alice(db_session: AsyncSession) -> UserDict:
+    user_data = UserDict(
+        tg_id=123458,
+        tg_username='tg_username_3',
+        first_name='first_name_3',
+        last_name='last_name_3',
+        avatar_url='avatar_url_3',
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    stmt = text("""
+        INSERT INTO users (tg_id, tg_username, first_name, last_name, avatar_url, created_at, updated_at)
+        VALUES (:tg_id, :tg_username, :first_name, :last_name, :avatar_url, :created_at, :updated_at)
+    """)
+    params = {
+        'tg_id': user_data['tg_id'],
+        'tg_username': user_data['tg_username'],
+        'first_name': user_data['first_name'],
+        'last_name': user_data['last_name'],
+        'avatar_url': user_data['avatar_url'],
+        'created_at': user_data['created_at'],
+        'updated_at': user_data['updated_at'],
+    }
+    await db_session.execute(stmt, params)
+    return user_data
+
+
+@pytest_asyncio.fixture
 async def test_user_with_friend(
     db_session: AsyncSession,
     test_user_bob: UserDict,
