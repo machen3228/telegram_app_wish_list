@@ -48,8 +48,8 @@ class GiftService:
             gift = await self._repository.get(gift_id, current_user_id)
         except NotFoundInDbError as e:
             raise NotFoundError(detail=str(e)) from e
-        if gift.user_id != current_user_id:
-            raise ForbiddenError
+        if not gift.can_delete_gift(current_user_id):
+            raise ForbiddenError(detail='You may not delete this gift')
         await self._repository.delete(gift_id)
 
     async def add_reservation(self, gift_id: int, current_user_id: int) -> None:

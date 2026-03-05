@@ -158,3 +158,13 @@ class TestUserDomain:
         gift = Gift.create(**gift_data)
         with pytest.raises(FrozenInstanceError):
             gift.name = 'New Name'  # ty:ignore[invalid-assignment]
+
+    def test_gift_domain_can_delete_gift_owner(self, gift_data: dict) -> None:
+        gift = Gift.create(**gift_data)
+
+        assert gift.can_delete_gift(gift_data['user_id']) is True
+
+    def test_gift_domain_can_delete_gift_not_owner(self, gift_data: dict) -> None:
+        gift = Gift.create(**gift_data)
+
+        assert gift.can_delete_gift(666_666) is False

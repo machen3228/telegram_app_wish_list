@@ -50,3 +50,6 @@ class Gift:
             is_reserved=False,
             reserved_by=None,
         )
+
+    def can_delete_gift(self, user_id: int) -> bool:
+        return self.user_id == user_id
