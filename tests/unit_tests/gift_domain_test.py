@@ -158,3 +158,40 @@ class TestUserDomain:
         gift = Gift.create(**gift_data)
         with pytest.raises(FrozenInstanceError):
             gift.name = 'New Name'  # ty:ignore[invalid-assignment]
+
+    def test_gift_domain_can_delete_gift_owner(self, gift_data: dict) -> None:
+        gift = Gift.create(**gift_data)
+
+        assert gift.can_delete_gift(gift_data['user_id']) is True
+
+    def test_gift_domain_can_delete_gift_not_owner(self, gift_data: dict) -> None:
+        gift = Gift.create(**gift_data)
+
+        assert gift.can_delete_gift(666_666) is False
+
+    @pytest.mark.parametrize(
+        ('is_reserved', 'reserved_by', 'who_try', 'result'),
+        [
+            pytest.param(True, 123_456, 123_456, True, id='Owner reserved, owner try'),
+            pytest.param(True, 123_456, 666_666, False, id='Owner reserved, alien tries'),
+            pytest.param(True, 111_111, 123_456, True, id='Friend reserved, owner tries'),
+            pytest.param(True, 111_111, 111_111, True, id='Friend reserved, friend tries'),
+            pytest.param(True, 111_111, 666_666, False, id='Friend reserved, alien tries'),
+            pytest.param(False, None, 123_456, False, id='Not reserved, owner tries'),
+            pytest.param(False, None, 666_666, False, id='Not reserved, alien tries'),
+        ],
+    )
+    def test_gift_domain_can_delete_reservation(
+        self, *, gift_data: dict, is_reserved: bool, reserved_by: int | None, who_try: int, result: bool
+    ) -> None:
+        now = datetime.now(UTC)
+        gift = Gift(**{
+            **gift_data,
+            'id': 1,
+            'is_reserved': is_reserved,
+            'reserved_by': reserved_by,
+            'created_at': now,
+            'updated_at': now,
+        })  # ty:ignore[invalid-argument-type]
+
+        assert gift.can_delete_reservation(who_try) is result

@@ -34,7 +34,7 @@ class GiftService:
         except NotFoundInDbError as e:
             raise NotFoundError(detail=str(e)) from e
 
-    async def get(self, gift_id: int, current_user_id: int) -> Gift:  # TODO: add tests
+    async def get(self, gift_id: int, current_user_id: int) -> Gift:
         try:
             return await self._repository.get(gift_id, current_user_id)
         except NotFoundInDbError as e:
@@ -48,8 +48,8 @@ class GiftService:
             gift = await self._repository.get(gift_id, current_user_id)
         except NotFoundInDbError as e:
             raise NotFoundError(detail=str(e)) from e
-        if gift.user_id != current_user_id:
-            raise ForbiddenError
+        if not gift.can_delete_gift(current_user_id):
+            raise ForbiddenError(detail='You may not delete this gift')
         await self._repository.delete(gift_id)
 
     async def add_reservation(self, gift_id: int, current_user_id: int) -> None:
@@ -71,6 +71,6 @@ class GiftService:
             raise NotFoundError(detail=str(e)) from e
         if not gift.is_reserved:
             raise BadRequestError(detail='The gift has no reservation')
-        if current_user_id not in (gift.user_id, gift.reserved_by):
+        if not gift.can_delete_reservation(current_user_id):
             raise ForbiddenError
         await self._repository.delete_reservation(gift_id)
