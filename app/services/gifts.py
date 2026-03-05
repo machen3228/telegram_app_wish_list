@@ -71,6 +71,6 @@ class GiftService:
             raise NotFoundError(detail=str(e)) from e
         if not gift.is_reserved:
             raise BadRequestError(detail='The gift has no reservation')
-        if current_user_id not in (gift.user_id, gift.reserved_by):
+        if not gift.can_delete_reservation(current_user_id):
             raise ForbiddenError
         await self._repository.delete_reservation(gift_id)

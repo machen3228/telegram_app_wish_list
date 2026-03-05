@@ -53,3 +53,6 @@ class Gift:
 
     def can_delete_gift(self, user_id: int) -> bool:
         return self.user_id == user_id
+
+    def can_delete_reservation(self, user_id: int) -> bool:
+        return user_id in (self.user_id, self.reserved_by) and self.is_reserved
