@@ -1,6 +1,8 @@
 from hamcrest import assert_that
 from hamcrest import equal_to
 from hamcrest import has_properties
+from hamcrest import is_
+from hamcrest import none
 from hamcrest import not_none
 import pytest
 from sqlalchemy import text
@@ -232,3 +234,36 @@ class TestGiftService:
     ) -> None:
         with pytest.raises(NotFoundError, match='Gift with id=999999 not found'):
             await gift_service.delete_reservation(999_999, test_user_john['tg_id'])
+
+    async def test_service_get_gift_success(
+        self,
+        gift_service: GiftService,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        result = await gift_service.get(
+            test_bob_gift['id'],
+            test_bob_gift['user_id'],
+        )
+
+        assert_that(
+            result,
+            has_properties(
+                id=equal_to(test_bob_gift['id']),
+                user_id=equal_to(test_bob_gift['user_id']),
+                name=equal_to(test_bob_gift['name']),
+                url=equal_to(test_bob_gift['url']),
+                wish_rate=equal_to(test_bob_gift['wish_rate']),
+                price=equal_to(test_bob_gift['price']),
+                note=equal_to(test_bob_gift['note']),
+                is_reserved=is_(False),
+                reserved_by=is_(none()),
+            ),
+        )
+
+    async def test_service_get_gift_not_found_raises(
+        self,
+        gift_service: GiftService,
+        test_user_bob: UserDict,
+    ) -> None:
+        with pytest.raises(NotFoundError, match='Gift with id=123456 not found'):
+            await gift_service.get(123456, test_user_bob['tg_id'])

@@ -34,7 +34,7 @@ class GiftService:
         except NotFoundInDbError as e:
             raise NotFoundError(detail=str(e)) from e
 
-    async def get(self, gift_id: int, current_user_id: int) -> Gift:  # TODO: add tests
+    async def get(self, gift_id: int, current_user_id: int) -> Gift:
         try:
             return await self._repository.get(gift_id, current_user_id)
         except NotFoundInDbError as e:
