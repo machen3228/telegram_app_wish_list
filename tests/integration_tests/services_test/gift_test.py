@@ -1,4 +1,6 @@
 from hamcrest import assert_that
+from hamcrest import contains_exactly
+from hamcrest import empty
 from hamcrest import equal_to
 from hamcrest import has_properties
 from hamcrest import is_
@@ -267,3 +269,86 @@ class TestGiftService:
     ) -> None:
         with pytest.raises(NotFoundError, match='Gift with id=123456 not found'):
             await gift_service.get(123456, test_user_bob['tg_id'])
+
+    async def test_service_get_gifts_by_user_id_success(
+        self,
+        gift_service: GiftService,
+        test_bob_gift: GiftDict,
+    ) -> None:
+        result = await gift_service.get_gifts_by_user_id(
+            test_bob_gift['user_id'],
+            test_bob_gift['user_id'],
+        )
+
+        assert_that(
+            result,
+            contains_exactly(
+                has_properties(
+                    id=equal_to(test_bob_gift['id']),
+                    user_id=equal_to(test_bob_gift['user_id']),
+                    name=equal_to(test_bob_gift['name']),
+                    url=equal_to(test_bob_gift['url']),
+                    wish_rate=equal_to(test_bob_gift['wish_rate']),
+                    price=equal_to(test_bob_gift['price']),
+                    note=equal_to(test_bob_gift['note']),
+                    is_reserved=is_(False),
+                    reserved_by=is_(none()),
+                ),
+            ),
+        )
+
+    async def test_service_get_gifts_by_user_id_empty(
+        self,
+        gift_service: GiftService,
+        test_user_bob: UserDict,
+    ) -> None:
+        result = await gift_service.get_gifts_by_user_id(
+            test_user_bob['tg_id'],
+            test_user_bob['tg_id'],
+        )
+
+        assert_that(result, empty())
+
+    async def test_service_get_gifts_by_user_id_with_reservation_owner_cannot_see_who(
+        self,
+        gift_service: GiftService,
+        test_bob_gift_with_reservation_by_john: GiftDict,
+        test_user_bob: UserDict,
+    ) -> None:
+        result = await gift_service.get_gifts_by_user_id(
+            test_user_bob['tg_id'],
+            test_user_bob['tg_id'],
+        )
+
+        assert_that(
+            result,
+            contains_exactly(
+                has_properties(
+                    id=equal_to(test_bob_gift_with_reservation_by_john['id']),
+                    is_reserved=is_(True),
+                    reserved_by=is_(none()),
+                ),
+            ),
+        )
+
+    async def test_service_get_gifts_by_user_id_with_reservation_current_user_sees_own(
+        self,
+        gift_service: GiftService,
+        test_bob_gift_with_reservation_by_john: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        result = await gift_service.get_gifts_by_user_id(
+            test_bob_gift_with_reservation_by_john['user_id'],
+            test_user_john['tg_id'],
+        )
+
+        assert_that(
+            result,
+            contains_exactly(
+                has_properties(
+                    id=equal_to(test_bob_gift_with_reservation_by_john['id']),
+                    is_reserved=is_(True),
+                    reserved_by=equal_to(test_user_john['tg_id']),
+                ),
+            ),
+        )
