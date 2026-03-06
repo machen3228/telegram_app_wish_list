@@ -74,3 +74,6 @@ class GiftService:
         if not gift.can_delete_reservation(current_user_id):
             raise ForbiddenError
         await self._repository.delete_reservation(gift_id)
+
+    async def get_my_reservations(self, current_user_id: int) -> list[Gift]:
+        return await self._repository.get_my_reservations(current_user_id)
