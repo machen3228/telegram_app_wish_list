@@ -73,6 +73,18 @@ class GiftController(Controller):
         await service.delete_reservation(gift_id, current_user_id)
 
     @get(
+        '/my/reserve',
+        summary='Get gifts reserved by me',
+        dependencies={'current_user_id': Provide(provide_access_jwt_auth)},
+    )
+    async def get_my_reservations(
+        self,
+        service: GiftService,
+        current_user_id: int,
+    ) -> list[Gift]:
+        return await service.get_my_reservations(current_user_id)
+
+    @get(
         '/user/{tg_id:int}',
         summary='Get user wishlist',
         dependencies={'current_user_id': Provide(provide_access_jwt_auth)},

@@ -3,6 +3,7 @@ from hamcrest import contains_exactly
 from hamcrest import empty
 from hamcrest import equal_to
 from hamcrest import has_entries
+from hamcrest import has_length
 from hamcrest import has_properties
 from hamcrest import is_
 from hamcrest import none
@@ -68,9 +69,9 @@ class TestGiftRepository:
         self,
         db_session: AsyncSession,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
-        await gift_repository.delete(test_bob_gift['id'])
+        await gift_repository.delete(test_bob_gift_plane['id'])
 
         query = await db_session.execute(
             text("""
@@ -78,7 +79,7 @@ class TestGiftRepository:
                 FROM gifts
                 WHERE id = :gift_id
             """),
-            {'gift_id': test_bob_gift['id']},
+            {'gift_id': test_bob_gift_plane['id']},
         )
 
         assert query.mappings().one_or_none() is None
@@ -92,23 +93,23 @@ class TestGiftRepository:
     async def test_repo_get_gift_success(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
         result = await gift_repository.get(
-            test_bob_gift['id'],
-            test_bob_gift['user_id'],
+            test_bob_gift_plane['id'],
+            test_bob_gift_plane['user_id'],
         )
 
         assert_that(
             result,
             has_properties(
-                id=equal_to(test_bob_gift['id']),
-                user_id=equal_to(test_bob_gift['user_id']),
-                name=equal_to(test_bob_gift['name']),
-                url=equal_to(test_bob_gift['url']),
-                wish_rate=equal_to(test_bob_gift['wish_rate']),
-                price=equal_to(test_bob_gift['price']),
-                note=equal_to(test_bob_gift['note']),
+                id=equal_to(test_bob_gift_plane['id']),
+                user_id=equal_to(test_bob_gift_plane['user_id']),
+                name=equal_to(test_bob_gift_plane['name']),
+                url=equal_to(test_bob_gift_plane['url']),
+                wish_rate=equal_to(test_bob_gift_plane['wish_rate']),
+                price=equal_to(test_bob_gift_plane['price']),
+                note=equal_to(test_bob_gift_plane['note']),
                 is_reserved=is_(False),
                 reserved_by=is_(none()),
             ),
@@ -125,7 +126,7 @@ class TestGiftRepository:
     async def test_repo_get_gift_reserved_by_current_user(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
         test_user_john: UserDict,
         db_session: AsyncSession,
     ) -> None:
@@ -134,12 +135,12 @@ class TestGiftRepository:
                  INSERT INTO gift_reservations (gift_id, reserved_by_tg_id)
                  VALUES (:gift_id, :reserved_by_tg_id)
                  """),
-            {'gift_id': test_bob_gift['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
+            {'gift_id': test_bob_gift_plane['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
         )
         await db_session.flush()
 
         result = await gift_repository.get(
-            test_bob_gift['id'],
+            test_bob_gift_plane['id'],
             test_user_john['tg_id'],
         )
 
@@ -154,7 +155,7 @@ class TestGiftRepository:
     async def test_repo_get_gift_reserved_by_other_user(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
         test_user_john: UserDict,
         db_session: AsyncSession,
     ) -> None:
@@ -163,13 +164,13 @@ class TestGiftRepository:
                  INSERT INTO gift_reservations (gift_id, reserved_by_tg_id)
                  VALUES (:gift_id, :reserved_by_tg_id)
                  """),
-            {'gift_id': test_bob_gift['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
+            {'gift_id': test_bob_gift_plane['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
         )
         await db_session.flush()
 
         result = await gift_repository.get(
-            test_bob_gift['id'],
-            test_bob_gift['user_id'],
+            test_bob_gift_plane['id'],
+            test_bob_gift_plane['user_id'],
         )
 
         assert_that(
@@ -183,10 +184,10 @@ class TestGiftRepository:
     async def test_repo_is_friend_or_owner_by_owner(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
         test_user_with_friend: int,
     ) -> None:
-        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_with_friend)
+        result = await gift_repository.is_friend_or_owner(test_bob_gift_plane['id'], test_user_with_friend)
 
         assert result is True
 
@@ -194,20 +195,20 @@ class TestGiftRepository:
     async def test_repo_is_friend_or_owner_by_friend(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
         test_user_john: UserDict,
     ) -> None:
-        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_john['tg_id'])
+        result = await gift_repository.is_friend_or_owner(test_bob_gift_plane['id'], test_user_john['tg_id'])
 
         assert result is True
 
     async def test_repo_is_friend_or_owner_by_another_user(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
         test_user_john: UserDict,
     ) -> None:
-        result = await gift_repository.is_friend_or_owner(test_bob_gift['id'], test_user_john['tg_id'])
+        result = await gift_repository.is_friend_or_owner(test_bob_gift_plane['id'], test_user_john['tg_id'])
 
         assert result is False
 
@@ -216,10 +217,10 @@ class TestGiftRepository:
         self,
         db_session: AsyncSession,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
         test_user_john: UserDict,
     ) -> None:
-        await gift_repository.add_reservation(test_bob_gift['id'], test_user_john['tg_id'])
+        await gift_repository.add_reservation(test_bob_gift_plane['id'], test_user_john['tg_id'])
 
         reservation = await db_session.execute(
             text("""
@@ -227,13 +228,13 @@ class TestGiftRepository:
                 FROM gift_reservations
                 WHERE gift_id = :gift_id AND reserved_by_tg_id = :reserved_by_tg_id
             """),
-            {'gift_id': test_bob_gift['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
+            {'gift_id': test_bob_gift_plane['id'], 'reserved_by_tg_id': test_user_john['tg_id']},
         )
 
         assert_that(
             reservation.mappings().first(),
             has_entries(
-                gift_id=equal_to(test_bob_gift['id']),
+                gift_id=equal_to(test_bob_gift_plane['id']),
                 reserved_by_tg_id=equal_to(test_user_john['tg_id']),
             ),
         )  # ty:ignore[no-matching-overload]
@@ -242,9 +243,9 @@ class TestGiftRepository:
         self,
         db_session: AsyncSession,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
-        await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])
+        await gift_repository.add_reservation(test_bob_gift_plane['id'], test_bob_gift_plane['user_id'])
 
         reservation = await db_session.execute(
             text("""
@@ -253,41 +254,41 @@ class TestGiftRepository:
                  WHERE gift_id = :gift_id
                    AND reserved_by_tg_id = :reserved_by_tg_id
                  """),
-            {'gift_id': test_bob_gift['id'], 'reserved_by_tg_id': test_bob_gift['user_id']},
+            {'gift_id': test_bob_gift_plane['id'], 'reserved_by_tg_id': test_bob_gift_plane['user_id']},
         )
 
         assert_that(
             reservation.mappings().first(),
             has_entries(
-                gift_id=equal_to(test_bob_gift['id']),
-                reserved_by_tg_id=equal_to(test_bob_gift['user_id']),
+                gift_id=equal_to(test_bob_gift_plane['id']),
+                reserved_by_tg_id=equal_to(test_bob_gift_plane['user_id']),
             ),
         )  # ty:ignore[no-matching-overload]
 
     async def test_repo_add_reservation_by_unexisting_user(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
         with pytest.raises(NotFoundInDbError, match='User with id=666666 not found'):
-            await gift_repository.add_reservation(test_bob_gift['id'], 666_666)
+            await gift_repository.add_reservation(test_bob_gift_plane['id'], 666_666)
 
     async def test_repo_add_reservation_gift_not_exists(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
         with pytest.raises(NotFoundInDbError, match='Gift with id=666666 not found'):
-            await gift_repository.add_reservation(666_666, test_bob_gift['user_id'])
+            await gift_repository.add_reservation(666_666, test_bob_gift_plane['user_id'])
 
     async def test_repo_add_reservation_twice(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
-        await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])
-        with pytest.raises(NotFoundInDbError, match=f'Gift with id={test_bob_gift["id"]} already reserved'):
-            await gift_repository.add_reservation(test_bob_gift['id'], test_bob_gift['user_id'])
+        await gift_repository.add_reservation(test_bob_gift_plane['id'], test_bob_gift_plane['user_id'])
+        with pytest.raises(NotFoundInDbError, match=f'Gift with id={test_bob_gift_plane["id"]} already reserved'):
+            await gift_repository.add_reservation(test_bob_gift_plane['id'], test_bob_gift_plane['user_id'])
 
     async def test_repo_delete_reservation_success(
         self,
@@ -312,31 +313,31 @@ class TestGiftRepository:
     async def test_repo_delete_reservation_no_reservation(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
-        await gift_repository.delete_reservation(test_bob_gift['id'])
+        await gift_repository.delete_reservation(test_bob_gift_plane['id'])
 
     async def test_repo_get_gifts_by_user_id_success(
         self,
         gift_repository: GiftRepository,
-        test_bob_gift: GiftDict,
+        test_bob_gift_plane: GiftDict,
     ) -> None:
         result = await gift_repository.get_gifts_by_user_id(
-            test_bob_gift['user_id'],
-            test_bob_gift['user_id'],
+            test_bob_gift_plane['user_id'],
+            test_bob_gift_plane['user_id'],
         )
 
         assert_that(
             result,
             contains_exactly(
                 has_properties(
-                    id=equal_to(test_bob_gift['id']),
-                    user_id=equal_to(test_bob_gift['user_id']),
-                    name=equal_to(test_bob_gift['name']),
-                    url=equal_to(test_bob_gift['url']),
-                    wish_rate=equal_to(test_bob_gift['wish_rate']),
-                    price=equal_to(test_bob_gift['price']),
-                    note=equal_to(test_bob_gift['note']),
+                    id=equal_to(test_bob_gift_plane['id']),
+                    user_id=equal_to(test_bob_gift_plane['user_id']),
+                    name=equal_to(test_bob_gift_plane['name']),
+                    url=equal_to(test_bob_gift_plane['url']),
+                    wish_rate=equal_to(test_bob_gift_plane['wish_rate']),
+                    price=equal_to(test_bob_gift_plane['price']),
+                    note=equal_to(test_bob_gift_plane['note']),
                     is_reserved=is_(False),
                     reserved_by=is_(none()),
                 ),
@@ -395,6 +396,82 @@ class TestGiftRepository:
                     id=equal_to(test_bob_gift_with_reservation_by_john['id']),
                     is_reserved=is_(True),
                     reserved_by=equal_to(test_user_john['tg_id']),
+                ),
+            ),
+        )
+
+    async def test_repo_get_my_reservations_success(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift_with_reservation_by_john: GiftDict,
+        test_user_john: UserDict,
+    ) -> None:
+        result = await gift_repository.get_my_reservations(
+            test_user_john['tg_id'],
+        )
+
+        assert_that(
+            result,
+            contains_exactly(
+                has_properties(
+                    id=equal_to(test_bob_gift_with_reservation_by_john['id']),
+                    user_id=equal_to(test_bob_gift_with_reservation_by_john['user_id']),
+                    name=equal_to(test_bob_gift_with_reservation_by_john['name']),
+                    url=equal_to(test_bob_gift_with_reservation_by_john['url']),
+                    wish_rate=equal_to(test_bob_gift_with_reservation_by_john['wish_rate']),
+                    price=equal_to(test_bob_gift_with_reservation_by_john['price']),
+                    note=equal_to(test_bob_gift_with_reservation_by_john['note']),
+                    is_reserved=is_(True),
+                    reserved_by=equal_to(test_user_john['tg_id']),
+                ),
+            ),
+        )
+
+    async def test_repo_get_my_reservations_empty(
+        self,
+        gift_repository: GiftRepository,
+        test_user_alice: UserDict,
+    ) -> None:
+        result = await gift_repository.get_my_reservations(
+            test_user_alice['tg_id'],
+        )
+
+        assert_that(result, empty())
+
+    async def test_repo_get_my_reservations_does_not_include_others(
+        self,
+        gift_repository: GiftRepository,
+        test_bob_gift_with_reservation_by_john: GiftDict,
+        test_bob_gift_with_reservation_by_alice: GiftDict,
+        test_user_john: UserDict,
+        test_user_alice: UserDict,
+    ) -> None:
+        john_result = await gift_repository.get_my_reservations(
+            test_user_john['tg_id'],
+        )
+
+        assert_that(john_result, has_length(1))
+        assert_that(
+            john_result,
+            contains_exactly(
+                has_properties(
+                    id=equal_to(test_bob_gift_with_reservation_by_john['id']),
+                    reserved_by=equal_to(test_user_john['tg_id']),
+                ),
+            ),
+        )
+
+        alice_result = await gift_repository.get_my_reservations(
+            test_user_alice['tg_id'],
+        )
+
+        assert_that(alice_result, has_length(1))
+        assert_that(
+            alice_result,
+            contains_exactly(
+                has_properties(
+                    id=equal_to(test_bob_gift_with_reservation_by_alice['id']),
+                    reserved_by=equal_to(test_user_alice['tg_id']),
                 ),
             ),
         )

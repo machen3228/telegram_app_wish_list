@@ -66,6 +66,12 @@ class GiftRepository(BaseRepository[Gift]):
         result = await self._session.execute(query, params)
         return [Gift(**row) for row in result.mappings()]
 
+    async def get_my_reservations(self, current_user_id: int) -> list[Gift]:
+        query = _gift_select_query('gr.reserved_by_tg_id = :current_user_id')
+        params = {'current_user_id': current_user_id}
+        result = await self._session.execute(query, params)
+        return [Gift(**row) for row in result.mappings()]
+
     async def delete(self, obj_id: int) -> None:
         stmt = text("""
             DELETE FROM gifts WHERE id = :gift_id;
