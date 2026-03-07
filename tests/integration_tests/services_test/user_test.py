@@ -8,7 +8,6 @@ from hamcrest import has_entries
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import none
-from litestar.exceptions import HTTPException
 import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,8 +16,9 @@ from core.security import TelegramInitData
 from core.security import TokenOut
 from domain import User
 from dto.users import FriendRequestDTO
+from exceptions.database import AlreadyExistsInDbError
+from exceptions.database import NotFoundInDbError
 from exceptions.http import BadRequestError
-from exceptions.http import NotFoundError
 from services import UserService
 from tests.integration_tests.conftest import UserDict
 
@@ -51,7 +51,7 @@ class TestUserService:
         self,
         user_service: UserService,
     ) -> None:
-        with pytest.raises(NotFoundError, match=r'User with id=\d+ not found'):
+        with pytest.raises(NotFoundInDbError, match=r'User with id=\d+ not found'):
             await user_service.get(123456)
 
     async def test_service_add_user_success(
@@ -106,7 +106,7 @@ class TestUserService:
         user_service: UserService,
         test_user_bob: UserDict,
     ) -> None:
-        with pytest.raises(HTTPException) as exc_info:
+        with pytest.raises(AlreadyExistsInDbError, match="User with this 'tg_id' already exists"):
             await user_service.add(
                 tg_id=test_user_bob['tg_id'],
                 tg_username='another_username',
@@ -114,14 +114,6 @@ class TestUserService:
                 last_name=None,
                 avatar_url=None,
             )
-
-        assert_that(
-            exc_info.value,
-            has_properties(
-                status_code=equal_to(400),
-                detail=equal_to("User with this 'tg_id' already exists"),
-            ),
-        )
 
     async def test_service_telegram_login_new_user_success(
         self,
@@ -210,7 +202,7 @@ class TestUserService:
         user_service: UserService,
         test_user_bob: UserDict,
     ) -> None:
-        with pytest.raises(NotFoundError):
+        with pytest.raises(NotFoundInDbError):
             await user_service.send_friend_request(
                 sender_id=999999,
                 receiver_id=test_user_bob['tg_id'],
@@ -221,7 +213,7 @@ class TestUserService:
         user_service: UserService,
         test_user_bob: UserDict,
     ) -> None:
-        with pytest.raises(NotFoundError):
+        with pytest.raises(NotFoundInDbError):
             await user_service.send_friend_request(
                 sender_id=test_user_bob['tg_id'],
                 receiver_id=999999,

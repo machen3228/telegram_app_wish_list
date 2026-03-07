@@ -10,6 +10,7 @@ from controllers import GiftController
 from controllers import UserController
 from core.config import settings
 from core.database import sqlalchemy_config
+from exceptions.handlers import get_exception_handlers
 
 PARENT_DIR = Path(__file__).resolve().parent
 STATIC_DIR = PARENT_DIR / 'static'
@@ -23,6 +24,7 @@ static_files_router = create_static_files_router(
 app = Litestar(
     route_handlers=[UserController, GiftController, static_files_router],
     plugins=[SQLAlchemyPlugin(config=sqlalchemy_config)],
+    exception_handlers=get_exception_handlers(),
     openapi_config=OpenAPIConfig(
         title=settings.app.title,
         version=settings.app.version,

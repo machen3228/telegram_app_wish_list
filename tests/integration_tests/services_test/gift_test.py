@@ -11,9 +11,9 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from exceptions.database import NotFoundInDbError
 from exceptions.http import BadRequestError
 from exceptions.http import ForbiddenError
-from exceptions.http import NotFoundError
 from services import GiftService
 from tests.integration_tests.conftest import GiftDict
 from tests.integration_tests.conftest import UserDict
@@ -59,7 +59,7 @@ class TestGiftService:
         gift_service: GiftService,
         gift_data: dict,
     ) -> None:
-        with pytest.raises(NotFoundError, match='User with id=123456 not found'):
+        with pytest.raises(NotFoundInDbError, match='User with id=123456 not found'):
             await gift_service.add(**gift_data, current_user_id=123456)
 
     async def test_service_delete_gift_success(
@@ -86,7 +86,7 @@ class TestGiftService:
         gift_service: GiftService,
         test_user_bob: UserDict,
     ) -> None:
-        with pytest.raises(NotFoundError, match='Gift with id=123456 not found'):
+        with pytest.raises(NotFoundInDbError, match='Gift with id=123456 not found'):
             await gift_service.delete(123456, test_user_bob['tg_id'])
 
     async def test_service_delete_gift_not_owner(
@@ -134,7 +134,7 @@ class TestGiftService:
         gift_service: GiftService,
         test_user_john: UserDict,
     ) -> None:
-        with pytest.raises(NotFoundError, match='Gift with id=999999 not found'):
+        with pytest.raises(NotFoundInDbError, match='Gift with id=999999 not found'):
             await gift_service.add_reservation(
                 gift_id=999999,
                 current_user_id=test_user_john['tg_id'],
@@ -163,7 +163,7 @@ class TestGiftService:
             current_user_id=test_user_bob['tg_id'],
         )
 
-        with pytest.raises(NotFoundError, match=f'Gift with id={test_bob_gift_plane["id"]} already reserved'):
+        with pytest.raises(NotFoundInDbError, match=f'Gift with id={test_bob_gift_plane["id"]} already reserved'):
             await gift_service.add_reservation(
                 gift_id=test_bob_gift_plane['id'],
                 current_user_id=test_user_bob['tg_id'],
@@ -235,7 +235,7 @@ class TestGiftService:
         gift_service: GiftService,
         test_user_john: UserDict,
     ) -> None:
-        with pytest.raises(NotFoundError, match='Gift with id=999999 not found'):
+        with pytest.raises(NotFoundInDbError, match='Gift with id=999999 not found'):
             await gift_service.delete_reservation(999_999, test_user_john['tg_id'])
 
     async def test_service_get_gift_success(
@@ -268,7 +268,7 @@ class TestGiftService:
         gift_service: GiftService,
         test_user_bob: UserDict,
     ) -> None:
-        with pytest.raises(NotFoundError, match='Gift with id=123456 not found'):
+        with pytest.raises(NotFoundInDbError, match='Gift with id=123456 not found'):
             await gift_service.get(123456, test_user_bob['tg_id'])
 
     async def test_service_get_gifts_by_user_id_success(
