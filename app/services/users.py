@@ -1,4 +1,3 @@
-from litestar.exceptions import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import BaseJWTAuth
@@ -7,10 +6,8 @@ from core.security import TokenOut
 from domain import User
 from domain.users import FriendAction
 from dto.users import FriendRequestDTO
-from exceptions.database import AlreadyExistsInDbError
 from exceptions.database import NotFoundInDbError
 from exceptions.http import BadRequestError
-from exceptions.http import NotFoundError
 from repositories import UserRepository
 
 
@@ -49,27 +46,17 @@ class UserService:
             last_name=last_name,
             avatar_url=avatar_url,
         )
-        try:
-            tg_id = await self._repository.add(user)
-        except AlreadyExistsInDbError as e:
-            raise HTTPException(status_code=400, detail=str(e)) from e
+        tg_id = await self._repository.add(user)
         return await self._repository.get(tg_id)
 
     async def get(self, tg_id: int) -> User:
-        try:
-            return await self._repository.get(tg_id)
-        except NotFoundInDbError as e:
-            raise NotFoundError(detail=str(e)) from e
+        return await self._repository.get(tg_id)
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         if sender_id == receiver_id:
             raise BadRequestError(detail='Cannot send friend request to yourself')
-        try:
-            user = await self._repository.get(sender_id)
-            friend = await self._repository.get(receiver_id)
-        except NotFoundInDbError as e:
-            raise NotFoundError(detail=str(e)) from e
-
+        user = await self._repository.get(sender_id)
+        friend = await self._repository.get(receiver_id)
         relations = await self._repository.get_user_relations(sender_id)
         user.load_relations(relations)
 
