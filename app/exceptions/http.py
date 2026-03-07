@@ -29,8 +29,3 @@ class UnauthorizedError(HttpError):
 class ForbiddenError(HttpError):
     status_code: int = status_codes.HTTP_403_FORBIDDEN
     detail: str = 'Forbidden'
-
-
-class NotFoundError(HttpError):
-    status_code: int = status_codes.HTTP_404_NOT_FOUND
-    detail: str = 'Not found'
