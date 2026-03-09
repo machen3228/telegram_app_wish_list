@@ -108,12 +108,18 @@
                 <div class="modal-header">Добавить подарок</div>
                 <form id="form-add-gift" onsubmit="handleAddGift(event)">
                     <div class="form-group">
-                        <label class="form-label">Название *</label>
-                        <input type="text" name="name" class="form-input" required>
+                        <label class="form-label">Название *
+                            <span id="name-counter" class="char-counter">0/100</span>
+                        </label>
+                        <input type="text" name="name" class="form-input" maxlength="100" required
+                               oninput="updateCounter(this, 'name-counter')">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Ссылка</label>
-                        <input type="url" name="url" class="form-input">
+                        <label class="form-label">Ссылка
+                            <span id="url-counter" class="char-counter">0/300</span>
+                        </label>
+                        <input type="url" name="url" class="form-input" maxlength="300"
+                               oninput="updateCounter(this, 'url-counter')">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Желаемость (1-10)</label>
@@ -124,8 +130,11 @@
                         <input type="number" name="price" class="form-input" min="0">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Заметка</label>
-                        <textarea name="note" class="form-input"></textarea>
+                        <label class="form-label">Заметка
+                            <span id="note-counter" class="char-counter">0/1000</span>
+                        </label>
+                        <textarea name="note" class="form-input" maxlength="1000"
+                                  oninput="updateCounter(this, 'note-counter')"></textarea>
                     </div>
                     <div class="modal-buttons">
                         <button type="button" class="btn" onclick="closeModal('modal-add-gift')">

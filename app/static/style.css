@@ -284,6 +284,9 @@ body {
     font-size: 18px;
     font-weight: 600;
     flex: 1;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
 }
 
 .gift-wish-rate {
@@ -324,6 +327,8 @@ body {
     font-size: 14px;
     color: var(--tg-theme-hint-color);
     font-style: italic;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .gift-date {
@@ -598,6 +603,12 @@ body {
     font-weight: 500;
     margin-bottom: 8px;
     font-size: 14px;
+}
+
+.char-counter {
+    font-size: 12px;
+    color: var(--tg-theme-hint-color);
+    float: right;
 }
 
 .form-input {

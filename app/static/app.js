@@ -199,6 +199,13 @@ async function copyIdToClipboard() {
     }
 }
 
+// обновление счетчика символов
+function updateCounter(input, counterId) {
+    const counter = document.getElementById(counterId);
+    const max = input.maxLength;
+    counter.textContent = `${input.value.length}/${max}`;
+}
+
 // функция сортировки подарков
 function sortGifts(gifts, sortBy) {
     const sorted = [...gifts]; // копируем массив
