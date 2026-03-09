@@ -187,10 +187,23 @@ class UserRepository(BaseRepository[User]):
         await self._session.commit()
 
     async def delete_friend(self, user_id: int, friend_id: int) -> None:
-        stmt = text("""
-        DELETE FROM friends
-        WHERE (user_tg_id = :user_id AND friend_tg_id = :friend_id)
-        OR (user_tg_id = :friend_id AND friend_tg_id = :user_id)
+        stmt2 = text("""
+            DELETE
+            FROM gift_reservations
+            WHERE gift_id IN (
+                SELECT g.id FROM gifts g
+                WHERE (g.user_id = :user_id OR g.user_id = :friend_id)
+            )
+            AND (reserved_by_tg_id = :user_id OR reserved_by_tg_id = :friend_id)
         """)
-        await self._session.execute(stmt, {'user_id': user_id, 'friend_id': friend_id})
+
+        stmt1 = text("""
+            DELETE
+            FROM friends
+            WHERE (user_tg_id = :user_id AND friend_tg_id = :friend_id)
+                OR (user_tg_id = :friend_id AND friend_tg_id = :user_id)
+        """)
+        params = {'user_id': user_id, 'friend_id': friend_id}
+        await self._session.execute(stmt1, params)
+        await self._session.execute(stmt2, params)
         await self._session.commit()
