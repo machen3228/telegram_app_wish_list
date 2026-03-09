@@ -45,6 +45,7 @@ class GiftRepository(BaseRepository[Gift]):
         }
         try:
             result = await self._session.execute(stmt, params)
+            await self._session.commit()
         except IntegrityError as e:
             context = {'user_id': obj.user_id}
             message = handle_integrity_error_message(e, context)
@@ -78,6 +79,7 @@ class GiftRepository(BaseRepository[Gift]):
         """)
         params = {'gift_id': obj_id}
         await self._session.execute(stmt, params)
+        await self._session.commit()
 
     async def add_reservation(self, gift_id: int, current_user_id: int) -> None:
         stmt = text("""
@@ -91,6 +93,7 @@ class GiftRepository(BaseRepository[Gift]):
         }
         try:
             await self._session.execute(stmt, params)
+            await self._session.commit()
         except IntegrityError as e:
             context = {
                 'gift_id': gift_id,
@@ -107,6 +110,7 @@ class GiftRepository(BaseRepository[Gift]):
             'gift_id': gift_id,
         }
         await self._session.execute(stmt, params)
+        await self._session.commit()
 
     async def is_friend_or_owner(self, gift_id: int, current_user_id: int) -> bool:
         query = text("""
@@ -128,4 +132,5 @@ class GiftRepository(BaseRepository[Gift]):
             'current_user_id': current_user_id,
         }
         result = await self._session.execute(query, params)
+        await self._session.commit()
         return result.scalar()
