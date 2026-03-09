@@ -30,6 +30,7 @@ class UserRepository(BaseRepository[User]):
         }
         try:
             await self._session.execute(stmt, params)
+            await self._session.commit()
         except IntegrityError as e:
             context = {'tg_id': obj.tg_id, 'tg_username': obj.tg_username}
             message = handle_integrity_error_message(e, context)
@@ -46,6 +47,7 @@ class UserRepository(BaseRepository[User]):
         stmt = text(query)
         params = {'tg_id': tg_id, **fields}
         await self._session.execute(stmt, params)
+        await self._session.commit()
 
     async def get_friends(self, user_id: int) -> list[User]:
         query = text("""
@@ -123,6 +125,7 @@ class UserRepository(BaseRepository[User]):
             DO UPDATE SET status = 'pending', updated_at = NOW()
         """)
         await self._session.execute(stmt, {'sender_id': sender_id, 'receiver_id': receiver_id})
+        await self._session.commit()
 
     async def get_pending_requests(self, user_id: int) -> list[FriendRequestDTO]:
         stmt = text("""
@@ -172,6 +175,7 @@ class UserRepository(BaseRepository[User]):
             ON CONFLICT DO NOTHING
         """)
         await self._session.execute(stmt_friends, {'user1': sender_id, 'user2': receiver_id})
+        await self._session.commit()
 
     async def reject_friend_request(self, receiver_id: int, sender_id: int) -> None:
         stmt = text("""
@@ -180,6 +184,7 @@ class UserRepository(BaseRepository[User]):
         WHERE sender_tg_id = :sender_id AND receiver_tg_id = :receiver_id AND status = 'pending'
         """)
         await self._session.execute(stmt, {'sender_id': sender_id, 'receiver_id': receiver_id})
+        await self._session.commit()
 
     async def delete_friend(self, user_id: int, friend_id: int) -> None:
         stmt = text("""
@@ -188,3 +193,4 @@ class UserRepository(BaseRepository[User]):
         OR (user_tg_id = :friend_id AND friend_tg_id = :user_id)
         """)
         await self._session.execute(stmt, {'user_id': user_id, 'friend_id': friend_id})
+        await self._session.commit()

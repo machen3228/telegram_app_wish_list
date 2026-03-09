@@ -116,24 +116,55 @@ body {
 .profile-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .profile-name {
     font-size: 24px;
     font-weight: 600;
-    margin-bottom: 4px;
 }
 
 .profile-username {
     font-size: 14px;
     color: var(--tg-theme-hint-color);
-    margin-bottom: 8px;
 }
 
 .profile-id {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
     font-size: 12px;
     color: var(--tg-theme-hint-color);
     font-family: monospace;
+}
+
+.id-text {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.copy-id-btn {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 6px;
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    cursor: pointer;
+    font-size: 16px;
+    transition: opacity 0.2s, transform 0.1s;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.copy-id-btn:hover {
+    opacity: 0.9;
+}
+
+.copy-id-btn:active {
+    transform: scale(0.95);
 }
 
 /* Секции */
@@ -301,6 +332,142 @@ body {
     margin-top: 8px;
 }
 
+/* Бронирование подарков */
+.gift-card.reserved {
+    opacity: 0.6;
+    filter: brightness(0.85);
+}
+
+.gift-reservation-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 10px;
+    background: #ef5350;
+    color: white;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.gift-reserve-btn {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.gift-reserve-btn:hover {
+    opacity: 0.85;
+}
+
+.gift-reserve-btn:active {
+    transform: scale(0.98);
+}
+
+.gift-reserve-btn.reserve {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.gift-reserve-btn.unreserve {
+    background: #ef5350;
+    color: white;
+}
+
+/* Карточка забронированного подарка с информацией о друге */
+.reservation-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-bottom: 12px;
+}
+
+.reservation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.reservation-friend-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--tg-theme-button-color);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.reservation-friend-avatar:hover {
+    transform: scale(1.05);
+}
+
+.reservation-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.reservation-friend-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--tg-theme-button-color);
+    cursor: pointer;
+    text-decoration: none;
+    margin-bottom: 4px;
+    display: inline-block;
+}
+
+.reservation-friend-name:hover {
+    text-decoration: underline;
+}
+
+.reservation-gift-name {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.reservation-gift-info {
+    font-size: 13px;
+    color: var(--tg-theme-hint-color);
+    margin-bottom: 8px;
+}
+
+.reservation-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.reservation-cancel-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #ef5350;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+}
+
+.reservation-cancel-btn:hover {
+    opacity: 0.85;
+}
+
+.reservation-cancel-btn:active {
+    transform: scale(0.95);
+}
+
 /* Список друзей */
 .friends-grid {
     display: grid;
@@ -453,88 +620,6 @@ textarea.form-input {
     resize: vertical;
 }
 
-/* Адаптивность */
-@media (max-width: 768px) {
-    .container {
-        padding-bottom: 60px;
-    }
-
-    .profile-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 16px;
-    }
-
-    .profile-avatar {
-        width: 100px;
-        height: 100px;
-    }
-
-    .gifts-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .friends-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .section-title {
-        font-size: 18px;
-    }
-}
-
-/* Добавьте эти стили в конец вашего style.css файла */
-
-/* Карточки заявок в друзья */
-.friend-requests-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.friend-request-card {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 16px;
-    background: var(--tg-theme-secondary-bg-color);
-    border-radius: 12px;
-    border: 2px solid var(--tg-theme-button-color);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.friend-request-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.2);
-}
-
-.request-user-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.request-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-@media (max-width: 480px) {
-    .friend-request-card {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .request-actions {
-        width: 100%;
-    }
-
-    .request-actions .btn {
-        flex: 1;
-    }
-}
-
 /* Контролы сортировки */
 .sort-controls {
     display: flex;
@@ -574,41 +659,90 @@ textarea.form-input {
     border-color: var(--tg-theme-button-color);
 }
 
-/* Кнопка копирования ID */
-.profile-id {
+/* Карточки заявок в друзья */
+.friend-requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.friend-request-card {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
-    position: relative;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    background: var(--tg-theme-secondary-bg-color);
+    border-radius: 12px;
+    border: 2px solid var(--tg-theme-button-color);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.id-text {
-    text-align: center;
+.friend-request-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 136, 204, 0.2);
 }
 
-.copy-id-btn {
-    padding: 6px 10px;
-    border: none;
-    border-radius: 6px;
-    background: var(--tg-theme-button-color);
-    color: var(--tg-theme-button-text-color);
-    cursor: pointer;
-    font-size: 16px;
-    transition: opacity 0.2s, transform 0.1s;
-    line-height: 1;
+.request-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.request-actions {
+    display: flex;
+    gap: 8px;
     flex-shrink: 0;
 }
 
-.copy-id-btn:hover {
-    opacity: 0.9;
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding-bottom: 60px;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-info {
+        align-items: center;
+    }
+
+    .profile-id {
+        justify-content: center;
+    }
+
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+    }
+
+    .gifts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .friends-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .section-title {
+        font-size: 18px;
+    }
+
+    .reservation-card {
+        flex-direction: column;
+    }
+
+    .reservation-actions {
+        width: 100%;
+    }
+
+    .reservation-cancel-btn {
+        flex: 1;
+    }
 }
 
-.copy-id-btn:active {
-    transform: scale(0.95);
-}
-
-/* Адаптивность для мобильных */
 @media (max-width: 480px) {
     .sort-controls {
         flex-direction: column;
@@ -618,52 +752,27 @@ textarea.form-input {
     .sort-label {
         text-align: center;
     }
-}
 
-/* Бронирование подарков */
-.gift-card.reserved {
-    opacity: 0.6;
-    filter: brightness(0.85);
-}
+    .friend-request-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
 
-.gift-reservation-badge {
-    display: inline-block;
-    margin-top: 10px;
-    padding: 4px 10px;
-    background: #ef5350;
-    color: white;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-}
+    .request-actions {
+        width: 100%;
+    }
 
-.gift-reserve-btn {
-    display: block;
-    width: 100%;
-    margin-top: 10px;
-    padding: 8px 12px;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.1s;
-}
+    .request-actions .btn {
+        flex: 1;
+    }
 
-.gift-reserve-btn:hover {
-    opacity: 0.85;
-}
+    .tabs {
+        overflow-x: auto;
+    }
 
-.gift-reserve-btn:active {
-    transform: scale(0.98);
-}
-
-.gift-reserve-btn.reserve {
-    background: var(--tg-theme-button-color);
-    color: var(--tg-theme-button-text-color);
-}
-
-.gift-reserve-btn.unreserve {
-    background: #ef5350;
-    color: white;
+    .tab {
+        white-space: nowrap;
+        font-size: 12px;
+        padding: 12px 8px;
+    }
 }
