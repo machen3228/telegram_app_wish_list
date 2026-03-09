@@ -199,6 +199,13 @@ async function copyIdToClipboard() {
     }
 }
 
+// обновление счетчика символов
+function updateCounter(input, counterId) {
+    const counter = document.getElementById(counterId);
+    const max = input.maxLength;
+    counter.textContent = `${input.value.length}/${max}`;
+}
+
 // функция сортировки подарков
 function sortGifts(gifts, sortBy) {
     const sorted = [...gifts]; // копируем массив
@@ -418,7 +425,15 @@ function renderMyGifts() {
 
 function renderMyReservations() {
     const container = document.getElementById('my-reservations-container');
-    const reservations = state.myReservations || [];
+    let reservations = state.myReservations || [];
+
+    // Фильтруем резервирования: оставляем только бронирования подарков друзей, которые есть в списке друзей
+    // или же это твои собственные подарки
+    reservations = reservations.filter(gift => {
+        const isFriend = state.myFriends.some(f => f.tg_id === gift.user_id);
+        const isOwnGift = gift.user_id === state.currentUser.tg_id;
+        return isFriend || isOwnGift;
+    });
 
     if (reservations.length === 0) {
         container.innerHTML = `
@@ -803,7 +818,7 @@ async function handleRejectRequest(senderId) {
 function confirmDeleteFriend(friendId) {
     tg.showPopup({
         title: 'Удалить из друзей?',
-        message: 'Вы уверены, что хотите удалить этого пользователя из друзей?',
+        message: 'Вы уверены, что хотите удалить этого пользователя из друзей? Все брони его подарков будут отменены.',
         buttons: [
             {id: 'cancel', type: 'cancel'},
             {id: 'delete', type: 'destructive', text: 'Удалить'}
@@ -813,9 +828,12 @@ function confirmDeleteFriend(friendId) {
             try {
                 await deleteFriend(friendId);
 
-                // Обновляем список друзей
+                // Обновляем список друзей и резервирования
                 state.myFriends = await getMyFriends();
+                state.myReservations = await getMyReservations();
+
                 renderFriends();
+                renderMyReservations();
 
                 tg.showPopup({
                     title: 'Успех',
@@ -823,6 +841,7 @@ function confirmDeleteFriend(friendId) {
                     buttons: [{type: 'ok'}]
                 });
             } catch (error) {
+                console.error('❌ Ошибка:', error);
                 tg.showPopup({
                     title: 'Ошибка',
                     message: error.message,

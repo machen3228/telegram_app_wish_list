@@ -295,6 +295,33 @@ async def test_bob_gift_car(
 
 
 @pytest_asyncio.fixture
+async def test_john_gift_yacht(
+    db_session: AsyncSession,
+    test_user_john: UserDict,
+) -> GiftDict:
+    now = datetime.now(UTC)
+    gift_data = {
+        'user_id': test_user_john['tg_id'],
+        'name': 'Yacht',
+        'url': 'https://www.google.com/',
+        'wish_rate': 4,
+        'price': 3_000_000,
+        'note': 'Big',
+        'created_at': now,
+        'updated_at': now,
+    }
+    stmt = text("""
+        INSERT INTO gifts (user_id, name, url, wish_rate, price, note, created_at, updated_at)
+        VALUES (:user_id, :name, :url, :wish_rate, :price, :note, :created_at, :updated_at)
+        RETURNING id
+    """)
+    result = await db_session.execute(stmt, gift_data)
+    await db_session.flush()
+    gift_id = result.scalar_one()
+    return GiftDict(id=gift_id, **gift_data)  # ty:ignore[missing-typed-dict-key]
+
+
+@pytest_asyncio.fixture
 async def test_bob_gift_with_reservation_by_john(
     db_session: AsyncSession,
     test_user_with_friend: int,  # noqa: ARG001
@@ -313,6 +340,27 @@ async def test_bob_gift_with_reservation_by_john(
     await db_session.execute(stmt, params)
 
     return test_bob_gift_plane
+
+
+@pytest_asyncio.fixture
+async def test_john_gift_with_reservation_by_bob(
+    db_session: AsyncSession,
+    test_user_with_friend: int,  # noqa: ARG001
+    test_john_gift_yacht: GiftDict,
+    test_user_bob: UserDict,
+) -> GiftDict:
+    stmt = text("""
+        INSERT INTO gift_reservations (gift_id, reserved_by_tg_id, created_at)
+        VALUES (:gift_id, :reserved_by_tg_id, :created_at)
+    """)
+    params = {
+        'gift_id': test_john_gift_yacht['id'],
+        'reserved_by_tg_id': test_user_bob['tg_id'],
+        'created_at': datetime.now(UTC),
+    }
+    await db_session.execute(stmt, params)
+
+    return test_john_gift_yacht
 
 
 @pytest_asyncio.fixture
