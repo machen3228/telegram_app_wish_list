@@ -5,10 +5,12 @@ const state = {
     myGifts: [],
     myFriends: [],
     friendRequests: [],
+    myReservations: [],
     selectedFriend: null,
     selectedFriendGifts: [],
-    myGiftsSortBy: 'date', // date, price, wish_rate
-    friendGiftsSortBy: 'date'
+    myGiftsSortBy: 'newest',
+    friendGiftsSortBy: 'newest',
+    myReservationsSortBy: 'owner-name'
 };
 
 // ============= Инициализация Telegram WebApp =============
@@ -31,11 +33,21 @@ async function apiRequest(url, options = {}) {
     const defaultOptions = {
         headers: {
             'Content-Type': 'application/json',
-            'X-Telegram-Init-Data': state.initData,
             ...options.headers
         },
         ...options
     };
+
+    // Для первого запроса авторизации используем X-Telegram-Init-Data header
+    if (url === '/users/auth') {
+        defaultOptions.headers['X-Telegram-Init-Data'] = state.initData;
+    } else {
+        // Для всех остальных запросов используем JWT token
+        const token = localStorage.getItem('jwtToken');
+        if (token) {
+            defaultOptions.headers['Authorization'] = `Bearer ${token}`;
+        }
+    }
 
     try {
         const response = await fetch(url, defaultOptions);
@@ -78,13 +90,13 @@ async function getPendingRequests() {
 
 async function acceptFriendRequest(senderId) {
     return await apiRequest(`/users/me/friends/${senderId}/accept`, {
-        method: 'POST'
+        method: 'PATCH'
     });
 }
 
 async function rejectFriendRequest(senderId) {
     return await apiRequest(`/users/me/friends/${senderId}/reject`, {
-        method: 'POST'
+        method: 'PATCH'
     });
 }
 
@@ -99,8 +111,12 @@ async function getUserById(userId) {
 }
 
 async function getUserGifts(userId) {
-    const result = await apiRequest(`/users/${userId}/gifts`);
+    const result = await apiRequest(`/gifts/user/${userId}`);
     return result;
+}
+
+async function getMyReservations() {
+    return await apiRequest('/gifts/my/reserve');
 }
 
 async function addGift(giftData) {
@@ -122,14 +138,8 @@ async function addReservation(giftId) {
     });
 }
 
-async function deleteReservationByFriend(giftId) {
-    return await apiRequest(`/gifts/${giftId}/reserve/friend`, {
-        method: 'DELETE'
-    });
-}
-
-async function deleteReservationByOwner(giftId) {
-    return await apiRequest(`/gifts/${giftId}/reserve/owner`, {
+async function deleteReservation(giftId) {
+    return await apiRequest(`/gifts/${giftId}/reserve`, {
         method: 'DELETE'
     });
 }
@@ -194,11 +204,15 @@ function sortGifts(gifts, sortBy) {
     const sorted = [...gifts]; // копируем массив
 
     switch(sortBy) {
-        case 'date':
+        case 'newest':
             // Сортировка по дате (новые первыми)
             sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
             break;
-        case 'price':
+        case 'oldest':
+            // Сортировка по дате (старые первыми)
+            sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            break;
+        case 'price-high':
             // Сортировка по цене (дорогие первыми, null в конце)
             sorted.sort((a, b) => {
                 if (a.price === null) return 1;
@@ -206,12 +220,65 @@ function sortGifts(gifts, sortBy) {
                 return b.price - a.price;
             });
             break;
-        case 'wish_rate':
+        case 'price-low':
+            // Сортировка по цене (дешёвые первыми, null в конце)
+            sorted.sort((a, b) => {
+                if (a.price === null) return 1;
+                if (b.price === null) return -1;
+                return a.price - b.price;
+            });
+            break;
+        case 'wish-rate-high':
             // Сортировка по рейтингу (высокие первыми, null в конце)
             sorted.sort((a, b) => {
                 if (a.wish_rate === null) return 1;
                 if (b.wish_rate === null) return -1;
                 return b.wish_rate - a.wish_rate;
+            });
+            break;
+    }
+
+    return sorted;
+}
+
+// функция обогащения резервирований данными о друзьях
+function enrichReservationsWithFriendData(reservations, friends) {
+    return reservations.map(gift => {
+        const friend = friends.find(f => f.tg_id === gift.user_id);
+        return {
+            ...gift,
+            friendData: friend || null
+        };
+    });
+}
+
+// специальная сортировка для "Мои брони"
+function sortReservations(reservations, sortBy) {
+    const sorted = [...reservations];
+
+    switch(sortBy) {
+        case 'owner-name':
+            // Сортировка по имени друга (владельца подарка)
+            sorted.sort((a, b) => {
+                const nameA = a.friendData ? `${a.friendData.first_name} ${a.friendData.last_name || ''}` : '';
+                const nameB = b.friendData ? `${b.friendData.first_name} ${b.friendData.last_name || ''}` : '';
+                return nameA.localeCompare(nameB);
+            });
+            break;
+        case 'price-low':
+            // Сортировка по цене (дешёвые первыми)
+            sorted.sort((a, b) => {
+                if (a.price === null) return 1;
+                if (b.price === null) return -1;
+                return a.price - b.price;
+            });
+            break;
+        case 'price-high':
+            // Сортировка по цене (дорогие первыми)
+            sorted.sort((a, b) => {
+                if (a.price === null) return 1;
+                if (b.price === null) return -1;
+                return b.price - a.price;
             });
             break;
     }
@@ -228,6 +295,11 @@ function changeMyGiftsSort(sortBy) {
 function changeFriendGiftsSort(sortBy) {
     state.friendGiftsSortBy = sortBy;
     renderFriendGifts();
+}
+
+function changeMyReservationsSort(sortBy) {
+    state.myReservationsSortBy = sortBy;
+    renderMyReservations();
 }
 
 // ============= Навигация по табам =============
@@ -253,10 +325,12 @@ function showTab(tabName) {
 }
 
 // Обработчики кликов по табам
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        const tabName = tab.dataset.tab;
-        showTab(tabName);
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            showTab(tabName);
+        });
     });
 });
 
@@ -270,13 +344,13 @@ function renderMyProfile() {
     document.getElementById('my-username').textContent =
         user.tg_username ? `@${user.tg_username}` : '';
 
-    // кнопка слева, ID по центру
+    // ID справа от всего текста
     const idElement = document.getElementById('my-id');
     idElement.innerHTML = `
+        <span class="id-text">ID: ${user.tg_id}</span>
         <button class="copy-id-btn" onclick="copyIdToClipboard()" title="Скопировать ID">
             📋
         </button>
-        <span class="id-text">ID: ${user.tg_id}</span>
     `;
 
     renderMyGifts();
@@ -291,9 +365,11 @@ function renderMyGifts() {
             <div class="sort-controls">
                 <label class="sort-label">Сортировать:</label>
                 <select class="sort-select" onchange="changeMyGiftsSort(this.value)">
-                    <option value="date" ${state.myGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
-                    <option value="price" ${state.myGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
-                    <option value="wish_rate" ${state.myGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+                    <option value="newest" ${state.myGiftsSortBy === 'newest' ? 'selected' : ''}>Сначала новые</option>
+                    <option value="oldest" ${state.myGiftsSortBy === 'oldest' ? 'selected' : ''}>Сначала старые</option>
+                    <option value="price-high" ${state.myGiftsSortBy === 'price-high' ? 'selected' : ''}>Сначала дороже</option>
+                    <option value="price-low" ${state.myGiftsSortBy === 'price-low' ? 'selected' : ''}>Сначала дешевле</option>
+                    <option value="wish-rate-high" ${state.myGiftsSortBy === 'wish-rate-high' ? 'selected' : ''}>Сначала самые желанные</option>
                 </select>
             </div>
             <div class="section-empty">Пока нет подарков в списке желаний</div>
@@ -308,9 +384,11 @@ function renderMyGifts() {
         <div class="sort-controls">
             <label class="sort-label">Сортировать:</label>
             <select class="sort-select" onchange="changeMyGiftsSort(this.value)">
-                <option value="date" ${state.myGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
-                <option value="price" ${state.myGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
-                <option value="wish_rate" ${state.myGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+                <option value="newest" ${state.myGiftsSortBy === 'newest' ? 'selected' : ''}>Сначала новые</option>
+                <option value="oldest" ${state.myGiftsSortBy === 'oldest' ? 'selected' : ''}>Сначала старые</option>
+                <option value="price-high" ${state.myGiftsSortBy === 'price-high' ? 'selected' : ''}>Сначала дороже</option>
+                <option value="price-low" ${state.myGiftsSortBy === 'price-low' ? 'selected' : ''}>Сначала дешевле</option>
+                <option value="wish-rate-high" ${state.myGiftsSortBy === 'wish-rate-high' ? 'selected' : ''}>Сначала самые желанные</option>
             </select>
         </div>
         <div class="gifts-grid">
@@ -327,16 +405,145 @@ function renderMyGifts() {
                     ${gift.price ? `<div class="gift-price">💰 ${formatPrice(gift.price)} ₽</div>` : ''}
                     ${gift.note ? `<div class="gift-note">📝 ${escapeHtml(gift.note)}</div>` : ''}
                     <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
-                    ${gift.is_reserved && gift.reserved_by === state.currentUser.tg_id
-                        ? `<div class="gift-reservation-badge">🔒 Забронировано тобой</div>
-                           <button class="gift-reserve-btn unreserve" onclick="handleUnreserveOwn(${gift.id})">Снять бронь</button>`
-                        : gift.is_reserved
-                            ? `<div class="gift-reservation-badge">🔒 Забронировано</div>
-                               <button class="gift-reserve-btn unreserve" onclick="handleUnreserveByOwner(${gift.id})">Снять бронь</button>`
-                            : ''
+                    ${gift.is_reserved
+                        ? `<div class="gift-reservation-badge">🔒 Забронировано</div>
+                           <button class="gift-reserve-btn unreserve" onclick="handleCancelReservation(${gift.id}, 'my-gifts')">Снять бронь</button>`
+                        : `<button class="gift-reserve-btn reserve" onclick="handleReserveSelfGift(${gift.id})">🎁 Буду дарить</button>`
                     }
                 </div>
             `).join('')}
+        </div>
+    `;
+}
+
+function renderMyReservations() {
+    const container = document.getElementById('my-reservations-container');
+    const reservations = state.myReservations || [];
+
+    if (reservations.length === 0) {
+        container.innerHTML = `
+            <div class="sort-controls">
+                <label class="sort-label">Сортировать:</label>
+                <select class="sort-select" onchange="changeMyReservationsSort(this.value)">
+                    <option value="owner-name" ${state.myReservationsSortBy === 'owner-name' ? 'selected' : ''}>По владельцу подарка (A-Z)</option>
+                    <option value="price-low" ${state.myReservationsSortBy === 'price-low' ? 'selected' : ''}>По цене: дешевле</option>
+                    <option value="price-high" ${state.myReservationsSortBy === 'price-high' ? 'selected' : ''}>По цене: дороже</option>
+                </select>
+            </div>
+            <div class="section-empty">Ты пока ничего не забронировал 🎁</div>
+        `;
+        return;
+    }
+
+    // Обогащаем резервирования данными друзей или текущего пользователя
+    const enrichedReservations = reservations.map(gift => {
+        let friend = state.myFriends.find(f => f.tg_id === gift.user_id);
+        // Если не в списке друзей и это твой подарок - используй текущего пользователя
+        if (!friend && gift.user_id === state.currentUser.tg_id) {
+            friend = state.currentUser;
+        }
+        return {
+            ...gift,
+            friendData: friend || null
+        };
+    });
+
+    const sortedReservations = sortReservations(enrichedReservations, state.myReservationsSortBy);
+
+    container.innerHTML = `
+        <div class="sort-controls">
+            <label class="sort-label">Сортировать:</label>
+            <select class="sort-select" onchange="changeMyReservationsSort(this.value)">
+                <option value="owner-name" ${state.myReservationsSortBy === 'owner-name' ? 'selected' : ''}>По владельцу подарка (A-Z)</option>
+                <option value="price-low" ${state.myReservationsSortBy === 'price-low' ? 'selected' : ''}>По цене: дешевле</option>
+                <option value="price-high" ${state.myReservationsSortBy === 'price-high' ? 'selected' : ''}>По цене: дороже</option>
+            </select>
+        </div>
+        <div>
+            ${sortedReservations.map(gift => {
+                const friend = gift.friendData;
+                const friendName = friend ? `${friend.first_name}${friend.last_name ? ' ' + friend.last_name : ''}` : 'Неизвестный';
+
+                return `
+                    <div class="reservation-card">
+                        ${friend ? `
+                            <img class="reservation-friend-avatar"
+                                 src="${getAvatarUrl(friend)}"
+                                 alt="Avatar"
+                                 onclick="showFriendProfile(${friend.tg_id})"
+                                 title="Перейти в профиль">
+                        ` : ''}
+                        <div class="reservation-content">
+                            ${friend ? `
+                                <a class="reservation-friend-name" onclick="showFriendProfile(${friend.tg_id})">
+                                    ${escapeHtml(friendName)}
+                                </a>
+                            ` : `<div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">Неизвестный пользователь</div>`}
+                            <div class="reservation-gift-name">${escapeHtml(gift.name)}</div>
+                            <div class="reservation-gift-info">
+                                ${gift.wish_rate ? `⭐ ${gift.wish_rate}/10 • ` : ''}
+                                ${gift.price ? `💰 ${formatPrice(gift.price)} ₽ • ` : ''}
+                                Зарезервировано: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}
+                            </div>
+                            ${gift.note ? `<div class="reservation-gift-info">📝 ${escapeHtml(gift.note)}</div>` : ''}
+                            <div class="reservation-actions">
+                                <button class="reservation-cancel-btn" onclick="handleCancelReservation(${gift.id}, 'reservations')">
+                                    ✕ Отменить бронь
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+    container.innerHTML = `
+        <div class="sort-controls">
+            <label class="sort-label">Сортировать:</label>
+            <select class="sort-select" onchange="changeMyReservationsSort(this.value)">
+                <option value="owner-name" ${state.myReservationsSortBy === 'owner-name' ? 'selected' : ''}>По владельцу подарка (A-Z)</option>
+                <option value="price-low" ${state.myReservationsSortBy === 'price-low' ? 'selected' : ''}>По цене: дешевле</option>
+                <option value="price-high" ${state.myReservationsSortBy === 'price-high' ? 'selected' : ''}>По цене: дороже</option>
+            </select>
+        </div>
+        <div>
+            ${sortedReservations.map(gift => {
+                const friend = gift.friendData;
+                const friendName = friend ? `${friend.first_name}${friend.last_name ? ' ' + friend.last_name : ''}` : 'Неизвестный';
+
+                return `
+                    <div class="reservation-card">
+                        ${friend ? `
+                            <img class="reservation-friend-avatar"
+                                 src="${getAvatarUrl(friend)}"
+                                 alt="Avatar"
+                                 onclick="showFriendProfile(${friend.tg_id})"
+                                 title="Перейти в профиль">
+                        ` : ''}
+                        <div class="reservation-content">
+                            ${friend ? `
+                                <a class="reservation-friend-name" onclick="showFriendProfile(${friend.tg_id})">
+                                    ${escapeHtml(friendName)}
+                                </a>
+                            ` : `<div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">Неизвестный пользователь</div>`}
+                            <div class="reservation-gift-name">${escapeHtml(gift.name)}</div>
+                            <div class="reservation-gift-info">
+                                ${gift.wish_rate ? `⭐ ${gift.wish_rate}/10 • ` : ''}
+                                ${gift.price ? `💰 ${formatPrice(gift.price)} ₽ • ` : ''}
+                                Зарезервировано: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}
+                            </div>
+                            ${gift.note ? `<div class="reservation-gift-info">📝 ${escapeHtml(gift.note)}</div>` : ''}
+                            <div class="reservation-actions">
+                                <button class="reservation-cancel-btn" onclick="handleCancelReservation(${gift.id}, 'reservations')">
+                                    ✕ Отменить бронь
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('')}
         </div>
     `;
 }
@@ -410,7 +617,12 @@ function renderFriendProfile() {
         `${friend.first_name}${friend.last_name ? ' ' + friend.last_name : ''}`;
     document.getElementById('friend-username').textContent =
         friend.tg_username ? `@${friend.tg_username}` : '';
-    document.getElementById('friend-id').textContent = `ID: ${friend.tg_id}`;
+
+    // ID справа от всего текста
+    const idElement = document.getElementById('friend-id');
+    idElement.innerHTML = `
+        <span class="id-text">ID: ${friend.tg_id}</span>
+    `;
 
     renderFriendGifts();
 }
@@ -424,9 +636,11 @@ function renderFriendGifts() {
             <div class="sort-controls">
                 <label class="sort-label">Сортировать:</label>
                 <select class="sort-select" onchange="changeFriendGiftsSort(this.value)">
-                    <option value="date" ${state.friendGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
-                    <option value="price" ${state.friendGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
-                    <option value="wish_rate" ${state.friendGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+                    <option value="newest" ${state.friendGiftsSortBy === 'newest' ? 'selected' : ''}>Сначала новые</option>
+                    <option value="oldest" ${state.friendGiftsSortBy === 'oldest' ? 'selected' : ''}>Сначала старые</option>
+                    <option value="price-high" ${state.friendGiftsSortBy === 'price-high' ? 'selected' : ''}>Сначала дороже</option>
+                    <option value="price-low" ${state.friendGiftsSortBy === 'price-low' ? 'selected' : ''}>Сначала дешевле</option>
+                    <option value="wish-rate-high" ${state.friendGiftsSortBy === 'wish-rate-high' ? 'selected' : ''}>Сначала самые желанные</option>
                 </select>
             </div>
             <div class="section-empty">У друга пока нет подарков в вишлисте</div>
@@ -441,9 +655,11 @@ function renderFriendGifts() {
         <div class="sort-controls">
             <label class="sort-label">Сортировать:</label>
             <select class="sort-select" onchange="changeFriendGiftsSort(this.value)">
-                <option value="date" ${state.friendGiftsSortBy === 'date' ? 'selected' : ''}>По дате</option>
-                <option value="price" ${state.friendGiftsSortBy === 'price' ? 'selected' : ''}>По цене</option>
-                <option value="wish_rate" ${state.friendGiftsSortBy === 'wish_rate' ? 'selected' : ''}>По рейтингу</option>
+                <option value="newest" ${state.friendGiftsSortBy === 'newest' ? 'selected' : ''}>Сначала новые</option>
+                <option value="oldest" ${state.friendGiftsSortBy === 'oldest' ? 'selected' : ''}>Сначала старые</option>
+                <option value="price-high" ${state.friendGiftsSortBy === 'price-high' ? 'selected' : ''}>Сначала дороже</option>
+                <option value="price-low" ${state.friendGiftsSortBy === 'price-low' ? 'selected' : ''}>Сначала дешевле</option>
+                <option value="wish-rate-high" ${state.friendGiftsSortBy === 'wish-rate-high' ? 'selected' : ''}>Сначала самые желанные</option>
             </select>
         </div>
         <div class="gifts-grid">
@@ -459,7 +675,7 @@ function renderFriendGifts() {
                     <div class="gift-date">Добавлен: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}</div>
                     ${gift.is_reserved && gift.reserved_by === state.currentUser.tg_id
                         ? `<div class="gift-reservation-badge">🔒 Забронировано тобой</div>
-                           <button class="gift-reserve-btn unreserve" onclick="handleUnreserveOwn(${gift.id})">Снять бронь</button>`
+                           <button class="gift-reserve-btn unreserve" onclick="handleCancelReservation(${gift.id}, 'friend-profile')">Снять бронь</button>`
                         : gift.is_reserved
                             ? `<div class="gift-reservation-badge">🔒 Забронировано</div>`
                             : `<button class="gift-reserve-btn reserve" onclick="handleReserve(${gift.id})">🎁 Буду дарить</button>`
@@ -685,11 +901,29 @@ async function showFriendProfile(friendId) {
 }
 
 // ============= Действия с бронью =============
+async function handleReserveSelfGift(giftId) {
+    try {
+        await addReservation(giftId);
+        state.myGifts = await getUserGifts(state.currentUser.tg_id);
+        state.myReservations = await getMyReservations();
+        renderMyGifts();
+        renderMyReservations();
+    } catch (error) {
+        tg.showPopup({
+            title: 'Ошибка',
+            message: error.message,
+            buttons: [{type: 'ok'}]
+        });
+    }
+}
+
 async function handleReserve(giftId) {
     try {
         await addReservation(giftId);
         state.selectedFriendGifts = await getUserGifts(state.selectedFriend.tg_id);
+        state.myReservations = await getMyReservations();
         renderFriendGifts();
+        renderMyReservations();  // ← ДОБАВИТЬ ЭТО для обновления вкладки "Мои брони"
     } catch (error) {
         tg.showPopup({
             title: 'Ошибка',
@@ -699,33 +933,32 @@ async function handleReserve(giftId) {
     }
 }
 
-// Снять свою бронь (текущий пользователь сам бронировал)
-async function handleUnreserveOwn(giftId) {
+// Отмена брони (универсальная функция)
+async function handleCancelReservation(giftId, sourceTab) {
     try {
-        await deleteReservationByFriend(giftId);
-        // Обновляем тот список, где мы сейчас находимся
-        if (state.selectedFriend) {
-            state.selectedFriendGifts = await getUserGifts(state.selectedFriend.tg_id);
-            renderFriendGifts();
-        } else {
+        await deleteReservation(giftId);
+
+        // Обновляем данные в зависимости от того, где произошло удаление
+        if (sourceTab === 'my-gifts') {
             state.myGifts = await getUserGifts(state.currentUser.tg_id);
+            state.myReservations = await getMyReservations();
             renderMyGifts();
+            renderMyReservations();
+        } else if (sourceTab === 'friend-profile') {
+            state.selectedFriendGifts = await getUserGifts(state.selectedFriend.tg_id);
+            state.myReservations = await getMyReservations();
+            renderFriendGifts();
+            renderMyReservations();
+        } else if (sourceTab === 'reservations') {
+            state.myReservations = await getMyReservations();
+            renderMyReservations();
         }
-    } catch (error) {
+
         tg.showPopup({
-            title: 'Ошибка',
-            message: error.message,
+            title: 'Успех',
+            message: 'Бронь отменена',
             buttons: [{type: 'ok'}]
         });
-    }
-}
-
-// Снять бронь с своего подарка (текущий пользователь — хозяин подарка)
-async function handleUnreserveByOwner(giftId) {
-    try {
-        await deleteReservationByOwner(giftId);
-        state.myGifts = await getUserGifts(state.currentUser.tg_id);
-        renderMyGifts();
     } catch (error) {
         tg.showPopup({
             title: 'Ошибка',
@@ -742,26 +975,35 @@ async function initApp() {
             throw new Error('Откройте приложение из Telegram');
         }
 
-        // Сначала делаем авторизацию через /users/auth/telegram
-        // Этот эндпоинт создаст пользователя если его нет
-        state.currentUser = await apiRequest('/users/auth/telegram', {
-            method: 'POST',
-            body: JSON.stringify({
-                init_data: state.initData
-            })
+        // Авторизация через /users/auth
+        // Отправляем X-Telegram-Init-Data header, получаем TokenOut
+        const authResponse = await apiRequest('/users/auth', {
+            method: 'POST'
         });
 
-        // Загружаем друзей, заявки и подарки
+        // Сохраняем access_token из TokenOut
+        if (authResponse.access_token) {
+            localStorage.setItem('jwtToken', authResponse.access_token);
+        } else {
+            throw new Error('Не получен access_token от сервера');
+        }
+
+        // Загружаем текущего пользователя
+        state.currentUser = await getCurrentUser();
+
+        // Загружаем друзей, заявки, подарки и резервирования
         state.myFriends = await getMyFriends();
         state.friendRequests = await getPendingRequests();
         state.myGifts = await getUserGifts(state.currentUser.tg_id);
+        state.myReservations = await getMyReservations();
 
         // Отображаем интерфейс
         document.getElementById('loading').style.display = 'none';
         document.getElementById('main-app').style.display = 'block';
 
-        // Рендерим профиль, друзей и заявки
+        // Рендерим профиль, друзей, заявки и резервирования
         renderMyProfile();
+        renderMyReservations();
         renderFriends();
         renderFriendRequests();
 
