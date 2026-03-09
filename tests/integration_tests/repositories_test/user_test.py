@@ -513,3 +513,29 @@ class TestUserRepository:
         test_user_john: UserDict,
     ) -> None:
         await user_repository.delete_friend(test_user_john['tg_id'], test_user_bob['tg_id'])
+
+    @pytest.mark.usefixtures('test_bob_gift_with_reservation_by_john', 'test_john_gift_with_reservation_by_bob')
+    async def test_repo_delete_friend_ensure_remove_gift_reservations(
+        self,
+        db_session: AsyncSession,
+        user_repository: UserRepository,
+        test_user_bob: UserDict,
+        test_user_john: UserDict,
+    ) -> None:
+        await user_repository.delete_friend(test_user_bob['tg_id'], test_user_john['tg_id'])
+
+        query = await db_session.execute(
+            text(
+                """
+                SELECT *
+                FROM gift_reservations gr
+                JOIN gifts g ON gr.gift_id = g.id
+                WHERE (gr.reserved_by_tg_id = :user_tg_id AND g.user_id = :friend_tg_id)
+                    OR (gr.reserved_by_tg_id = :friend_tg_id AND g.user_id = :user_tg_id)
+                """
+            ),
+            {'user_tg_id': test_user_bob['tg_id'], 'friend_tg_id': test_user_john['tg_id']},
+        )
+        rows = query.mappings().all()
+
+        assert rows == []
