@@ -430,7 +430,7 @@ function renderMyReservations() {
                     <option value="price-high" ${state.myReservationsSortBy === 'price-high' ? 'selected' : ''}>По цене: дороже</option>
                 </select>
             </div>
-            <div class="section-empty">Ты пока ничего не забронировал 🎁</div>
+            <div class="section-empty">Ты пока ничего не забронировал(а) 🎁</div>
         `;
         return;
     }
@@ -449,55 +449,6 @@ function renderMyReservations() {
     });
 
     const sortedReservations = sortReservations(enrichedReservations, state.myReservationsSortBy);
-
-    container.innerHTML = `
-        <div class="sort-controls">
-            <label class="sort-label">Сортировать:</label>
-            <select class="sort-select" onchange="changeMyReservationsSort(this.value)">
-                <option value="owner-name" ${state.myReservationsSortBy === 'owner-name' ? 'selected' : ''}>По владельцу подарка (A-Z)</option>
-                <option value="price-low" ${state.myReservationsSortBy === 'price-low' ? 'selected' : ''}>По цене: дешевле</option>
-                <option value="price-high" ${state.myReservationsSortBy === 'price-high' ? 'selected' : ''}>По цене: дороже</option>
-            </select>
-        </div>
-        <div>
-            ${sortedReservations.map(gift => {
-                const friend = gift.friendData;
-                const friendName = friend ? `${friend.first_name}${friend.last_name ? ' ' + friend.last_name : ''}` : 'Неизвестный';
-
-                return `
-                    <div class="reservation-card">
-                        ${friend ? `
-                            <img class="reservation-friend-avatar"
-                                 src="${getAvatarUrl(friend)}"
-                                 alt="Avatar"
-                                 onclick="showFriendProfile(${friend.tg_id})"
-                                 title="Перейти в профиль">
-                        ` : ''}
-                        <div class="reservation-content">
-                            ${friend ? `
-                                <a class="reservation-friend-name" onclick="showFriendProfile(${friend.tg_id})">
-                                    ${escapeHtml(friendName)}
-                                </a>
-                            ` : `<div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">Неизвестный пользователь</div>`}
-                            <div class="reservation-gift-name">${escapeHtml(gift.name)}</div>
-                            <div class="reservation-gift-info">
-                                ${gift.wish_rate ? `⭐ ${gift.wish_rate}/10 • ` : ''}
-                                ${gift.price ? `💰 ${formatPrice(gift.price)} ₽ • ` : ''}
-                                Зарезервировано: ${new Date(gift.created_at).toLocaleDateString('ru-RU')}
-                            </div>
-                            ${gift.note ? `<div class="reservation-gift-info">📝 ${escapeHtml(gift.note)}</div>` : ''}
-                            <div class="reservation-actions">
-                                <button class="reservation-cancel-btn" onclick="handleCancelReservation(${gift.id}, 'reservations')">
-                                    ✕ Отменить бронь
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('')}
-        </div>
-    `;
-}
 
     container.innerHTML = `
         <div class="sort-controls">
