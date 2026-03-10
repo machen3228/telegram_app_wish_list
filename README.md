@@ -5,6 +5,8 @@
 
 A Telegram Mini App that simplifies gift selection for any occasion. Share your wishlist with friends, see what they want, and coordinate gift purchases to avoid duplicates.
 
+**Try it now:** [@wishlist_pretty_bot](https://t.me/wishlist_pretty_bot)
+
 ## 🌟 Features
 
 - **Personal Wishlists** — Add gifts with details: name, link, price, priority (1-10 scale), and personal notes
