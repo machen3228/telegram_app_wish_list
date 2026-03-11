@@ -39,7 +39,7 @@ table "users" {
   }
   index "idx_tg_username" {
     columns = [column.tg_username]
-    unique = true
+    unique = false
   }
 }
 

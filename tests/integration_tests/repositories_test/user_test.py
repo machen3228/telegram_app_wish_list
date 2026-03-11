@@ -150,7 +150,7 @@ class TestUserRepository:
         with pytest.raises(AlreadyExistsInDbError, match=r"User with this 'tg_id' already exists"):
             await user_repository.add(user)
 
-    async def test_repo_add_user_duplicate_tg_username_raises(
+    async def test_repo_add_user_duplicate_tg_username_dont_raise(
         self,
         user_repository: UserRepository,
         test_user_bob: UserDict,
@@ -163,8 +163,7 @@ class TestUserRepository:
             avatar_url=None,
         )
 
-        with pytest.raises(AlreadyExistsInDbError, match=r"User with this 'tg_username' already exists"):
-            await user_repository.add(user)
+        await user_repository.add(user)
 
     async def test_repo_get_friends_success(
         self,

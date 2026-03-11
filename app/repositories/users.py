@@ -32,7 +32,7 @@ class UserRepository(BaseRepository[User]):
             await self._session.execute(stmt, params)
             await self._session.commit()
         except IntegrityError as e:
-            context = {'tg_id': obj.tg_id, 'tg_username': obj.tg_username}
+            context = {'tg_id': obj.tg_id}
             message = handle_integrity_error_message(e, context)
             raise AlreadyExistsInDbError(message) from None
         return obj.tg_id

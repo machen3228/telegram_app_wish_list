@@ -21,20 +21,6 @@ class TestHandleIntegrityErrorMessage:
 
         assert result == "User with this 'tg_id' already exists"
 
-    def test_idx_tg_username_constraint(self) -> None:
-        pg_exc = Mock()
-        pg_exc.constraint_name = 'idx_tg_username'
-
-        orig = Mock()
-        orig.__cause__ = pg_exc
-
-        error = Mock(spec=IntegrityError)
-        error.orig = orig
-
-        result = handle_integrity_error_message(error)
-
-        assert result == "User with this 'tg_username' already exists"
-
     def test_fk_gifts_user_constraint_with_context(self) -> None:
         pg_exc = Mock()
         pg_exc.constraint_name = 'fk_gifts_user'
