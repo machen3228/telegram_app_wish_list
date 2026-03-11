@@ -34,5 +34,5 @@ app = Litestar(
             email=settings.app.developer_email,
         ),
     ),
-    debug=True,
+    debug=False,
 )

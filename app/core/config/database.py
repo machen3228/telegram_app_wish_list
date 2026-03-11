@@ -9,7 +9,7 @@ class SessionConfig(BaseModel):
 
 
 class EngineConfig(BaseModel):
-    echo: bool = True
+    echo: bool = False
     pool_size: int = 10
     max_overflow: int = 10
     pool_timeout: int = 30
