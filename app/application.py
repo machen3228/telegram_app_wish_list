@@ -8,12 +8,15 @@ from litestar.static_files import create_static_files_router
 
 from controllers import GiftController
 from controllers import UserController
+from core import setup_logging
 from core.config import settings
 from core.database import sqlalchemy_config
 from exceptions.handlers import get_exception_handlers
 
 PARENT_DIR = Path(__file__).resolve().parent
 STATIC_DIR = PARENT_DIR / 'static'
+
+setup_logging()
 
 static_files_router = create_static_files_router(
     path='/',

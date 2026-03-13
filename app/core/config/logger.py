@@ -5,7 +5,11 @@ from pydantic import BaseModel
 
 
 class LoggerConfig(BaseModel):
-    format: str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format: str = (
+        '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | '
+        '<level>{level: <8}</level> | '
+        '<cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>'
+    )
     level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
 
     @property

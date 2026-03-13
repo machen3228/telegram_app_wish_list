@@ -9,6 +9,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "greenlet>=3.3.0",
     "litestar[standard]>=2.21.0",
+    "loguru>=0.7.3",
     "pip>=25.3",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
@@ -45,7 +46,7 @@ indent-width = 4
 select = ["ALL"]
 fixable = ["ALL"]
 ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D107", "D203", "D213", "COM812","EM101", "EM102",
-    "Q000", "Q003", "PLR0913", "INP001", "TRY003", "TD002", "TD003", "FIX002", "S608", "S101", "RUF012"
+    "Q000", "Q003", "PLR0913", "INP001", "TRY003", "TD002", "TD003", "FIX002", "S608", "S101", "RUF012", "TRY301"
 ]
 
 [tool.ruff.lint.isort]
