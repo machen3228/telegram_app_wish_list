@@ -8,6 +8,6 @@ if __name__ == '__main__':
         'application:app',
         host='0.0.0.0',  # noqa: S104
         port=80,
-        reload=True,
+        reload=False,
         log_config=None,
     )

@@ -1,6 +1,7 @@
 from datetime import UTC
 from datetime import datetime
 
+from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
@@ -28,13 +29,18 @@ class UserRepository(BaseRepository[User]):
             'created_at': obj.created_at,
             'updated_at': obj.updated_at,
         }
+
         try:
             await self._session.execute(stmt, params)
             await self._session.commit()
         except IntegrityError as e:
             context = {'tg_id': obj.tg_id}
             message = handle_integrity_error_message(e, context)
+            logger.critical('Failed to add user: IntegrityError for tg_id={}: {}', obj.tg_id, message)
             raise AlreadyExistsInDbError(message) from None
+        except Exception as e:
+            logger.error('Unexpected error adding user with tg_id={}: {}', obj.tg_id, type(e).__name__)
+            raise
         return obj.tg_id
 
     async def update(self, tg_id: int, **fields: str | int | datetime) -> None:
@@ -46,8 +52,13 @@ class UserRepository(BaseRepository[User]):
         query = f'UPDATE users SET {set_clause} WHERE tg_id = :tg_id'
         stmt = text(query)
         params = {'tg_id': tg_id, **fields}
-        await self._session.execute(stmt, params)
-        await self._session.commit()
+
+        try:
+            await self._session.execute(stmt, params)
+            await self._session.commit()
+        except Exception as e:
+            logger.error('Failed to update user with tg_id={}: {}', tg_id, type(e).__name__)
+            raise
 
     async def get_friends(self, user_id: int) -> list[User]:
         query = text("""
@@ -57,10 +68,14 @@ class UserRepository(BaseRepository[User]):
           WHERE f.user_tg_id = :tg_id
         """)
         params = {'tg_id': user_id}
-        query_result = await self._session.execute(query, params)
-        rows = query_result.mappings().all()
 
-        return [User(**row) for row in rows]
+        try:
+            query_result = await self._session.execute(query, params)
+            rows = query_result.mappings().all()
+            return [User(**row) for row in rows]
+        except Exception as e:
+            logger.error('Failed to get friends for user with tg_id={}: {}', user_id, type(e).__name__)
+            raise
 
     async def get(self, obj_id: int) -> User:
         query = text("""
@@ -68,10 +83,15 @@ class UserRepository(BaseRepository[User]):
           FROM users u
           WHERE u.tg_id = :tg_id;
         """)
-        result = await self._session.execute(query, {'tg_id': obj_id})
-        row = result.mappings().one_or_none()
 
+        try:
+            result = await self._session.execute(query, {'tg_id': obj_id})
+            row = result.mappings().one_or_none()
+        except Exception as e:
+            logger.error('Failed to get user with tg_id={}: {}', obj_id, type(e).__name__)
+            raise
         if row is None:
+            logger.warning('User with tg_id={} not found in DB', obj_id)
             raise NotFoundInDbError(f'User with id={obj_id} not found')
 
         return User(**row)
@@ -95,27 +115,31 @@ class UserRepository(BaseRepository[User]):
             WHERE fr.sender_tg_id = :user_id AND fr.status = 'pending'
         """)
 
-        result = await self._session.execute(stmt, {'user_id': user_id})
-        rows = result.mappings().all()
+        try:
+            result = await self._session.execute(stmt, {'user_id': user_id})
+            rows = result.mappings().all()
 
-        friends_ids: set[int] = set()
-        incoming: set[int] = set()
-        outgoing: set[int] = set()
+            friends_ids: set[int] = set()
+            incoming: set[int] = set()
+            outgoing: set[int] = set()
 
-        for row in rows:
-            match row['relation_type']:
-                case 'friend':
-                    friends_ids.add(row['target_id'])
-                case 'incoming':
-                    incoming.add(row['target_id'])
-                case 'outgoing':
-                    outgoing.add(row['target_id'])
+            for row in rows:
+                match row['relation_type']:
+                    case 'friend':
+                        friends_ids.add(row['target_id'])
+                    case 'incoming':
+                        incoming.add(row['target_id'])
+                    case 'outgoing':
+                        outgoing.add(row['target_id'])
 
-        return UserRelationsDTO(
-            friends_ids=friends_ids,
-            incoming_request_ids=incoming,
-            outgoing_request_ids=outgoing,
-        )
+            return UserRelationsDTO(
+                friends_ids=friends_ids,
+                incoming_request_ids=incoming,
+                outgoing_request_ids=outgoing,
+            )
+        except Exception as e:
+            logger.error('Failed to get user relations for user_id={}: {}', user_id, type(e).__name__)
+            raise
 
     async def send_friend_request(self, sender_id: int, receiver_id: int) -> None:
         stmt = text("""
@@ -124,8 +148,13 @@ class UserRepository(BaseRepository[User]):
             ON CONFLICT (sender_tg_id, receiver_tg_id)
             DO UPDATE SET status = 'pending', updated_at = NOW()
         """)
-        await self._session.execute(stmt, {'sender_id': sender_id, 'receiver_id': receiver_id})
-        await self._session.commit()
+
+        try:
+            await self._session.execute(stmt, {'sender_id': sender_id, 'receiver_id': receiver_id})
+            await self._session.commit()
+        except Exception as e:
+            logger.error('Failed to send friend request from {} to {}: {}', sender_id, receiver_id, type(e).__name__)
+            raise
 
     async def get_pending_requests(self, user_id: int) -> list[FriendRequestDTO]:
         stmt = text("""
@@ -142,22 +171,27 @@ class UserRepository(BaseRepository[User]):
             WHERE fr.receiver_tg_id = :user_id AND fr.status = 'pending'
             ORDER BY fr.created_at DESC
         """)
-        result = await self._session.execute(stmt, {'user_id': user_id})
-        rows = result.mappings().all()
 
-        return [
-            FriendRequestDTO(
-                sender_tg_id=row['sender_tg_id'],
-                receiver_tg_id=row['receiver_tg_id'],
-                status=row['status'],
-                created_at=row['created_at'],
-                sender_name=f'{row["sender_first_name"]} {row["sender_last_name"]}'
-                if row['sender_last_name']
-                else row['sender_first_name'],
-                sender_username=row['sender_username'],
-            )
-            for row in rows
-        ]
+        try:
+            result = await self._session.execute(stmt, {'user_id': user_id})
+            rows = result.mappings().all()
+
+            return [
+                FriendRequestDTO(
+                    sender_tg_id=row['sender_tg_id'],
+                    receiver_tg_id=row['receiver_tg_id'],
+                    status=row['status'],
+                    created_at=row['created_at'],
+                    sender_name=f'{row["sender_first_name"]} {row["sender_last_name"]}'
+                    if row['sender_last_name']
+                    else row['sender_first_name'],
+                    sender_username=row['sender_username'],
+                )
+                for row in rows
+            ]
+        except Exception as e:
+            logger.error('Failed to get pending requests for user_id={}: {}', user_id, type(e).__name__)
+            raise
 
     async def accept_friend_request(self, receiver_id: int, sender_id: int) -> None:
         stmt_update = text("""
@@ -165,8 +199,6 @@ class UserRepository(BaseRepository[User]):
            SET status = 'accepted', updated_at = NOW()
            WHERE sender_tg_id = :sender_id AND receiver_tg_id = :receiver_id AND status = 'pending'
        """)
-        await self._session.execute(stmt_update, {'sender_id': sender_id, 'receiver_id': receiver_id})
-
         stmt_friends = text("""
             INSERT INTO friends (user_tg_id, friend_tg_id)
             VALUES
@@ -174,8 +206,14 @@ class UserRepository(BaseRepository[User]):
                 (:user2, :user1)
             ON CONFLICT DO NOTHING
         """)
-        await self._session.execute(stmt_friends, {'user1': sender_id, 'user2': receiver_id})
-        await self._session.commit()
+
+        try:
+            await self._session.execute(stmt_update, {'sender_id': sender_id, 'receiver_id': receiver_id})
+            await self._session.execute(stmt_friends, {'user1': sender_id, 'user2': receiver_id})
+            await self._session.commit()
+        except Exception as e:
+            logger.error('Failed to accept friend request from {} to {}: {}', sender_id, receiver_id, type(e).__name__)
+            raise
 
     async def reject_friend_request(self, receiver_id: int, sender_id: int) -> None:
         stmt = text("""
@@ -183,11 +221,16 @@ class UserRepository(BaseRepository[User]):
         SET status = 'rejected', updated_at = NOW()
         WHERE sender_tg_id = :sender_id AND receiver_tg_id = :receiver_id AND status = 'pending'
         """)
-        await self._session.execute(stmt, {'sender_id': sender_id, 'receiver_id': receiver_id})
-        await self._session.commit()
+
+        try:
+            await self._session.execute(stmt, {'sender_id': sender_id, 'receiver_id': receiver_id})
+            await self._session.commit()
+        except Exception as e:
+            logger.error('Failed to reject friend request from {} to {}: {}', sender_id, receiver_id, type(e).__name__)
+            raise
 
     async def delete_friend(self, user_id: int, friend_id: int) -> None:
-        stmt2 = text("""
+        stmt1 = text("""
             DELETE
             FROM gift_reservations
             WHERE gift_id IN (
@@ -197,13 +240,18 @@ class UserRepository(BaseRepository[User]):
             AND (reserved_by_tg_id = :user_id OR reserved_by_tg_id = :friend_id)
         """)
 
-        stmt1 = text("""
+        stmt2 = text("""
             DELETE
             FROM friends
             WHERE (user_tg_id = :user_id AND friend_tg_id = :friend_id)
                 OR (user_tg_id = :friend_id AND friend_tg_id = :user_id)
         """)
         params = {'user_id': user_id, 'friend_id': friend_id}
-        await self._session.execute(stmt1, params)
-        await self._session.execute(stmt2, params)
-        await self._session.commit()
+
+        try:
+            await self._session.execute(stmt1, params)
+            await self._session.execute(stmt2, params)
+            await self._session.commit()
+        except Exception as e:
+            logger.error('Failed to delete friend {} for user {}: {}', friend_id, user_id, type(e).__name__)
+            raise
