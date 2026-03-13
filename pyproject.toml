@@ -9,6 +9,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "greenlet>=3.3.0",
     "litestar[standard]>=2.21.0",
+    "loguru>=0.7.3",
     "pip>=25.3",
     "pydantic>=2.12.5",
     "pydantic-settings>=2.12.0",
