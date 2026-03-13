@@ -86,7 +86,7 @@ class UserService:
             match user.resolve_friend_action(friend):
                 case FriendAction.ALREADY_FRIENDS:
                     logger.warning('Users already friends: sender={}, receiver={}', sender_id, receiver_id)
-                    raise BadRequestError(detail='Already friends')  # noqa: TRY301
+                    raise BadRequestError(detail='Already friends')
                 case FriendAction.ADD_FRIEND:
                     await self._repository.accept_friend_request(sender_id, receiver_id)
                     logger.success('Friends added successfully: user1={}, user2={}', sender_id, receiver_id)

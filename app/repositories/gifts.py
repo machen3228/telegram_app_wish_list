@@ -1,6 +1,7 @@
 from datetime import UTC
 from datetime import datetime
 
+from loguru import logger
 from sqlalchemy import TextClause
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -49,37 +50,58 @@ class GiftRepository(BaseRepository[Gift]):
         except IntegrityError as e:
             context = {'user_id': obj.user_id}
             message = handle_integrity_error_message(e, context)
+            logger.critical('Failed to add gift: IntegrityError for user_id={}: {}', obj.user_id, message)
             raise NotFoundInDbError(message) from None
         return result.scalar_one()
 
     async def get(self, obj_id: int, current_user_id: int) -> Gift:
         query = _gift_select_query('g.id = :gift_id')
         params = {'gift_id': obj_id, 'current_user_id': current_user_id}
-        result = await self._session.execute(query, params)
-        row = result.mappings().one_or_none()
+        try:
+            result = await self._session.execute(query, params)
+            row = result.mappings().one_or_none()
+        except Exception as e:
+            logger.error('Failed to get gift with id={}: {}', obj_id, type(e).__name__)
+            raise
+
         if row is None:
+            logger.warning('Gift with id={} not found', obj_id)
             raise NotFoundInDbError(f'Gift with id={obj_id} not found')
         return Gift(**row)
 
     async def get_gifts_by_user_id(self, tg_id: int, current_user_id: int) -> list[Gift]:
         query = _gift_select_query('g.user_id = :user_id')
         params = {'user_id': tg_id, 'current_user_id': current_user_id}
-        result = await self._session.execute(query, params)
-        return [Gift(**row) for row in result.mappings()]
+        try:
+            result = await self._session.execute(query, params)
+            gifts = [Gift(**row) for row in result.mappings()]
+        except Exception as e:
+            logger.error('Failed to get gifts for user_id={}: {}', tg_id, type(e).__name__)
+            raise
+        return gifts
 
     async def get_my_reservations(self, current_user_id: int) -> list[Gift]:
         query = _gift_select_query('gr.reserved_by_tg_id = :current_user_id')
         params = {'current_user_id': current_user_id}
-        result = await self._session.execute(query, params)
-        return [Gift(**row) for row in result.mappings()]
+        try:
+            result = await self._session.execute(query, params)
+            gifts = [Gift(**row) for row in result.mappings()]
+        except Exception as e:
+            logger.error('Failed to get reservations for user_id={}: {}', current_user_id, type(e).__name__)
+            raise
+        return gifts
 
     async def delete(self, obj_id: int) -> None:
         stmt = text("""
             DELETE FROM gifts WHERE id = :gift_id;
         """)
         params = {'gift_id': obj_id}
-        await self._session.execute(stmt, params)
-        await self._session.commit()
+        try:
+            await self._session.execute(stmt, params)
+            await self._session.commit()
+        except Exception as e:
+            logger.error('Failed to delete gift with id={}: {}', obj_id, type(e).__name__)
+            raise
 
     async def add_reservation(self, gift_id: int, current_user_id: int) -> None:
         stmt = text("""
@@ -100,17 +122,23 @@ class GiftRepository(BaseRepository[Gift]):
                 'reserved_by_tg_id': current_user_id,
             }
             message = handle_integrity_error_message(e, context)
+            logger.critical('Failed to add reservation: IntegrityError for gift_id={}: {}', gift_id, message)
             raise NotFoundInDbError(message) from None
+        except Exception as e:
+            logger.error('Failed to add reservation for gift_id={}: {}', gift_id, type(e).__name__)
+            raise
 
     async def delete_reservation(self, gift_id: int) -> None:
         stmt = text("""
           DELETE FROM gift_reservations WHERE gift_id = :gift_id
         """)
-        params = {
-            'gift_id': gift_id,
-        }
-        await self._session.execute(stmt, params)
-        await self._session.commit()
+        params = {'gift_id': gift_id}
+        try:
+            await self._session.execute(stmt, params)
+            await self._session.commit()
+        except Exception as e:
+            logger.error('Failed to delete reservation for gift_id={}: {}', gift_id, type(e).__name__)
+            raise
 
     async def is_friend_or_owner(self, gift_id: int, current_user_id: int) -> bool:
         query = text("""
@@ -131,6 +159,10 @@ class GiftRepository(BaseRepository[Gift]):
             'gift_id': gift_id,
             'current_user_id': current_user_id,
         }
-        result = await self._session.execute(query, params)
-        await self._session.commit()
-        return result.scalar()
+        try:
+            result = await self._session.execute(query, params)
+            await self._session.commit()
+            return result.scalar()
+        except Exception as e:
+            logger.error('Failed to check if user is friend or owner for gift_id={}: {}', gift_id, type(e).__name__)
+            raise
