@@ -265,6 +265,13 @@ Automatically run on commit:
 4. `ty` - Type checking
 5. `export-requirements` - Update `requirements.txt` from `uv.lock` (no-dev dependencies only)
 
+**IMPORTANT: Always run pre-commit manually before creating a commit:**
+```bash
+# Run all pre-commit checks manually to catch issues early
+pre-commit run --all-files
+```
+This helps catch linting, formatting, and type errors before attempting to commit, saving time and avoiding multiple commit attempts.
+
 **Note:** The `requirements.txt` file is auto-generated from `uv.lock` and contains only production dependencies (no dev/test groups). Never edit it manually.
 
 ## Configuration Management
