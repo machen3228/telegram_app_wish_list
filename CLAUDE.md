@@ -191,6 +191,29 @@ Services call domain methods for complex business rules, keeping services focuse
   assert user.avatar_url == expected_url
   assert len(user.avatar_url) == 200
   ```
+- **Use parametrize for similar tests**: When testing multiple similar cases, use `pytest.mark.parametrize()` with descriptive `id` parameter for each test case
+  ```python
+  # ✅ GOOD - Parametrized tests with descriptive ids
+  @pytest.mark.parametrize(
+      ('user_id', 'error_message'),
+      [
+          pytest.param(-1, 'User ID must be positive, got: -1', id='negative_user_id'),
+          pytest.param(0, 'User ID must be positive, got: 0', id='zero_user_id'),
+      ],
+  )
+  def test_validates_user_id(user_id: int, error_message: str) -> None:
+      with pytest.raises(ValueError, match=error_message):
+          User.create(user_id=user_id, ...)
+
+  # ❌ BAD - Separate tests for similar cases
+  def test_validates_negative_user_id() -> None:
+      with pytest.raises(ValueError, match='User ID must be positive, got: -1'):
+          User.create(user_id=-1, ...)
+
+  def test_validates_zero_user_id() -> None:
+      with pytest.raises(ValueError, match='User ID must be positive, got: 0'):
+          User.create(user_id=0, ...)
+  ```
 - Example: `user_domain_test.py`, `jwt_auth_test.py`
 
 **Integration Tests** (`tests/integration_tests/`):

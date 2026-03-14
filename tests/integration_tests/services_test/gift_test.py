@@ -62,6 +62,18 @@ class TestGiftService:
         with pytest.raises(NotFoundInDbError, match='User with id=123456 not found'):
             await gift_service.add(**gift_data, current_user_id=123456)
 
+    async def test_service_add_gift_validation_error_raises_bad_request(
+        self,
+        gift_service: GiftService,
+        test_user_bob: UserDict,
+        gift_data: dict,
+    ) -> None:
+        with pytest.raises(BadRequestError, match='Gift name cannot be empty'):
+            await gift_service.add(
+                **{**gift_data, 'name': ''},  # ty:ignore[invalid-argument-type]
+                current_user_id=test_user_bob['tg_id'],
+            )
+
     async def test_service_delete_gift_success(
         self,
         db_session: AsyncSession,

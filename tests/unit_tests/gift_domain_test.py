@@ -195,3 +195,120 @@ class TestUserDomain:
         })  # ty:ignore[invalid-argument-type]
 
         assert gift.can_delete_reservation(who_try) is result
+
+    @pytest.mark.parametrize(
+        ('user_id', 'error_message'),
+        [
+            pytest.param(-1, 'User ID must be positive, got: -1', id='negative_user_id'),
+            pytest.param(0, 'User ID must be positive, got: 0', id='zero_user_id'),
+        ],
+    )
+    def test_gift_domain_create_validates_user_id(self, gift_data: dict, user_id: int, error_message: str) -> None:
+        with pytest.raises(ValueError, match=error_message):
+            Gift.create(**{**gift_data, 'user_id': user_id})  # ty:ignore[invalid-argument-type]
+
+    @pytest.mark.parametrize(
+        ('name', 'error_message'),
+        [
+            pytest.param('', 'Gift name cannot be empty', id='empty_name'),
+            pytest.param('   ', 'Gift name cannot be empty', id='whitespace_only_name'),
+            pytest.param('a' * 101, 'Gift name exceeds maximum length of 100 characters', id='name_too_long'),
+        ],
+    )
+    def test_gift_domain_create_validates_name(self, gift_data: dict, name: str, error_message: str) -> None:
+        with pytest.raises(ValueError, match=error_message):
+            Gift.create(**{**gift_data, 'name': name})  # ty:ignore[invalid-argument-type]
+
+    def test_gift_domain_create_allows_exact_max_length_name(self, gift_data: dict) -> None:
+        exact_length_name = 'a' * 100
+        gift = Gift.create(**{**gift_data, 'name': exact_length_name})  # ty:ignore[invalid-argument-type]
+        assert gift.name == exact_length_name
+
+    @pytest.mark.parametrize(
+        ('url', 'error_message'),
+        [
+            pytest.param(
+                'https://' + 'a' * 500,
+                'URL exceeds maximum length of 500 characters',
+                id='url_too_long',
+            ),
+            pytest.param(
+                'ftp://example.com',
+                r'URL must be a valid HTTP/HTTPS URL, got: ftp://example\.com',
+                id='invalid_protocol',
+            ),
+            pytest.param(
+                '/gift.jpg',
+                r'URL must be a valid HTTP/HTTPS URL, got: /gift\.jpg',
+                id='relative_url',
+            ),
+        ],
+    )
+    def test_gift_domain_create_validates_url(self, gift_data: dict, url: str, error_message: str) -> None:
+        with pytest.raises(ValueError, match=error_message):
+            Gift.create(**{**gift_data, 'url': url})  # ty:ignore[invalid-argument-type]
+
+    @pytest.mark.parametrize(
+        'url',
+        [
+            pytest.param('http://example.com/gift', id='http_url'),
+            pytest.param('https://example.com/gift', id='https_url'),
+            pytest.param(None, id='none_url'),
+        ],
+    )
+    def test_gift_domain_create_allows_valid_url(self, gift_data: dict, url: str | None) -> None:
+        gift = Gift.create(**{**gift_data, 'url': url})  # ty:ignore[invalid-argument-type]
+        assert gift.url == url
+
+    def test_gift_domain_create_allows_exact_max_length_url(self, gift_data: dict) -> None:
+        exact_length_url = 'https://' + 'a' * 488 + '.jpg'
+        expected_max_length = 500
+        gift = Gift.create(**{**gift_data, 'url': exact_length_url})  # ty:ignore[invalid-argument-type]
+        assert len(gift.url) == expected_max_length  # ty:ignore[invalid-argument-type]
+
+    @pytest.mark.parametrize(
+        ('wish_rate', 'error_message'),
+        [
+            pytest.param(0, 'Wish rate must be between 1 and 10, got: 0', id='wish_rate_zero'),
+            pytest.param(11, 'Wish rate must be between 1 and 10, got: 11', id='wish_rate_too_high'),
+            pytest.param(-5, 'Wish rate must be between 1 and 10, got: -5', id='wish_rate_negative'),
+        ],
+    )
+    def test_gift_domain_create_validates_wish_rate(self, gift_data: dict, wish_rate: int, error_message: str) -> None:
+        with pytest.raises(ValueError, match=error_message):
+            Gift.create(**{**gift_data, 'wish_rate': wish_rate})  # ty:ignore[invalid-argument-type]
+
+    @pytest.mark.parametrize(
+        'wish_rate',
+        [
+            pytest.param(1, id='wish_rate_minimum'),
+            pytest.param(10, id='wish_rate_maximum'),
+            pytest.param(None, id='wish_rate_none'),
+        ],
+    )
+    def test_gift_domain_create_allows_valid_wish_rate(self, gift_data: dict, wish_rate: int | None) -> None:
+        gift = Gift.create(**{**gift_data, 'wish_rate': wish_rate})  # ty:ignore[invalid-argument-type]
+        assert gift.wish_rate == wish_rate
+
+    @pytest.mark.parametrize(
+        ('price', 'error_message'),
+        [
+            pytest.param(-100, 'Price must be non-negative, got: -100', id='negative_price'),
+            pytest.param(100_000_000, 'Price exceeds maximum value of 99999999, got: 100000000', id='price_too_high'),
+        ],
+    )
+    def test_gift_domain_create_validates_price(self, gift_data: dict, price: int, error_message: str) -> None:
+        with pytest.raises(ValueError, match=error_message):
+            Gift.create(**{**gift_data, 'price': price})  # ty:ignore[invalid-argument-type]
+
+    @pytest.mark.parametrize(
+        'price',
+        [
+            pytest.param(0, id='zero_price'),
+            pytest.param(99_999_999, id='maximum_price'),
+            pytest.param(None, id='none_price'),
+        ],
+    )
+    def test_gift_domain_create_allows_valid_price(self, gift_data: dict, price: int | None) -> None:
+        gift = Gift.create(**{**gift_data, 'price': price})  # ty:ignore[invalid-argument-type]
+        assert gift.price == price
