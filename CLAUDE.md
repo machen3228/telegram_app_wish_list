@@ -34,14 +34,17 @@ python app/main.py
 
 ### Testing
 ```bash
+# IMPORTANT: Start Docker containers before running integration tests
+docker compose up -d
+
 # Run all tests with coverage
 uv run pytest -vv --cov=app --cov-report=html:htmlcov --cov-report=term
 
 # Unit tests only (fast, no database)
-uv run -m unit -vv
+uv run pytest -m unit -vv
 
-# Integration tests only (use test database)
-uv run -m integration -vv
+# Integration tests only (use test database, requires Docker containers running)
+uv run pytest -m integration -vv
 
 # Run single test file
 uv run pytest tests/unit_tests/user_domain_test.py -vv
@@ -179,6 +182,15 @@ Services call domain methods for complex business rules, keeping services focuse
 - Test domain logic, utilities, security functions
 - No database interaction
 - Use pytest-mock for mocking
+- **Use hamcrest matchers for assertions**: When a test has multiple assertions, combine them using `assert_that()` with `all_of()` instead of multiple `assert` statements
+  ```python
+  # ✅ GOOD - Single assertion with hamcrest
+  assert_that(user.avatar_url, all_of(equal_to(expected_url), has_length(200)))
+
+  # ❌ BAD - Multiple assertions
+  assert user.avatar_url == expected_url
+  assert len(user.avatar_url) == 200
+  ```
 - Example: `user_domain_test.py`, `jwt_auth_test.py`
 
 **Integration Tests** (`tests/integration_tests/`):
@@ -268,12 +280,13 @@ Config classes in `app/core/config/`:
 
 1. **Don't use SQLAlchemy ORM** - Use raw SQL with `text()` and `session.execute()`
 2. **Set PYTHONPATH** - Required for imports to work: `export PYTHONPATH=$PYTHONPATH:$(pwd)/app`
-3. **Apply migrations to both databases** - Run `atlas migrate apply` for both `local` and `local_test` envs
-4. **Don't commit without pre-commit** - `requirements.txt` must be updated automatically
-5. **Coverage omits certain files** - Controllers, DTOs, config, and entrypoints excluded from coverage (see `pyproject.toml`)
-6. **Tests must be marked** - Use `@pytest.mark.unit` or `@pytest.mark.integration` markers
-7. **AsyncSession in repos** - All repository methods must be `async` and use `await session.execute()`
-8. **Bidirectional friendships** - Friend relationships insert two rows (both directions) in `friends` table
+3. **Start Docker containers before integration tests** - Run `docker compose up -d` before running integration tests
+4. **Apply migrations to both databases** - Run `atlas migrate apply` for both `local` and `local_test` envs
+5. **Don't commit without pre-commit** - `requirements.txt` must be updated automatically
+6. **Coverage omits certain files** - Controllers, DTOs, config, and entrypoints excluded from coverage (see `pyproject.toml`)
+7. **Tests must be marked** - Use `@pytest.mark.unit` or `@pytest.mark.integration` markers
+8. **AsyncSession in repos** - All repository methods must be `async` and use `await session.execute()`
+9. **Bidirectional friendships** - Friend relationships insert two rows (both directions) in `friends` table
 
 ## Database Schema Notes
 

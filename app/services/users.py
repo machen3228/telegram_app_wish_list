@@ -48,13 +48,18 @@ class UserService:
         last_name: str | None,
         avatar_url: str | None,
     ) -> User:
-        user = User.create(
-            tg_id=tg_id,
-            tg_username=tg_username,
-            first_name=first_name,
-            last_name=last_name,
-            avatar_url=avatar_url,
-        )
+        try:
+            user = User.create(
+                tg_id=tg_id,
+                tg_username=tg_username,
+                first_name=first_name,
+                last_name=last_name,
+                avatar_url=avatar_url,
+            )
+        except ValueError as e:
+            logger.warning('User validation failed: {}', str(e))
+            raise BadRequestError(detail=str(e)) from e
+
         try:
             tg_id = await self._repository.add(user)
             logger.success('User created successfully: tg_id={}', tg_id)
