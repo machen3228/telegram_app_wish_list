@@ -20,14 +20,19 @@ class GiftService:
         price: int | None,
         note: str | None,
     ) -> int:
-        gift = Gift.create(
-            user_id=current_user_id,
-            name=name,
-            url=url,
-            wish_rate=wish_rate,
-            price=price,
-            note=note,
-        )
+        try:
+            gift = Gift.create(
+                user_id=current_user_id,
+                name=name,
+                url=url,
+                wish_rate=wish_rate,
+                price=price,
+                note=note,
+            )
+        except ValueError as e:
+            logger.warning('Gift validation failed: {}', str(e))
+            raise BadRequestError(detail=str(e)) from e
+
         gift_id = await self._repository.add(gift)
         logger.success('Gift created successfully: gift_id={}, user_id={}', gift_id, current_user_id)
         return gift_id

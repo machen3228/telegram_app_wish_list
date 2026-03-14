@@ -101,6 +101,19 @@ class TestUserService:
             ),
         )
 
+    async def test_service_add_user_validation_error_raises_bad_request(
+        self,
+        user_service: UserService,
+    ) -> None:
+        with pytest.raises(BadRequestError, match='Telegram ID must be positive'):
+            await user_service.add(
+                tg_id=-1,
+                tg_username='john',
+                first_name='John',
+                last_name=None,
+                avatar_url=None,
+            )
+
     async def test_service_add_user_duplicate_raises_http_exception(
         self,
         user_service: UserService,

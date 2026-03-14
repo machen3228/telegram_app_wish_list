@@ -51,6 +51,13 @@ class User:
         last_name: str | None,
         avatar_url: str | None,
     ) -> Self:
+        cls._validate_tg_id(tg_id)
+        cls._validate_field_length(tg_username, 'tg_username', 30)
+        cls._validate_field_length(first_name, 'first_name', 30)
+        cls._validate_field_length(last_name, 'last_name', 30)
+        cls._validate_field_length(avatar_url, 'avatar_url', 200)
+        cls._validate_url_format(avatar_url)
+
         now = datetime.now(UTC)
         return cls(
             tg_id=tg_id,
@@ -61,6 +68,23 @@ class User:
             created_at=now,
             updated_at=now,
         )
+
+    @staticmethod
+    def _validate_tg_id(tg_id: int) -> None:
+        if tg_id <= 0:
+            raise ValueError(f'Telegram ID must be positive, got: {tg_id}')
+
+    @staticmethod
+    def _validate_field_length(value: str | None, field_name: str, max_length: int) -> None:
+        if value is not None and len(value) > max_length:
+            raise ValueError(
+                f'{field_name} exceeds maximum length of {max_length} characters (got {len(value)} characters)'
+            )
+
+    @staticmethod
+    def _validate_url_format(url: str | None) -> None:
+        if url and not url.startswith(('http://', 'https://')):
+            raise ValueError(f'avatar_url must be a valid HTTP/HTTPS URL, got: {url}')
 
     def load_relations(self, relations: UserRelationsDTO) -> None:
         self._friends_ids = relations.friends_ids - {self.tg_id}

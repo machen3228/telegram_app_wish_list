@@ -9,6 +9,7 @@ from hamcrest import assert_that
 from hamcrest import equal_to
 from hamcrest import greater_than_or_equal_to
 from hamcrest import has_entries
+from hamcrest import has_length
 from hamcrest import has_properties
 from hamcrest import instance_of
 from hamcrest import less_than_or_equal_to
@@ -422,3 +423,161 @@ class TestUserDomain:
         )
 
         assert user.resolve_friend_action(friend) == FriendAction.ALREADY_FRIENDS
+
+    def test_user_domain_create_validates_negative_tg_id(self) -> None:
+        with pytest.raises(ValueError, match='Telegram ID must be positive, got: -1'):
+            User.create(
+                tg_id=-1,
+                tg_username='john',
+                first_name='John',
+                last_name=None,
+                avatar_url=None,
+            )
+
+    def test_user_domain_create_validates_zero_tg_id(self) -> None:
+        with pytest.raises(ValueError, match='Telegram ID must be positive, got: 0'):
+            User.create(
+                tg_id=0,
+                tg_username='john',
+                first_name='John',
+                last_name=None,
+                avatar_url=None,
+            )
+
+    def test_user_domain_create_validates_tg_username_max_length(self) -> None:
+        long_username = 'a' * 31
+        with pytest.raises(ValueError, match='tg_username exceeds maximum length of 30 characters'):
+            User.create(
+                tg_id=1,
+                tg_username=long_username,
+                first_name='John',
+                last_name=None,
+                avatar_url=None,
+            )
+
+    def test_user_domain_create_validates_first_name_max_length(self) -> None:
+        long_first_name = 'a' * 31
+        with pytest.raises(ValueError, match='first_name exceeds maximum length of 30 characters'):
+            User.create(
+                tg_id=1,
+                tg_username='john',
+                first_name=long_first_name,
+                last_name=None,
+                avatar_url=None,
+            )
+
+    def test_user_domain_create_validates_last_name_max_length(self) -> None:
+        long_last_name = 'a' * 31
+        with pytest.raises(ValueError, match='last_name exceeds maximum length of 30 characters'):
+            User.create(
+                tg_id=1,
+                tg_username='john',
+                first_name='John',
+                last_name=long_last_name,
+                avatar_url=None,
+            )
+
+    def test_user_domain_create_validates_avatar_url_max_length(self) -> None:
+        long_url = 'https://' + 'a' * 200
+        with pytest.raises(ValueError, match='avatar_url exceeds maximum length of 200 characters'):
+            User.create(
+                tg_id=1,
+                tg_username='john',
+                first_name='John',
+                last_name=None,
+                avatar_url=long_url,
+            )
+
+    def test_user_domain_create_validates_avatar_url_format_http(self) -> None:
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name=None,
+            avatar_url='http://example.com/avatar.jpg',
+        )
+        assert user.avatar_url == 'http://example.com/avatar.jpg'
+
+    def test_user_domain_create_validates_avatar_url_format_https(self) -> None:
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name=None,
+            avatar_url='https://example.com/avatar.jpg',
+        )
+        assert user.avatar_url == 'https://example.com/avatar.jpg'
+
+    def test_user_domain_create_validates_avatar_url_format_invalid(self) -> None:
+        with pytest.raises(ValueError, match=r'avatar_url must be a valid HTTP/HTTPS URL, got: ftp://example\.com'):
+            User.create(
+                tg_id=1,
+                tg_username='john',
+                first_name='John',
+                last_name=None,
+                avatar_url='ftp://example.com',
+            )
+
+    def test_user_domain_create_validates_avatar_url_format_relative(self) -> None:
+        with pytest.raises(ValueError, match=r'avatar_url must be a valid HTTP/HTTPS URL, got: /avatar\.jpg'):
+            User.create(
+                tg_id=1,
+                tg_username='john',
+                first_name='John',
+                last_name=None,
+                avatar_url='/avatar.jpg',
+            )
+
+    def test_user_domain_create_allows_exact_max_length_tg_username(self) -> None:
+        exact_length_username = 'a' * 30
+        user = User.create(
+            tg_id=1,
+            tg_username=exact_length_username,
+            first_name='John',
+            last_name=None,
+            avatar_url=None,
+        )
+        assert user.tg_username == exact_length_username
+
+    def test_user_domain_create_allows_exact_max_length_first_name(self) -> None:
+        exact_length_first_name = 'a' * 30
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name=exact_length_first_name,
+            last_name=None,
+            avatar_url=None,
+        )
+        assert user.first_name == exact_length_first_name
+
+    def test_user_domain_create_allows_exact_max_length_last_name(self) -> None:
+        exact_length_last_name = 'a' * 30
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name=exact_length_last_name,
+            avatar_url=None,
+        )
+        assert user.last_name == exact_length_last_name
+
+    def test_user_domain_create_allows_exact_max_length_avatar_url(self) -> None:
+        exact_length_url = 'https://' + 'a' * 188 + '.jpg'
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name=None,
+            avatar_url=exact_length_url,
+        )
+        assert_that(user.avatar_url, all_of(equal_to(exact_length_url), has_length(200)))
+
+    def test_user_domain_create_allows_empty_string_avatar_url(self) -> None:
+        user = User.create(
+            tg_id=1,
+            tg_username='john',
+            first_name='John',
+            last_name=None,
+            avatar_url='',
+        )
+        assert user.avatar_url == ''
