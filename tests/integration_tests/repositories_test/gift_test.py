@@ -405,6 +405,7 @@ class TestGiftRepository:
         gift_repository: GiftRepository,
         test_bob_gift_with_reservation_by_john: GiftDict,
         test_user_john: UserDict,
+        test_user_bob: UserDict,
     ) -> None:
         result = await gift_repository.get_my_reservations(
             test_user_john['tg_id'],
@@ -423,6 +424,11 @@ class TestGiftRepository:
                     note=equal_to(test_bob_gift_with_reservation_by_john['note']),
                     is_reserved=is_(True),
                     reserved_by=equal_to(test_user_john['tg_id']),
+                    owner=has_properties(
+                        first_name=equal_to(test_user_bob['first_name']),
+                        last_name=equal_to(test_user_bob['last_name']),
+                        avatar_url=equal_to(test_user_bob['avatar_url']),
+                    ),
                 ),
             ),
         )
@@ -445,6 +451,7 @@ class TestGiftRepository:
         test_bob_gift_with_reservation_by_alice: GiftDict,
         test_user_john: UserDict,
         test_user_alice: UserDict,
+        test_user_bob: UserDict,
     ) -> None:
         john_result = await gift_repository.get_my_reservations(
             test_user_john['tg_id'],
@@ -457,6 +464,11 @@ class TestGiftRepository:
                 has_properties(
                     id=equal_to(test_bob_gift_with_reservation_by_john['id']),
                     reserved_by=equal_to(test_user_john['tg_id']),
+                    owner=has_properties(
+                        first_name=equal_to(test_user_bob['first_name']),
+                        last_name=equal_to(test_user_bob['last_name']),
+                        avatar_url=equal_to(test_user_bob['avatar_url']),
+                    ),
                 ),
             ),
         )
@@ -472,6 +484,11 @@ class TestGiftRepository:
                 has_properties(
                     id=equal_to(test_bob_gift_with_reservation_by_alice['id']),
                     reserved_by=equal_to(test_user_alice['tg_id']),
+                    owner=has_properties(
+                        first_name=equal_to(test_user_bob['first_name']),
+                        last_name=equal_to(test_user_bob['last_name']),
+                        avatar_url=equal_to(test_user_bob['avatar_url']),
+                    ),
                 ),
             ),
         )

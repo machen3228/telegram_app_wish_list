@@ -2,6 +2,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain import Gift
+from dto.gifts import GiftWithOwnerDTO
 from exceptions.http import BadRequestError
 from exceptions.http import ForbiddenError
 from repositories import GiftRepository
@@ -110,7 +111,7 @@ class GiftService:
             logger.error('Failed to delete reservation for gift_id={}: {}', gift_id, type(e).__name__)
             raise
 
-    async def get_my_reservations(self, current_user_id: int) -> list[Gift]:
+    async def get_my_reservations(self, current_user_id: int) -> list[GiftWithOwnerDTO]:
         try:
             gifts = await self._repository.get_my_reservations(current_user_id)
             logger.success(
