@@ -7,6 +7,8 @@ from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
 from domain.gifts import Gift
+from dto.gifts import GiftOwnerDTO
+from dto.gifts import GiftWithOwnerDTO
 from exceptions.database import NotFoundInDbError
 from repositories.base import BaseRepository
 from utils import handle_integrity_error_message
@@ -80,15 +82,50 @@ class GiftRepository(BaseRepository[Gift]):
             raise
         return gifts
 
-    async def get_my_reservations(self, current_user_id: int) -> list[Gift]:
-        query = _gift_select_query('gr.reserved_by_tg_id = :current_user_id')
+    async def get_my_reservations(self, current_user_id: int) -> list[GiftWithOwnerDTO]:
+        query = text("""
+            SELECT
+                g.*,
+                gr.gift_id IS NOT NULL AS is_reserved,
+                gr.reserved_by_tg_id AS reserved_by,
+                u.first_name AS owner_first_name,
+                u.last_name AS owner_last_name,
+                u.avatar_url AS owner_avatar_url
+            FROM gifts g
+            JOIN gift_reservations gr ON g.id = gr.gift_id
+            JOIN users u ON g.user_id = u.tg_id
+            WHERE gr.reserved_by_tg_id = :current_user_id
+        """)
         params = {'current_user_id': current_user_id}
         try:
             result = await self._session.execute(query, params)
-            gifts = [Gift(**row) for row in result.mappings()]
+            rows = result.mappings().all()
         except Exception as e:
             logger.error('Failed to get reservations for user_id={}: {}', current_user_id, type(e).__name__)
             raise
+        gifts = []
+        for row in rows:
+            owner = GiftOwnerDTO(
+                first_name=row['owner_first_name'],
+                last_name=row['owner_last_name'],
+                avatar_url=row['owner_avatar_url'],
+            )
+            gifts.append(
+                GiftWithOwnerDTO(
+                    id=row['id'],
+                    user_id=row['user_id'],
+                    name=row['name'],
+                    url=row['url'],
+                    wish_rate=row['wish_rate'],
+                    price=row['price'],
+                    note=row['note'],
+                    created_at=row['created_at'],
+                    updated_at=row['updated_at'],
+                    is_reserved=row['is_reserved'],
+                    reserved_by=row['reserved_by'],
+                    owner=owner,
+                )
+            )
         return gifts
 
     async def delete(self, obj_id: int) -> None:

@@ -8,6 +8,7 @@ from dependencies import provide_access_jwt_auth
 from dependencies import provide_gift_service
 from domain.gifts import Gift
 from dto.gifts import GiftCreateDTO
+from dto.gifts import GiftWithOwnerDTO
 from services import GiftService
 
 
@@ -81,7 +82,7 @@ class GiftController(Controller):
         self,
         service: GiftService,
         current_user_id: int,
-    ) -> list[Gift]:
+    ) -> list[GiftWithOwnerDTO]:
         return await service.get_my_reservations(current_user_id)
 
     @get(
