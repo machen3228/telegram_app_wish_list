@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         extra='ignore',
     )
 
-    app: AppConfig = AppConfig()
+    app: AppConfig
     logger: LoggerConfig = LoggerConfig()
     bot: BotConfig
     db: DatabaseConfig

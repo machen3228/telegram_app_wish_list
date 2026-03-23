@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from litestar import Litestar
+from litestar.config.cors import CORSConfig
 from litestar.contrib.sqlalchemy.plugins import SQLAlchemyPlugin
 from litestar.openapi import OpenAPIConfig
 from litestar.openapi.spec import Contact
-from litestar.static_files import create_static_files_router
 
 from controllers import GiftController
 from controllers import UserController
@@ -14,18 +14,19 @@ from core.database import sqlalchemy_config
 from exceptions.handlers import get_exception_handlers
 
 PARENT_DIR = Path(__file__).resolve().parent
-STATIC_DIR = PARENT_DIR / 'static'
 
 setup_logging()
 
-static_files_router = create_static_files_router(
-    path='/',
-    directories=[STATIC_DIR],
-    html_mode=True,
+
+cors_config = CORSConfig(
+    allow_origins=[settings.app.frontend_host],
+    allow_methods=['*'],
+    allow_headers=['*'],
 )
 
 app = Litestar(
-    route_handlers=[UserController, GiftController, static_files_router],
+    route_handlers=[UserController, GiftController],
+    cors_config=cors_config,
     plugins=[SQLAlchemyPlugin(config=sqlalchemy_config)],
     exception_handlers=get_exception_handlers(),
     openapi_config=OpenAPIConfig(
