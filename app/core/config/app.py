@@ -9,3 +9,5 @@ class AppConfig(BaseModel):
     developer_email: str = 'machen3228@gmail.com'
 
     max_tg_token_age: int = 86400
+
+    frontend_host: str
