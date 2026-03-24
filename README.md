@@ -20,8 +20,8 @@ A Telegram Mini App that simplifies gift selection for any occasion. Share your 
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│               Telegram Mini App (Frontend)                  │
-│               (HTML/JS/CSS, future: React)                  │
+│          Telegram Mini App (React Frontend)                 │
+│  github.com/machen3228/telegram_frontend_wish_list          │
 └────────────────────┬────────────────────────────────────────┘
                      │ HTTP Requests
                      ↓
@@ -68,8 +68,8 @@ A Telegram Mini App that simplifies gift selection for any occasion. Share your 
 - **Containerization**: Docker Compose (local development)
 - **CI/CD**: GitHub Actions (code quality checks, tests, coverage reporting)
 
-### Frontend (Current)
-- **HTML/CSS/JavaScript** (temporary, single files in `/app/static/`)
+### Frontend
+- **React** — Separate repository: [telegram_frontend_wish_list](https://github.com/machen3228/telegram_frontend_wish_list)
 - **Telegram Web App SDK**: `telegram-web-app.js`
 
 ## 📊 Database Schema
@@ -290,7 +290,6 @@ app/
 │   └── database/        # SQLAlchemy setup
 ├── dependencies/        # Dependency injection providers
 ├── exceptions/          # Custom exceptions
-├── static/              # Frontend (HTML/JS/CSS)
 ├── utils/               # Utilities
 ├── main.py              # App entry point
 └── application.py       # Litestar app setup
@@ -362,7 +361,6 @@ git push origin feature/your-feature-name
 
 ## 🔮 Future Plans
 
-- **React Frontend** — Migrate from HTML/JS to a modern React app (separate repository)
 - **Deployment** — Set up production deployment (likely to Railway or similar platform)
 - **Push Notifications** — Notify friends when their wishlist is updated
 - **Search & Filters** — Advanced wishlist filtering by category, price, priority
